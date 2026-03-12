@@ -1,11 +1,20 @@
-<div align="center">
+# 漫剧 (Manga Drama) - v1.1.0
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+## 更新说明
+本次版本更新主要优化了创作流程中的 UI 交互体验：
 
-  <h1>Built with AI Studio</h2>
+### 1. UI 布局优化
+- **风格与尺寸选择器迁移**：将“风格”和“尺寸”选择器从分集剧本页面移动到了“资产绑定面板”和“分镜管理页”的顶部工具栏。
+- **流程一致性**：确保在创作的不同阶段，用户都能快速调整全局视觉设定。
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+### 2. 资产绑定面板增强
+- **常驻框架**：优化了右侧面板的逻辑，即使在智能提取角色前，顶部的操作栏也会保持显示，引导用户进行下一步操作。
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+### 3. 分镜管理页同步
+- **风格同步**：分镜管理页现在支持全部 15 种艺术风格。
+- **工具栏集成**：在分镜管理页顶部新增了紧凑型的风格与尺寸切换器。
 
-</div>
+## 如何运行
+1. 安装依赖：`npm install`
+2. 启动开发服务器：`npm run dev`
+3. 构建项目：`npm run build`
