@@ -1,9 +1,31 @@
 import React, { useState } from 'react';
 import { ChevronDown, Edit3, ArrowRight, ArrowLeft, X, Image as ImageIcon } from 'lucide-react';
 
+const styles = [
+  { id: '默认', name: '默认', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&q=80' },
+  { id: '日本动画片', name: '日本动画片', image: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150&q=80' },
+  { id: '吉卜力', name: '吉卜力', image: 'https://images.unsplash.com/photo-1580477667995-2b92f01c3f15?w=150&q=80' },
+  { id: '漫画', name: '漫画', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80' },
+  { id: '3D', name: '3D', image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&q=80' },
+  { id: '皮克斯', name: '皮克斯', image: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&q=80' },
+  { id: '黏土', name: '黏土', image: 'https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?w=150&q=80' },
+  { id: '扁平插画', name: '扁平插画', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&q=80' },
+  { id: '童话手绘', name: '童话手绘', image: 'https://images.unsplash.com/photo-1580477667995-2b92f01c3f15?w=150&q=80' },
+  { id: '赛博朋克', name: '赛博朋克', image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&q=80' },
+  { id: '水墨画', name: '水墨画', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80' },
+  { id: '油画', name: '油画', image: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&q=80' },
+  { id: '水彩', name: '水彩', image: 'https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?w=150&q=80' },
+  { id: '游戏CG', name: '游戏CG', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&q=80' },
+  { id: '中国风', name: '中国风', image: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150&q=80' },
+];
+
 export default function ScriptSplitView({ onCreateProject, onBack }: { onCreateProject: () => void, onBack: () => void }) {
   const [selectedEpisode, setSelectedEpisode] = useState(1);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedStyle, setSelectedStyle] = useState('默认');
+  const [selectedOrientation, setSelectedOrientation] = useState<'16:9' | '9:16'>('16:9');
+  const [isStyleDropdownOpen, setIsStyleDropdownOpen] = useState(false);
+  const [isOrientationDropdownOpen, setIsOrientationDropdownOpen] = useState(false);
 
   const scriptContent = `第${selectedEpisode}集
 
@@ -86,7 +108,79 @@ VO：这款现象级全息网游在上线前就火爆全球，可没人知道，
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-4 ml-auto">
+          <div className="flex items-center gap-4 ml-auto flex-wrap justify-end">
+            <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-xl px-2 py-1.5 shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-500 pl-1">风格:</span>
+                <div className="relative">
+                  <button
+                    onClick={() => { setIsStyleDropdownOpen(!isStyleDropdownOpen); setIsOrientationDropdownOpen(false); }}
+                    className="flex items-center justify-between w-40 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-white transition-colors shadow-sm"
+                  >
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      <img src={styles.find((style) => style.id === selectedStyle)?.image} alt={selectedStyle} className="w-5 h-5 rounded-md object-cover shrink-0" />
+                      <span className="truncate">{selectedStyle}</span>
+                    </div>
+                    <ChevronDown size={14} className="text-slate-400 shrink-0 ml-1" />
+                  </button>
+                  {isStyleDropdownOpen && (
+                    <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-20 max-h-64 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2 duration-200">
+                      {styles.map((style) => (
+                        <button
+                          key={style.id}
+                          onClick={() => { setSelectedStyle(style.id); setIsStyleDropdownOpen(false); }}
+                          className={`w-full text-left px-3 py-2 text-xs transition-colors flex items-center gap-3 ${selectedStyle === style.id ? 'bg-emerald-50 text-emerald-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
+                        >
+                          <img src={style.image} alt={style.name} className="w-5 h-5 rounded object-cover shadow-sm" />
+                          <span className="truncate">{style.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="w-px h-5 bg-slate-300"></div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-500">尺寸:</span>
+                <div className="relative">
+                  <button
+                    onClick={() => { setIsOrientationDropdownOpen(!isOrientationDropdownOpen); setIsStyleDropdownOpen(false); }}
+                    className="flex items-center justify-between w-40 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-white transition-colors shadow-sm"
+                  >
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      {selectedOrientation === '16:9' ? (
+                        <div className="w-4 h-2.5 border-2 border-slate-500 rounded-[3px] shrink-0"></div>
+                      ) : (
+                        <div className="w-2.5 h-4 border-2 border-slate-500 rounded-[3px] shrink-0"></div>
+                      )}
+                      <span className="truncate">{selectedOrientation === '16:9' ? '16:9 (横屏)' : '9:16 (竖屏)'}</span>
+                    </div>
+                    <ChevronDown size={14} className="text-slate-400 shrink-0 ml-1" />
+                  </button>
+                  {isOrientationDropdownOpen && (
+                    <div className="absolute top-full left-0 mt-1 w-40 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <button
+                        onClick={() => { setSelectedOrientation('16:9'); setIsOrientationDropdownOpen(false); }}
+                        className={`w-full text-left px-3 py-2 text-xs transition-colors flex items-center gap-3 ${selectedOrientation === '16:9' ? 'bg-emerald-50 text-emerald-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
+                      >
+                        <div className={`w-4 h-2.5 border-2 rounded-[3px] ${selectedOrientation === '16:9' ? 'border-emerald-500' : 'border-slate-400'}`}></div>
+                        <span>16:9 (横屏)</span>
+                      </button>
+                      <button
+                        onClick={() => { setSelectedOrientation('9:16'); setIsOrientationDropdownOpen(false); }}
+                        className={`w-full text-left px-3 py-2 text-xs transition-colors flex items-center gap-3 ${selectedOrientation === '9:16' ? 'bg-emerald-50 text-emerald-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
+                      >
+                        <div className={`w-2.5 h-4 border-2 rounded-[3px] ${selectedOrientation === '9:16' ? 'border-emerald-500' : 'border-slate-400'}`}></div>
+                        <span>9:16 (竖屏)</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <button className="text-sm text-slate-600 hover:text-emerald-600 flex items-center gap-1.5 transition-colors">
               <Edit3 size={16} /> 手动编辑
             </button>

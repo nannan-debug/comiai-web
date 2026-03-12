@@ -24,10 +24,11 @@ const styles = [
   { id: '中国风', name: '中国风', image: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150&q=80' },
 ];
 
-export default function StoryboardManagement({ onNext }: { onNext: () => void }) {
+type StoryboardMode = 'image-video' | 'direct-video';
+
+export default function StoryboardManagement({ onNext, initialMode }: { onNext: () => void, initialMode: StoryboardMode }) {
   const [isScriptPanelOpen, setIsScriptPanelOpen] = useState(true);
   const [shots, setShots] = useState([1, 2, 3, 4]);
-  const [globalMode, setGlobalMode] = useState<'image-video' | 'direct-video'>('image-video');
   const [showModelMenu, setShowModelMenu] = useState(false);
 
   // Style and Orientation State
@@ -51,6 +52,10 @@ export default function StoryboardManagement({ onNext }: { onNext: () => void })
     const newId = shots.length > 0 ? Math.max(...shots) + 1 : 1;
     setShots([...shots, newId]);
   };
+
+  const modeMeta = initialMode === 'direct-video'
+    ? { label: '多参生视频', description: '当前按多参生视频模式初始化', textColor: 'text-blue-700', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', icon: <Video className="w-3.5 h-3.5" /> }
+    : { label: '图生视频', description: '当前按图生视频模式初始化', textColor: 'text-emerald-700', bgColor: 'bg-emerald-50', borderColor: 'border-emerald-200', icon: <ImageIcon className="w-3.5 h-3.5" /> };
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden p-3 gap-3 pb-0">
@@ -178,24 +183,12 @@ export default function StoryboardManagement({ onNext }: { onNext: () => void })
               </div>
             </div>
             
-            {/* 生成模式切换 */}
-            <div className="flex bg-slate-200/50 p-0.5 rounded-xl border border-slate-100 ml-2 shadow-inner">
-              <button 
-                onClick={() => setGlobalMode('image-video')}
-                className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 ${
-                  globalMode === 'image-video' ? 'bg-white shadow-sm text-emerald-600' : 'text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                <ImageIcon className="w-3 h-3" /> 图生视频
-              </button>
-              <button 
-                onClick={() => setGlobalMode('direct-video')}
-                className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 ${
-                  globalMode === 'direct-video' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                <Video className="w-3 h-3" /> 文字直出
-              </button>
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border ml-2 shadow-sm ${modeMeta.bgColor} ${modeMeta.borderColor} ${modeMeta.textColor}`}>
+              {modeMeta.icon}
+              <div>
+                <div className="text-[11px] font-bold leading-none">{modeMeta.label}</div>
+                <div className="text-[10px] opacity-80 mt-0.5">镜头内仍可单独切换</div>
+              </div>
             </div>
           </div>
 
@@ -255,6 +248,7 @@ export default function StoryboardManagement({ onNext }: { onNext: () => void })
               shotNumber={index + 1} 
               onDelete={() => handleDeleteShot(shot)} 
               onNext={onNext}
+              initialMode={initialMode}
             />
           ))}
 
@@ -277,8 +271,8 @@ export default function StoryboardManagement({ onNext }: { onNext: () => void })
   );
 }
 
-function ShotCard({ shotNumber, onDelete, onNext }: { key?: React.Key, shotNumber: number, onDelete: () => void, onNext: () => void }) {
-  const [cardMode, setCardMode] = useState<'image' | 'video'>('image');
+function ShotCard({ shotNumber, onDelete, onNext, initialMode }: { key?: React.Key, shotNumber: number, onDelete: () => void, onNext: () => void, initialMode: StoryboardMode }) {
+  const [cardMode, setCardMode] = useState<'image' | 'video'>(initialMode === 'direct-video' ? 'video' : 'image');
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex transition-colors hover:border-emerald-300 group/card">

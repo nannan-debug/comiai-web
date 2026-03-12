@@ -10,10 +10,12 @@ import ProjectManagement from './ProjectManagement';
 import { ArrowLeft } from 'lucide-react';
 
 type ViewState = 'projects' | 'management' | 'upload' | 'split' | 'production';
+type StoryboardMode = 'image-video' | 'direct-video';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewState>('projects');
   const [productionStep, setProductionStep] = useState(1);
+  const [selectedStoryboardMode, setSelectedStoryboardMode] = useState<StoryboardMode>('image-video');
 
   return (
     <div className="flex flex-col h-screen bg-[#F0F2F5] text-slate-800 font-sans overflow-hidden text-sm relative">
@@ -86,10 +88,15 @@ export default function App() {
       
       {/* Production Steps */}
       {currentView === 'production' && productionStep === 1 && (
-        <ScriptAndAssets onNext={() => setProductionStep(2)} />
+        <ScriptAndAssets
+          onNext={(mode) => {
+            setSelectedStoryboardMode(mode);
+            setProductionStep(2);
+          }}
+        />
       )}
       {currentView === 'production' && productionStep === 2 && (
-        <StoryboardManagement onNext={() => setProductionStep(3)} />
+        <StoryboardManagement onNext={() => setProductionStep(3)} initialMode={selectedStoryboardMode} />
       )}
       {currentView === 'production' && productionStep === 3 && (
         <StoryboardProduction />
