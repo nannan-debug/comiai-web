@@ -11,11 +11,15 @@ import { ArrowLeft } from 'lucide-react';
 
 type ViewState = 'projects' | 'management' | 'upload' | 'split' | 'production';
 type StoryboardMode = 'image-video' | 'direct-video';
+type SplitEntrySource = 'upload' | 'management';
+type ProductionPanelMode = 'image' | 'video';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewState>('projects');
   const [productionStep, setProductionStep] = useState(1);
   const [selectedStoryboardMode, setSelectedStoryboardMode] = useState<StoryboardMode>('image-video');
+  const [splitEntrySource, setSplitEntrySource] = useState<SplitEntrySource>('upload');
+  const [productionPanelMode, setProductionPanelMode] = useState<ProductionPanelMode>('image');
 
   return (
     <div className="flex flex-col h-screen bg-[#F0F2F5] text-slate-800 font-sans overflow-hidden text-sm relative">
@@ -63,7 +67,10 @@ export default function App() {
 
       {currentView === 'management' && (
         <EpisodeManagement 
-          onUpload={() => setCurrentView('upload')}
+          onUpload={() => {
+            setSplitEntrySource('management');
+            setCurrentView('split');
+          }}
           onEnterEpisode={() => {
             setProductionStep(1);
             setCurrentView('production');
@@ -74,14 +81,17 @@ export default function App() {
       
       {currentView === 'upload' && (
         <ScriptUpload 
-          onNext={() => setCurrentView('split')} 
+          onNext={() => {
+            setSplitEntrySource('upload');
+            setCurrentView('split');
+          }} 
           onBack={() => setCurrentView('projects')} 
         />
       )}
 
       {currentView === 'split' && (
         <ScriptSplitView 
-          onBack={() => setCurrentView('upload')}
+          onBack={() => setCurrentView(splitEntrySource === 'management' ? 'management' : 'upload')}
           onCreateProject={() => setCurrentView('management')} 
         />
       )}
@@ -96,10 +106,19 @@ export default function App() {
         />
       )}
       {currentView === 'production' && productionStep === 2 && (
-        <StoryboardManagement onNext={() => setProductionStep(3)} initialMode={selectedStoryboardMode} />
+        <StoryboardManagement
+          onNext={(panelMode) => {
+            setProductionPanelMode(panelMode);
+            setProductionStep(3);
+          }}
+          initialMode={selectedStoryboardMode}
+        />
       )}
       {currentView === 'production' && productionStep === 3 && (
-        <StoryboardProduction />
+        <StoryboardProduction
+          initialGlobalMode={productionPanelMode}
+          initialTaskMode={productionPanelMode === 'video' ? 'first-last' : 'first-last'}
+        />
       )}
       {currentView === 'production' && productionStep === 4 && (
         <VideoPreview />

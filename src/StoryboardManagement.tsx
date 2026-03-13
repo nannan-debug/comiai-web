@@ -25,10 +25,108 @@ const styles = [
 ];
 
 type StoryboardMode = 'image-video' | 'direct-video';
+type CardMode = 'image' | 'video';
+type GenerationStatus = 'idle' | 'generating' | 'completed';
 
-export default function StoryboardManagement({ onNext, initialMode }: { onNext: () => void, initialMode: StoryboardMode }) {
+type PreviewState = {
+  status: GenerationStatus;
+  duration?: string;
+  thumbnail?: string;
+};
+
+type ShotRecord = {
+  id: number;
+  assets: Array<{ type: 'scene' | 'character' | 'prop'; label: string; image?: string }>;
+  references: string[];
+  prompt: string;
+  dialogue: string;
+  sound: string;
+  imagePreview: PreviewState;
+  videoPreview: PreviewState;
+};
+
+const initialShotRecords: ShotRecord[] = [
+  {
+    id: 1,
+    assets: [
+      { type: 'scene', label: '陷阵营地' },
+      { type: 'character', label: '老兵甲', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop' },
+      { type: 'prop', label: '青铜方鼎' },
+    ],
+    references: ['https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=140&h=140&fit=crop&q=60'],
+    prompt: '营地夜幕低垂，营火在画面中央燃烧，老兵甲位于前景偏左，人物与场景形成清晰主次关系，火光映亮盔甲与地面纹理。',
+    dialogue: '老兵甲：今天总算能松口气了。',
+    sound: '营地风声，木柴噼啪作响',
+    imagePreview: {
+      status: 'completed',
+      thumbnail: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&h=360&fit=crop&q=80',
+    },
+    videoPreview: {
+      status: 'completed',
+      thumbnail: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=600&h=360&fit=crop&q=80',
+      duration: '05s',
+    },
+  },
+  {
+    id: 2,
+    assets: [
+      { type: 'scene', label: '篝火区域' },
+      { type: 'character', label: '士兵群演', image: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?w=100&h=100&fit=crop' },
+      { type: 'prop', label: '篝火火堆' },
+    ],
+    references: [],
+    prompt: '围绕篝火做中景构图，士兵群演围坐成弧形，火光与暗部反差强烈，突出夜间压迫感和人物停顿状态。',
+    dialogue: '暂无台词',
+    sound: '火星爆裂声，铠甲轻微摩擦',
+    imagePreview: {
+      status: 'generating',
+    },
+    videoPreview: {
+      status: 'idle',
+    },
+  },
+  {
+    id: 3,
+    assets: [
+      { type: 'scene', label: '营帐通道' },
+      { type: 'character', label: '老兵甲', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop' },
+      { type: 'prop', label: '铁甲兵器' },
+    ],
+    references: ['https://images.unsplash.com/photo-1511884642898-4c92249e20b6?w=140&h=140&fit=crop&q=60'],
+    prompt: '营帐之间的狭长通道被冷暖混合光切开，老兵甲走向镜头，甲片边缘泛出冷色高光，突出人物压迫感与步伐节奏。',
+    dialogue: '老兵甲：都给我打起精神。',
+    sound: '脚步踩地声，金属碰撞声',
+    imagePreview: {
+      status: 'idle',
+    },
+    videoPreview: {
+      status: 'generating',
+    },
+  },
+  {
+    id: 4,
+    assets: [
+      { type: 'scene', label: '营地边缘' },
+      { type: 'character', label: '士兵群演', image: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?w=100&h=100&fit=crop' },
+      { type: 'prop', label: '战旗' },
+    ],
+    references: [],
+    prompt: '营地边缘的战旗在夜风中摇晃，群演剪影层层递进，画面保留更多负空间，让风和旗成为情绪主导。',
+    dialogue: '士兵群演：前面有动静。',
+    sound: '旌旗掠风声，远处犬吠',
+    imagePreview: {
+      status: 'completed',
+      thumbnail: 'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?w=600&h=360&fit=crop&q=80',
+    },
+    videoPreview: {
+      status: 'idle',
+    },
+  },
+];
+
+export default function StoryboardManagement({ onNext, initialMode }: { onNext: (panelMode: CardMode) => void, initialMode: StoryboardMode }) {
   const [isScriptPanelOpen, setIsScriptPanelOpen] = useState(true);
-  const [shots, setShots] = useState([1, 2, 3, 4]);
+  const [shots, setShots] = useState(initialShotRecords);
   const [showModelMenu, setShowModelMenu] = useState(false);
 
   // Style and Orientation State
@@ -45,12 +143,69 @@ export default function StoryboardManagement({ onNext, initialMode }: { onNext: 
   ];
 
   const handleDeleteShot = (id: number) => {
-    setShots(shots.filter(s => s !== id));
+    setShots((currentShots) => currentShots.filter((shot) => shot.id !== id).map((shot, index) => ({
+      ...shot,
+      id: index + 1,
+    })));
   };
 
   const handleAddShot = () => {
-    const newId = shots.length > 0 ? Math.max(...shots) + 1 : 1;
-    setShots([...shots, newId]);
+    setShots((currentShots) => {
+      const newId = currentShots.length + 1;
+      return [
+        ...currentShots,
+        {
+          id: newId,
+          assets: [
+            { type: 'scene', label: '新场景' },
+            { type: 'character', label: '新角色' },
+            { type: 'prop', label: '新道具' },
+          ],
+          references: [],
+          prompt: '请补充分镜描述，明确主体、环境与镜头节奏。',
+          dialogue: '暂无台词',
+          sound: '待补充音效',
+          imagePreview: { status: 'idle' },
+          videoPreview: { status: 'idle' },
+        },
+      ];
+    });
+  };
+
+  const handleGenerate = (shotId: number, mode: CardMode) => {
+    const stateKey = mode === 'image' ? 'imagePreview' : 'videoPreview';
+
+    setShots((currentShots) => currentShots.map((shot) => (
+      shot.id === shotId
+        ? {
+            ...shot,
+            [stateKey]: {
+              ...shot[stateKey],
+              status: 'generating',
+            },
+          }
+        : shot
+    )));
+
+    setTimeout(() => {
+      setShots((currentShots) => currentShots.map((shot) => {
+        if (shot.id !== shotId) return shot;
+
+        return {
+          ...shot,
+          [stateKey]: mode === 'image'
+            ? {
+                status: 'completed',
+                thumbnail: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=600&h=360&fit=crop&q=80',
+              }
+            : {
+                status: 'completed',
+                duration: '05s',
+                thumbnail: 'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?w=600&h=360&fit=crop&q=80',
+              },
+        };
+      }));
+    }, 1800);
   };
 
   const modeMeta = initialMode === 'direct-video'
@@ -244,9 +399,11 @@ export default function StoryboardManagement({ onNext, initialMode }: { onNext: 
         <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/30 pb-20 custom-scrollbar">
           {shots.map((shot, index) => (
             <ShotCard 
-              key={shot} 
+              key={shot.id} 
+              shot={shot}
               shotNumber={index + 1} 
-              onDelete={() => handleDeleteShot(shot)} 
+              onDelete={() => handleDeleteShot(shot.id)} 
+              onGenerate={handleGenerate}
               onNext={onNext}
               initialMode={initialMode}
             />
@@ -271,8 +428,27 @@ export default function StoryboardManagement({ onNext, initialMode }: { onNext: 
   );
 }
 
-function ShotCard({ shotNumber, onDelete, onNext, initialMode }: { key?: React.Key, shotNumber: number, onDelete: () => void, onNext: () => void, initialMode: StoryboardMode }) {
+function ShotCard({
+  shot,
+  shotNumber,
+  onDelete,
+  onGenerate,
+  onNext,
+  initialMode,
+}: {
+  shot: ShotRecord,
+  shotNumber: number,
+  onDelete: () => void,
+  onGenerate: (shotId: number, mode: CardMode) => void,
+  onNext: (panelMode: CardMode) => void,
+  initialMode: StoryboardMode
+}) {
   const [cardMode, setCardMode] = useState<'image' | 'video'>(initialMode === 'direct-video' ? 'video' : 'image');
+  const currentPreview = cardMode === 'image' ? shot.imagePreview : shot.videoPreview;
+  const sceneAsset = shot.assets.find((asset) => asset.type === 'scene');
+  const characterAssets = shot.assets.filter((asset) => asset.type === 'character');
+  const propAssets = shot.assets.filter((asset) => asset.type === 'prop');
+  const isImageVideoWorkflow = initialMode === 'image-video';
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex transition-colors hover:border-emerald-300 group/card">
@@ -282,7 +458,7 @@ function ShotCard({ shotNumber, onDelete, onNext, initialMode }: { key?: React.K
           {shotNumber}
         </span>
         <div className="flex flex-col gap-2 opacity-0 group-hover/card:opacity-100 transition-opacity">
-          <button onClick={onNext} className="text-emerald-500 hover:text-emerald-700 bg-emerald-50 shadow-sm border border-emerald-200 rounded-lg p-1.5 transition-colors" title="进入精修模式">
+          <button onClick={() => onNext(cardMode)} className="text-emerald-500 hover:text-emerald-700 bg-emerald-50 shadow-sm border border-emerald-200 rounded-lg p-1.5 transition-colors" title="进入精修模式">
             <SlidersHorizontal className="w-3.5 h-3.5" />
           </button>
           <button className="text-slate-400 hover:text-slate-600 bg-white shadow-sm border border-slate-200 rounded-lg p-1.5 transition-colors" title="复制此镜">
@@ -301,21 +477,39 @@ function ShotCard({ shotNumber, onDelete, onNext, initialMode }: { key?: React.K
           <div>
             <label className="text-[10px] text-slate-400 uppercase font-bold mb-2 block tracking-wider">绑定资产</label>
             <div className="flex flex-wrap gap-2">
+              {sceneAsset && (
               <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 pr-2 pl-1 py-1 rounded-lg shadow-sm">
                 <div className="w-5 h-5 bg-white rounded flex items-center justify-center border border-slate-100 shrink-0">
                   <ImageIcon className="w-3 h-3 text-slate-400" />
                 </div>
-                <span className="text-[10px] font-bold text-slate-700 truncate max-w-[60px]" title="陷阵营地">营地</span>
+                <span className="text-[10px] font-bold text-slate-700 truncate max-w-[72px]" title={sceneAsset.label}>{sceneAsset.label}</span>
               </div>
-              <div className="flex items-center gap-1.5 bg-white border border-slate-200 pr-2 pl-0.5 py-0.5 rounded-full shadow-sm">
-                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop" className="w-5 h-5 rounded-full object-cover border border-slate-100" />
-                <span className="text-[10px] font-bold text-slate-700">老兵甲</span>
-              </div>
+              )}
+              {characterAssets.map((asset) => (
+                <div key={asset.label} className="flex items-center gap-1.5 bg-white border border-slate-200 pr-2 pl-0.5 py-0.5 rounded-full shadow-sm">
+                  {asset.image ? (
+                    <img src={asset.image} className="w-5 h-5 rounded-full object-cover border border-slate-100" />
+                  ) : (
+                    <div className="w-5 h-5 rounded-full bg-slate-100 border border-slate-100" />
+                  )}
+                  <span className="text-[10px] font-bold text-slate-700">{asset.label}</span>
+                </div>
+              ))}
+              {propAssets.map((asset) => (
+                <div key={asset.label} className="flex items-center gap-1 bg-violet-50 border border-violet-100 px-2 py-1 rounded-full shadow-sm">
+                  <span className="text-[10px] font-bold text-violet-700">{asset.label}</span>
+                </div>
+              ))}
             </div>
           </div>
           <div className="pt-2 border-t border-slate-50">
             <label className="text-[10px] text-slate-400 uppercase font-bold mb-2 block tracking-wider">附加参考图</label>
             <div className="flex gap-2 flex-wrap">
+              {shot.references.map((reference, index) => (
+                <div key={`${reference}-${index}`} className="w-10 h-10 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+                  <img src={reference} alt="" className="w-full h-full object-cover" />
+                </div>
+              ))}
               <div className="w-10 h-10 rounded-xl border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 hover:text-emerald-500 hover:border-emerald-400 hover:bg-emerald-50 cursor-pointer transition-colors bg-white shadow-sm">
                 <Plus className="w-4 h-4" />
               </div>
@@ -331,16 +525,16 @@ function ShotCard({ shotNumber, onDelete, onNext, initialMode }: { key?: React.K
           </label>
           <textarea 
             className="w-full text-xs font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-xl p-2.5 h-20 resize-none outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition-all leading-relaxed mb-3 shadow-inner"
-            defaultValue="上帝视角垂直俯拍，极简几何构图。画面是纯粹的几何图形：背景是深不见底的黑，中央是一个巨大的正方形朱砂红地毯区域。正中心是一团金色的圆形火焰（青铜方鼎）。三十个黑色的圆点（士兵）整齐围坐在火周围。影视级CGI渲染。"
+            defaultValue={shot.prompt}
           />
           <div className="mt-auto grid grid-cols-2 gap-3 text-xs bg-white rounded-xl">
             <div>
               <span className="text-[9px] text-slate-400 font-bold block mb-1">台词</span>
-              <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 outline-none focus:border-emerald-500 focus:bg-white text-slate-700 placeholder-slate-400 font-medium shadow-inner transition-colors" placeholder="暂无台词" />
+              <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 outline-none focus:border-emerald-500 focus:bg-white text-slate-700 placeholder-slate-400 font-medium shadow-inner transition-colors" defaultValue={shot.dialogue} />
             </div>
             <div>
               <span className="text-[9px] text-slate-400 font-bold block mb-1">音效</span>
-              <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 outline-none focus:border-emerald-500 focus:bg-white text-slate-700 font-medium shadow-inner transition-colors" defaultValue="柴火爆裂声，风声沉闷" />
+              <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 outline-none focus:border-emerald-500 focus:bg-white text-slate-700 font-medium shadow-inner transition-colors" defaultValue={shot.sound} />
             </div>
           </div>
         </div>
@@ -349,51 +543,308 @@ function ShotCard({ shotNumber, onDelete, onNext, initialMode }: { key?: React.K
         <div className="col-span-4 flex flex-col relative">
           <div className="flex items-center justify-between mb-2">
             <label className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">预览与生成</label>
-            <div className="flex bg-slate-200/50 p-0.5 rounded-lg border border-slate-100 shadow-inner">
-              <button 
-                onClick={() => setCardMode('image')}
-                className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1 ${
-                  cardMode === 'image' ? 'bg-white shadow-sm text-emerald-600' : 'text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                <ImageIcon className="w-3 h-3" /> 图生
-              </button>
-              <button 
-                onClick={() => setCardMode('video')}
-                className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1 ${
-                  cardMode === 'video' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                <Video className="w-3 h-3" /> 直出
-              </button>
-            </div>
+            {isImageVideoWorkflow ? (
+              <div className="flex items-center gap-2 text-[10px] font-bold">
+                <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1 text-emerald-700">
+                  <ImageIcon className="w-3 h-3" /> 图生
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2 py-1 text-blue-700">
+                  <Video className="w-3 h-3" /> 直出
+                </span>
+              </div>
+            ) : (
+              <div className="flex bg-slate-200/50 p-0.5 rounded-lg border border-slate-100 shadow-inner">
+                <button 
+                  onClick={() => setCardMode('image')}
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1 ${
+                    cardMode === 'image' ? 'bg-white shadow-sm text-emerald-600' : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  <ImageIcon className="w-3 h-3" /> 图生
+                </button>
+                <button 
+                  onClick={() => setCardMode('video')}
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1 ${
+                    cardMode === 'video' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  <Video className="w-3 h-3" /> 直出
+                </button>
+              </div>
+            )}
           </div>
-          
-          {cardMode === 'image' ? (
+
+          {isImageVideoWorkflow ? (
+            <div className="grid grid-cols-2 gap-2 min-h-[112px] animate-in fade-in duration-300">
+              {shot.imagePreview.status === 'completed' ? (
+                <button
+                  type="button"
+                  onClick={() => onGenerate(shot.id, 'image')}
+                  className="group/asset border border-emerald-200 rounded-xl overflow-hidden bg-white text-left hover:border-emerald-300 transition-colors shadow-sm"
+                >
+                  <div className="relative h-full min-h-[112px]">
+                    <img src={shot.imagePreview.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+                    <div className="absolute inset-0 bg-black/35 opacity-0 group-hover/asset:opacity-100 transition-opacity" />
+                    <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-white/90 text-[10px] font-bold text-emerald-700">已生成关键帧</div>
+                    <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover/asset:opacity-100 transition-opacity z-10">
+                      <span
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onNext('image');
+                        }}
+                        className="px-3 py-2 rounded-xl bg-white text-slate-800 text-[11px] font-bold shadow-sm hover:bg-slate-50"
+                      >
+                        图片精修
+                      </span>
+                      <span
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onGenerate(shot.id, 'image');
+                        }}
+                        className="px-3 py-2 rounded-xl bg-emerald-500 text-white text-[11px] font-bold shadow-sm hover:bg-emerald-600"
+                      >
+                        重新生成
+                      </span>
+                    </div>
+                    <div className="absolute bottom-3 left-3 text-white">
+                      <div className="text-[11px] font-bold">点击重新生成</div>
+                    </div>
+                  </div>
+                </button>
+              ) : shot.imagePreview.status === 'generating' ? (
+                <button
+                  type="button"
+                  onClick={() => onGenerate(shot.id, 'image')}
+                  className="border border-amber-200 rounded-xl bg-amber-50/70 text-amber-700 flex flex-col items-center justify-center min-h-[112px] transition-colors shadow-sm"
+                >
+                  <div className="w-8 h-8 rounded-full border-2 border-amber-200 border-t-amber-500 animate-spin mb-2" />
+                  <div className="text-[11px] font-bold">关键帧生成中</div>
+                  <div className="text-[10px] text-amber-600 mt-1">点击可重新触发任务</div>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onGenerate(shot.id, 'image')}
+                  className="border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center bg-slate-50 cursor-pointer hover:border-emerald-400 hover:bg-emerald-50 text-slate-400 transition-colors group shadow-sm min-h-[112px]"
+                >
+                  <ImageIcon className="w-5 h-5 mb-1 group-hover:text-emerald-500 transition-colors" />
+                  <span className="text-[10px] font-bold text-slate-600 group-hover:text-emerald-600">点击生成关键帧</span>
+                </button>
+              )}
+
+              {shot.videoPreview.status === 'completed' ? (
+                <button
+                  type="button"
+                  onClick={() => onGenerate(shot.id, 'video')}
+                  className="group/asset border border-blue-200 rounded-xl overflow-hidden bg-white text-left hover:border-blue-300 transition-colors shadow-sm relative"
+                >
+                  <div className="absolute top-2 right-2 z-10 px-2 py-1 rounded-full bg-black/60 text-[10px] font-bold text-white">{shot.videoPreview.duration ?? '05s'}</div>
+                  <div className="relative h-full min-h-[112px]">
+                    <img src={shot.videoPreview.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/5 to-transparent" />
+                    <div className="absolute inset-0 bg-black/35 opacity-0 group-hover/asset:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-white/85 flex items-center justify-center shadow-lg">
+                        <Play className="w-5 h-5 text-blue-700 fill-current ml-0.5" />
+                      </div>
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover/asset:opacity-100 transition-opacity z-10">
+                      <span
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onNext('video');
+                        }}
+                        className="px-3 py-2 rounded-xl bg-white text-slate-800 text-[11px] font-bold shadow-sm hover:bg-slate-50"
+                      >
+                        视频精修
+                      </span>
+                      <span
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onGenerate(shot.id, 'video');
+                        }}
+                        className="px-3 py-2 rounded-xl bg-blue-500 text-white text-[11px] font-bold shadow-sm hover:bg-blue-600"
+                      >
+                        重新生成
+                      </span>
+                    </div>
+                    <div className="absolute bottom-3 left-3 text-white">
+                      <div className="text-[11px] font-bold">已完成直出视频</div>
+                    </div>
+                  </div>
+                </button>
+              ) : shot.videoPreview.status === 'generating' ? (
+                <button
+                  type="button"
+                  onClick={() => onGenerate(shot.id, 'video')}
+                  className="border border-blue-200 rounded-xl bg-blue-50/70 text-blue-700 flex flex-col items-center justify-center min-h-[112px] transition-colors shadow-sm relative overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_60%)]" />
+                  <div className="w-8 h-8 rounded-full border-2 border-blue-200 border-t-blue-500 animate-spin mb-2 z-10" />
+                  <div className="text-[11px] font-bold z-10">视频生成中</div>
+                  <div className="text-[10px] text-blue-600 mt-1 z-10">点击重新发起任务</div>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onGenerate(shot.id, 'video')}
+                  className="border-2 border-dashed border-blue-300 rounded-xl flex flex-col items-center justify-center bg-blue-50/50 cursor-pointer hover:bg-blue-100 hover:border-blue-400 text-blue-500 transition-colors group relative overflow-hidden shadow-sm min-h-[112px]"
+                >
+                  <div className="absolute top-1 right-1 flex items-center gap-1 z-10" onClick={(e) => e.stopPropagation()}>
+                    <select className="bg-white border border-blue-200 text-[10px] font-bold text-blue-700 rounded-lg px-1.5 py-0.5 outline-none cursor-pointer shadow-sm">
+                      <option>5s</option>
+                      <option>10s</option>
+                      <option>15s</option>
+                    </select>
+                  </div>
+                  <Video className="w-6 h-6 mb-1 group-hover:scale-110 transition-transform" />
+                  <span className="text-[11px] font-bold text-blue-700">点击直出视频</span>
+                  <span className="text-[9px] mt-1 text-blue-400 font-bold">消耗 10 算力</span>
+                </button>
+              )}
+            </div>
+          ) : cardMode === 'image' ? (
             <div className="w-full h-full flex gap-2 min-h-[90px] animate-in fade-in duration-300">
-              <div className="flex-1 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center bg-slate-50 cursor-pointer hover:border-emerald-400 hover:bg-emerald-50 text-slate-400 transition-colors group shadow-sm">
-                <ImageIcon className="w-5 h-5 mb-1 group-hover:text-emerald-500 transition-colors" />
-                <span className="text-[10px] font-bold text-slate-600 group-hover:text-emerald-600">生成关键帧</span>
-              </div>
-              <div className="flex-1 border border-slate-200 rounded-xl flex flex-col items-center justify-center bg-slate-100/50 text-slate-400 opacity-60 shadow-inner">
-                <Film className="w-5 h-5 mb-1" />
-                <span className="text-[10px] font-bold">需先生成图片</span>
-              </div>
+              {currentPreview.status === 'completed' ? (
+                <button
+                  type="button"
+                  onClick={() => onGenerate(shot.id, 'image')}
+                  className="group/asset w-full flex-1 border border-emerald-200 rounded-xl overflow-hidden bg-white text-left hover:border-emerald-300 transition-colors shadow-sm"
+                >
+                  <div className="relative h-full min-h-[112px]">
+                    <img src={currentPreview.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+                    <div className="absolute inset-0 bg-black/35 opacity-0 group-hover/asset:opacity-100 transition-opacity" />
+                    <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-white/90 text-[10px] font-bold text-emerald-700">已生成关键帧</div>
+                    <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover/asset:opacity-100 transition-opacity z-10">
+                      <span
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onNext('image');
+                        }}
+                        className="px-3 py-2 rounded-xl bg-white text-slate-800 text-[11px] font-bold shadow-sm hover:bg-slate-50"
+                      >
+                        图片精修
+                      </span>
+                      <span
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onGenerate(shot.id, 'image');
+                        }}
+                        className="px-3 py-2 rounded-xl bg-emerald-500 text-white text-[11px] font-bold shadow-sm hover:bg-emerald-600"
+                      >
+                        重新生成
+                      </span>
+                    </div>
+                    <div className="absolute bottom-3 left-3 text-white">
+                      <div className="text-[11px] font-bold">点击重新生成</div>
+                      <div className="text-[10px] text-white/80 mt-0.5">保留当前案例作为已完成状态</div>
+                    </div>
+                  </div>
+                </button>
+              ) : currentPreview.status === 'generating' ? (
+                <button
+                  type="button"
+                  onClick={() => onGenerate(shot.id, 'image')}
+                  className="w-full flex-1 border border-amber-200 rounded-xl bg-amber-50/70 text-amber-700 flex flex-col items-center justify-center min-h-[112px] transition-colors shadow-sm"
+                >
+                  <div className="w-8 h-8 rounded-full border-2 border-amber-200 border-t-amber-500 animate-spin mb-2" />
+                  <div className="text-[11px] font-bold">关键帧生成中</div>
+                  <div className="text-[10px] text-amber-600 mt-1">点击可重新触发任务</div>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onGenerate(shot.id, 'image')}
+                  className="w-full flex-1 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center bg-slate-50 cursor-pointer hover:border-emerald-400 hover:bg-emerald-50 text-slate-400 transition-colors group shadow-sm min-h-[112px]"
+                >
+                  <ImageIcon className="w-5 h-5 mb-1 group-hover:text-emerald-500 transition-colors" />
+                  <span className="text-[10px] font-bold text-slate-600 group-hover:text-emerald-600">点击生成关键帧</span>
+                </button>
+              )}
             </div>
           ) : (
             <div className="w-full h-full flex min-h-[90px] animate-in fade-in duration-300">
-              <div className="w-full flex-1 border-2 border-dashed border-blue-300 rounded-xl flex flex-col items-center justify-center bg-blue-50/50 cursor-pointer hover:bg-blue-100 hover:border-blue-400 text-blue-500 transition-colors group relative overflow-hidden shadow-sm">
-                <div className="absolute top-1 right-1 flex items-center gap-1 z-10" onClick={(e) => e.stopPropagation()}>
-                  <select className="bg-white border border-blue-200 text-[10px] font-bold text-blue-700 rounded-lg px-1.5 py-0.5 outline-none cursor-pointer shadow-sm">
-                    <option>5s</option>
-                    <option>10s</option>
-                    <option>15s</option>
-                  </select>
-                </div>
-                <Video className="w-6 h-6 mb-1 group-hover:scale-110 transition-transform" />
-                <span className="text-[11px] font-bold text-blue-700">点击直出视频</span>
-                <span className="text-[9px] mt-1 text-blue-400 font-bold">消耗 10 算力</span>
-              </div>
+              {currentPreview.status === 'completed' ? (
+                <button
+                  type="button"
+                  onClick={() => onGenerate(shot.id, 'video')}
+                  className="group/asset w-full flex-1 border border-blue-200 rounded-xl overflow-hidden bg-white text-left hover:border-blue-300 transition-colors shadow-sm relative"
+                >
+                  <div className="absolute top-2 right-2 z-10 px-2 py-1 rounded-full bg-black/60 text-[10px] font-bold text-white">{currentPreview.duration ?? '05s'}</div>
+                  <div className="relative h-full min-h-[112px]">
+                    <img src={currentPreview.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/5 to-transparent" />
+                    <div className="absolute inset-0 bg-black/35 opacity-0 group-hover/asset:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-white/85 flex items-center justify-center shadow-lg">
+                        <Play className="w-5 h-5 text-blue-700 fill-current ml-0.5" />
+                      </div>
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover/asset:opacity-100 transition-opacity z-10">
+                      <span
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onNext('video');
+                        }}
+                        className="px-3 py-2 rounded-xl bg-white text-slate-800 text-[11px] font-bold shadow-sm hover:bg-slate-50"
+                      >
+                        视频精修
+                      </span>
+                      <span
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onGenerate(shot.id, 'video');
+                        }}
+                        className="px-3 py-2 rounded-xl bg-blue-500 text-white text-[11px] font-bold shadow-sm hover:bg-blue-600"
+                      >
+                        重新生成
+                      </span>
+                    </div>
+                    <div className="absolute bottom-3 left-3 text-white">
+                      <div className="text-[11px] font-bold">已完成直出视频</div>
+                      <div className="text-[10px] text-white/80 mt-0.5">点击可重新提交生成任务</div>
+                    </div>
+                  </div>
+                </button>
+              ) : currentPreview.status === 'generating' ? (
+                <button
+                  type="button"
+                  onClick={() => onGenerate(shot.id, 'video')}
+                  className="w-full flex-1 border border-blue-200 rounded-xl bg-blue-50/70 text-blue-700 flex flex-col items-center justify-center min-h-[112px] transition-colors shadow-sm relative overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_60%)]" />
+                  <div className="w-8 h-8 rounded-full border-2 border-blue-200 border-t-blue-500 animate-spin mb-2 z-10" />
+                  <div className="text-[11px] font-bold z-10">视频生成中</div>
+                  <div className="text-[10px] text-blue-600 mt-1 z-10">点击重新发起任务</div>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onGenerate(shot.id, 'video')}
+                  className="w-full flex-1 border-2 border-dashed border-blue-300 rounded-xl flex flex-col items-center justify-center bg-blue-50/50 cursor-pointer hover:bg-blue-100 hover:border-blue-400 text-blue-500 transition-colors group relative overflow-hidden shadow-sm min-h-[112px]"
+                >
+                  <div className="absolute top-1 right-1 flex items-center gap-1 z-10" onClick={(e) => e.stopPropagation()}>
+                    <select className="bg-white border border-blue-200 text-[10px] font-bold text-blue-700 rounded-lg px-1.5 py-0.5 outline-none cursor-pointer shadow-sm">
+                      <option>5s</option>
+                      <option>10s</option>
+                      <option>15s</option>
+                    </select>
+                  </div>
+                  <Video className="w-6 h-6 mb-1 group-hover:scale-110 transition-transform" />
+                  <span className="text-[11px] font-bold text-blue-700">点击直出视频</span>
+                  <span className="text-[9px] mt-1 text-blue-400 font-bold">消耗 10 算力</span>
+                </button>
+              )}
             </div>
           )}
         </div>

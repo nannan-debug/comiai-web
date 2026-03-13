@@ -6,12 +6,18 @@ import {
   Scissors, Share, ArrowUpFromLine, PlayCircle
 } from 'lucide-react';
 
-export default function StoryboardProduction() {
+export default function StoryboardProduction({
+  initialGlobalMode = 'video',
+  initialTaskMode = 'first-last',
+}: {
+  initialGlobalMode?: 'video' | 'image';
+  initialTaskMode?: 'all' | 'first-last' | 'img2video';
+}) {
   // 1. 全局任务切换
-  const [globalMode, setGlobalMode] = useState<'video' | 'image'>('video');
+  const [globalMode, setGlobalMode] = useState<'video' | 'image'>(initialGlobalMode);
   
   // 2. 左侧任务面板 - 模式切换
-  const [taskMode, setTaskMode] = useState<'all' | 'first-last' | 'img2video'>('first-last');
+  const [taskMode, setTaskMode] = useState<'all' | 'first-last' | 'img2video'>(initialTaskMode);
   
   // 模型与参数联动
   const [selectedModel, setSelectedModel] = useState('Seedance2.0');
