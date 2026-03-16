@@ -13,6 +13,7 @@ type ViewState = 'projects' | 'management' | 'upload' | 'split' | 'production';
 type StoryboardMode = 'image-video' | 'direct-video';
 type SplitEntrySource = 'upload' | 'management';
 type ProductionPanelMode = 'image' | 'video';
+type PreviewDraftState = 'clean' | 'draft';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewState>('projects');
@@ -20,6 +21,16 @@ export default function App() {
   const [selectedStoryboardMode, setSelectedStoryboardMode] = useState<StoryboardMode>('image-video');
   const [splitEntrySource, setSplitEntrySource] = useState<SplitEntrySource>('upload');
   const [productionPanelMode, setProductionPanelMode] = useState<ProductionPanelMode>('image');
+  const [previewDraftState, setPreviewDraftState] = useState<PreviewDraftState>('clean');
+  const [previewNotice, setPreviewNotice] = useState('');
+
+  const handleProductionStepChange = (nextStep: number) => {
+    if (productionStep === 4 && nextStep !== 4 && previewDraftState === 'draft') {
+      setPreviewNotice('视频预览里的修改已自动保存为草稿，可稍后继续并再决定是否应用。');
+      setTimeout(() => setPreviewNotice(''), 2600);
+    }
+    setProductionStep(nextStep);
+  };
 
   return (
     <div className="flex flex-col h-screen bg-[#F0F2F5] text-slate-800 font-sans overflow-hidden text-sm relative">
@@ -42,10 +53,10 @@ export default function App() {
           </div>
 
           <div className="flex bg-[#23292E] rounded-full p-1 text-[11px] font-bold">
-            <button onClick={() => setProductionStep(1)} className={`px-4 py-1.5 rounded-full transition-all ${productionStep === 1 ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}>1.剧本与设定</button>
-            <button onClick={() => setProductionStep(2)} className={`px-4 py-1.5 rounded-full transition-all ${productionStep === 2 ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}>2.分镜管理</button>
-            <button onClick={() => setProductionStep(3)} className={`px-4 py-1.5 rounded-full transition-all ${productionStep === 3 ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}>3.分镜制作</button>
-            <button onClick={() => setProductionStep(4)} className={`px-4 py-1.5 rounded-full transition-all ${productionStep === 4 ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}>4.视频预览</button>
+            <button onClick={() => handleProductionStepChange(1)} className={`px-4 py-1.5 rounded-full transition-all ${productionStep === 1 ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}>1.剧本与设定</button>
+            <button onClick={() => handleProductionStepChange(2)} className={`px-4 py-1.5 rounded-full transition-all ${productionStep === 2 ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}>2.分镜管理</button>
+            <button onClick={() => handleProductionStepChange(3)} className={`px-4 py-1.5 rounded-full transition-all ${productionStep === 3 ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}>3.分镜制作</button>
+            <button onClick={() => handleProductionStepChange(4)} className={`px-4 py-1.5 rounded-full transition-all ${productionStep === 4 ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}>4.视频预览</button>
           </div>
 
           <div className="flex items-center gap-3">
@@ -55,6 +66,12 @@ export default function App() {
             <div className="w-8 h-8 rounded-full bg-slate-500 border border-slate-400"></div>
           </div>
         </header>
+      )}
+
+      {currentView === 'production' && previewNotice && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[70] rounded-2xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-medium text-amber-800 shadow-lg">
+          {previewNotice}
+        </div>
       )}
 
       {/* Page Content based on ViewState */}
@@ -118,10 +135,11 @@ export default function App() {
         <StoryboardProduction
           initialGlobalMode={productionPanelMode}
           initialTaskMode={productionPanelMode === 'video' ? 'first-last' : 'first-last'}
+          onOpenPreview={() => setProductionStep(4)}
         />
       )}
       {currentView === 'production' && productionStep === 4 && (
-        <VideoPreview />
+        <VideoPreview onDraftStateChange={setPreviewDraftState} />
       )}
     </div>
   );

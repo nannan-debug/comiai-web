@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { 
   BookOpen, PanelLeftClose, PanelLeftOpen, Cpu, Settings2, Play, 
   Image as ImageIcon, Video, SlidersHorizontal, Copy, Trash2, 
   Plus, CheckCircle2, Download, ChevronDown, LayoutGrid, Film,
-  PlusCircle
+  PlusCircle, X
 } from 'lucide-react';
 
 const styles = [
@@ -27,6 +27,7 @@ const styles = [
 type StoryboardMode = 'image-video' | 'direct-video';
 type CardMode = 'image' | 'video';
 type GenerationStatus = 'idle' | 'generating' | 'completed';
+type AssetType = 'scene' | 'character' | 'prop';
 
 type PreviewState = {
   status: GenerationStatus;
@@ -36,13 +37,33 @@ type PreviewState = {
 
 type ShotRecord = {
   id: number;
-  assets: Array<{ type: 'scene' | 'character' | 'prop'; label: string; image?: string }>;
+  assets: Array<{ type: AssetType; label: string; image?: string }>;
   references: string[];
   prompt: string;
   dialogue: string;
   sound: string;
   imagePreview: PreviewState;
   videoPreview: PreviewState;
+};
+
+const assetPresetPool: Record<AssetType, Array<{ label: string; image?: string }>> = {
+  character: [
+    { label: '老兵甲', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop' },
+    { label: '士兵群演', image: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?w=100&h=100&fit=crop' },
+    { label: '林兄弟', image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop' },
+  ],
+  scene: [
+    { label: '陷阵营地' },
+    { label: '篝火区域' },
+    { label: '营帐通道' },
+    { label: '营地边缘' },
+  ],
+  prop: [
+    { label: '青铜方鼎' },
+    { label: '篝火火堆' },
+    { label: '铁甲兵器' },
+    { label: '战旗' },
+  ],
 };
 
 const initialShotRecords: ShotRecord[] = [
@@ -54,7 +75,7 @@ const initialShotRecords: ShotRecord[] = [
       { type: 'prop', label: '青铜方鼎' },
     ],
     references: ['https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=140&h=140&fit=crop&q=60'],
-    prompt: '营地夜幕低垂，营火在画面中央燃烧，老兵甲位于前景偏左，人物与场景形成清晰主次关系，火光映亮盔甲与地面纹理。',
+    prompt: '营地夜幕低垂，@{陷阵营地} 中央的营火在燃烧，@{老兵甲} 位于前景偏左，@{青铜方鼎} 作为视觉核心，人物与场景形成清晰主次关系。',
     dialogue: '老兵甲：今天总算能松口气了。',
     sound: '营地风声，木柴噼啪作响',
     imagePreview: {
@@ -75,7 +96,7 @@ const initialShotRecords: ShotRecord[] = [
       { type: 'prop', label: '篝火火堆' },
     ],
     references: [],
-    prompt: '围绕篝火做中景构图，士兵群演围坐成弧形，火光与暗部反差强烈，突出夜间压迫感和人物停顿状态。',
+    prompt: '围绕 @{篝火区域} 做中景构图，@{士兵群演} 围坐成弧形，@{篝火火堆} 作为主光源，火光与暗部反差强烈。',
     dialogue: '暂无台词',
     sound: '火星爆裂声，铠甲轻微摩擦',
     imagePreview: {
@@ -93,7 +114,7 @@ const initialShotRecords: ShotRecord[] = [
       { type: 'prop', label: '铁甲兵器' },
     ],
     references: ['https://images.unsplash.com/photo-1511884642898-4c92249e20b6?w=140&h=140&fit=crop&q=60'],
-    prompt: '营帐之间的狭长通道被冷暖混合光切开，老兵甲走向镜头，甲片边缘泛出冷色高光，突出人物压迫感与步伐节奏。',
+    prompt: '@{营帐通道} 被冷暖混合光切开，@{老兵甲} 走向镜头，@{铁甲兵器} 边缘泛出冷色高光，突出人物压迫感与步伐节奏。',
     dialogue: '老兵甲：都给我打起精神。',
     sound: '脚步踩地声，金属碰撞声',
     imagePreview: {
@@ -111,7 +132,7 @@ const initialShotRecords: ShotRecord[] = [
       { type: 'prop', label: '战旗' },
     ],
     references: [],
-    prompt: '营地边缘的战旗在夜风中摇晃，群演剪影层层递进，画面保留更多负空间，让风和旗成为情绪主导。',
+    prompt: '@{营地边缘} 的 @{战旗} 在夜风中摇晃，@{士兵群演} 剪影层层递进，画面保留更多负空间，让风和旗成为情绪主导。',
     dialogue: '士兵群演：前面有动静。',
     sound: '旌旗掠风声，远处犬吠',
     imagePreview: {
@@ -128,6 +149,12 @@ export default function StoryboardManagement({ onNext, initialMode }: { onNext: 
   const [isScriptPanelOpen, setIsScriptPanelOpen] = useState(true);
   const [shots, setShots] = useState(initialShotRecords);
   const [showModelMenu, setShowModelMenu] = useState(false);
+  const [previewAsset, setPreviewAsset] = useState<{
+    type: CardMode;
+    title: string;
+    thumbnail?: string;
+    duration?: string;
+  } | null>(null);
 
   // Style and Orientation State
   const [selectedStyle, setSelectedStyle] = useState('默认');
@@ -206,6 +233,31 @@ export default function StoryboardManagement({ onNext, initialMode }: { onNext: 
         };
       }));
     }, 1800);
+  };
+
+  const handleUpdateShot = (shotId: number, field: 'prompt' | 'dialogue' | 'sound', value: string) => {
+    setShots((currentShots) => currentShots.map((shot) => (
+      shot.id === shotId
+        ? { ...shot, [field]: value }
+        : shot
+    )));
+  };
+
+  const handleAddAssetToShot = (shotId: number, type: AssetType) => {
+    setShots((currentShots) => currentShots.map((shot) => {
+      if (shot.id !== shotId) return shot;
+
+      const existingLabels = shot.assets.filter((asset) => asset.type === type).map((asset) => asset.label);
+      const nextPreset = assetPresetPool[type].find((asset) => !existingLabels.includes(asset.label));
+      const nextAsset = nextPreset ?? { label: `新${type === 'character' ? '角色' : type === 'scene' ? '场景' : '道具'}${existingLabels.length + 1}` };
+      const nextMention = `@{${nextAsset.label}}`;
+
+      return {
+        ...shot,
+        assets: [...shot.assets, { type, ...nextAsset }],
+        prompt: shot.prompt.includes(nextMention) ? shot.prompt : `${shot.prompt}${shot.prompt ? ' ' : ''}${nextMention}`,
+      };
+    }));
   };
 
   const modeMeta = initialMode === 'direct-video'
@@ -404,6 +456,9 @@ export default function StoryboardManagement({ onNext, initialMode }: { onNext: 
               shotNumber={index + 1} 
               onDelete={() => handleDeleteShot(shot.id)} 
               onGenerate={handleGenerate}
+              onUpdateShot={handleUpdateShot}
+              onAddAsset={handleAddAssetToShot}
+              onPreviewAsset={setPreviewAsset}
               onNext={onNext}
               initialMode={initialMode}
             />
@@ -424,6 +479,78 @@ export default function StoryboardManagement({ onNext, initialMode }: { onNext: 
         </div>
       </main>
     </div>
+
+    {previewAsset && (
+      <div className="fixed inset-0 z-[120] bg-slate-950/65 backdrop-blur-sm flex items-center justify-center p-8">
+        <div className="relative w-full max-w-5xl bg-white rounded-[28px] shadow-2xl overflow-hidden border border-slate-200">
+          <button
+            type="button"
+            onClick={() => setPreviewAsset(null)}
+            className="absolute top-5 right-5 z-20 w-11 h-11 rounded-full bg-black/55 text-white flex items-center justify-center hover:bg-black/75 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          <div className="grid grid-cols-[minmax(0,1fr)_320px] min-h-[620px]">
+            <div className="bg-slate-950 flex items-center justify-center p-8">
+              <div className="relative h-full max-h-[560px] w-full flex items-center justify-center">
+                {previewAsset.thumbnail && (
+                  <img
+                    src={previewAsset.thumbnail}
+                    alt={previewAsset.title}
+                    className="max-h-[560px] w-auto max-w-full object-contain rounded-2xl shadow-2xl"
+                  />
+                )}
+                {previewAsset.type === 'video' && (
+                  <>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-24 h-24 rounded-full bg-white/88 backdrop-blur flex items-center justify-center shadow-xl">
+                        <Play className="w-10 h-10 text-blue-700 fill-current ml-1" />
+                      </div>
+                    </div>
+                    {previewAsset.duration && (
+                      <div className="absolute top-4 right-4 rounded-full bg-black/60 px-3 py-1.5 text-xs font-bold text-white">
+                        {previewAsset.duration}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-white border-l border-slate-200 p-6 flex flex-col">
+              <div className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">
+                预览效果
+              </div>
+              <div className="mt-3 text-2xl font-bold text-slate-900">
+                {previewAsset.type === 'image' ? '图片预览' : '视频预览'}
+              </div>
+              <div className="mt-2 text-sm text-slate-500 leading-6">
+                {previewAsset.title}
+              </div>
+
+              <div className="mt-6 rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                <div className="text-xs font-bold text-slate-500">当前状态</div>
+                <div className="mt-2 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-bold bg-emerald-50 border-emerald-200 text-emerald-700">
+                  {previewAsset.type === 'image' ? <ImageIcon className="w-4 h-4" /> : <Video className="w-4 h-4" />}
+                  已生成可预览
+                </div>
+              </div>
+
+              <div className="mt-auto flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPreviewAsset(null)}
+                  className="flex-1 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50"
+                >
+                  关闭预览
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
     </div>
   );
 }
@@ -433,6 +560,9 @@ function ShotCard({
   shotNumber,
   onDelete,
   onGenerate,
+  onUpdateShot,
+  onAddAsset,
+  onPreviewAsset,
   onNext,
   initialMode,
 }: {
@@ -440,6 +570,9 @@ function ShotCard({
   shotNumber: number,
   onDelete: () => void,
   onGenerate: (shotId: number, mode: CardMode) => void,
+  onUpdateShot: (shotId: number, field: 'prompt' | 'dialogue' | 'sound', value: string) => void,
+  onAddAsset: (shotId: number, type: AssetType) => void,
+  onPreviewAsset: (asset: { type: CardMode; title: string; thumbnail?: string; duration?: string }) => void,
   onNext: (panelMode: CardMode) => void,
   initialMode: StoryboardMode
 }) {
@@ -501,6 +634,17 @@ function ShotCard({
                 </div>
               ))}
             </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button type="button" onClick={() => onAddAsset(shot.id, 'character')} className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-bold text-slate-600 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700">
+                <Plus className="w-3 h-3" /> 角色
+              </button>
+              <button type="button" onClick={() => onAddAsset(shot.id, 'scene')} className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-bold text-slate-600 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700">
+                <Plus className="w-3 h-3" /> 场景
+              </button>
+              <button type="button" onClick={() => onAddAsset(shot.id, 'prop')} className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-bold text-slate-600 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700">
+                <Plus className="w-3 h-3" /> 道具
+              </button>
+            </div>
           </div>
           <div className="pt-2 border-t border-slate-50">
             <label className="text-[10px] text-slate-400 uppercase font-bold mb-2 block tracking-wider">附加参考图</label>
@@ -523,18 +667,19 @@ function ShotCard({
             画面内容与AIGC提示词
             <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded cursor-pointer hover:bg-emerald-100 transition-colors shadow-sm border border-emerald-100">AI 优化</span>
           </label>
-          <textarea 
-            className="w-full text-xs font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-xl p-2.5 h-20 resize-none outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition-all leading-relaxed mb-3 shadow-inner"
-            defaultValue={shot.prompt}
+          <PromptAssetEditor
+            value={shot.prompt}
+            assets={shot.assets}
+            onChange={(value) => onUpdateShot(shot.id, 'prompt', value)}
           />
           <div className="mt-auto grid grid-cols-2 gap-3 text-xs bg-white rounded-xl">
             <div>
               <span className="text-[9px] text-slate-400 font-bold block mb-1">台词</span>
-              <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 outline-none focus:border-emerald-500 focus:bg-white text-slate-700 placeholder-slate-400 font-medium shadow-inner transition-colors" defaultValue={shot.dialogue} />
+              <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 outline-none focus:border-emerald-500 focus:bg-white text-slate-700 placeholder-slate-400 font-medium shadow-inner transition-colors" value={shot.dialogue} onChange={(e) => onUpdateShot(shot.id, 'dialogue', e.target.value)} />
             </div>
             <div>
               <span className="text-[9px] text-slate-400 font-bold block mb-1">音效</span>
-              <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 outline-none focus:border-emerald-500 focus:bg-white text-slate-700 font-medium shadow-inner transition-colors" defaultValue={shot.sound} />
+              <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 outline-none focus:border-emerald-500 focus:bg-white text-slate-700 font-medium shadow-inner transition-colors" value={shot.sound} onChange={(e) => onUpdateShot(shot.id, 'sound', e.target.value)} />
             </div>
           </div>
         </div>
@@ -543,44 +688,35 @@ function ShotCard({
         <div className="col-span-4 flex flex-col relative">
           <div className="flex items-center justify-between mb-2">
             <label className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">预览与生成</label>
-            {isImageVideoWorkflow ? (
-              <div className="flex items-center gap-2 text-[10px] font-bold">
-                <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1 text-emerald-700">
-                  <ImageIcon className="w-3 h-3" /> 图生
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2 py-1 text-blue-700">
-                  <Video className="w-3 h-3" /> 直出
-                </span>
-              </div>
-            ) : (
-              <div className="flex bg-slate-200/50 p-0.5 rounded-lg border border-slate-100 shadow-inner">
-                <button 
-                  onClick={() => setCardMode('image')}
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1 ${
-                    cardMode === 'image' ? 'bg-white shadow-sm text-emerald-600' : 'text-slate-500 hover:text-slate-700'
-                  }`}
-                >
-                  <ImageIcon className="w-3 h-3" /> 图生
-                </button>
-                <button 
-                  onClick={() => setCardMode('video')}
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1 ${
-                    cardMode === 'video' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'
-                  }`}
-                >
-                  <Video className="w-3 h-3" /> 直出
-                </button>
-              </div>
-            )}
+            <div className="flex bg-slate-200/50 p-0.5 rounded-lg border border-slate-100 shadow-inner">
+              <button 
+                onClick={() => setCardMode('image')}
+                className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1 ${
+                  cardMode === 'image' ? 'bg-white shadow-sm text-emerald-600' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <ImageIcon className="w-3 h-3" /> 图生
+              </button>
+              <button 
+                onClick={() => setCardMode('video')}
+                className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1 ${
+                  cardMode === 'video' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <Video className="w-3 h-3" /> 直出
+              </button>
+            </div>
           </div>
 
           {isImageVideoWorkflow ? (
+            cardMode === 'image' ? (
             <div className="grid grid-cols-2 gap-2 min-h-[112px] animate-in fade-in duration-300">
+              <div className="transition-all">
               {shot.imagePreview.status === 'completed' ? (
                 <button
                   type="button"
                   onClick={() => onGenerate(shot.id, 'image')}
-                  className="group/asset border border-emerald-200 rounded-xl overflow-hidden bg-white text-left hover:border-emerald-300 transition-colors shadow-sm"
+                  className="group/asset w-full h-full border rounded-xl overflow-hidden bg-white text-left transition-all shadow-sm border-emerald-300 ring-2 ring-emerald-200/60"
                 >
                   <div className="relative h-full min-h-[112px]">
                     <img src={shot.imagePreview.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover" />
@@ -588,6 +724,20 @@ function ShotCard({
                     <div className="absolute inset-0 bg-black/35 opacity-0 group-hover/asset:opacity-100 transition-opacity" />
                     <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-white/90 text-[10px] font-bold text-emerald-700">已生成关键帧</div>
                     <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover/asset:opacity-100 transition-opacity z-10">
+                      <span
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onPreviewAsset({
+                            type: 'image',
+                            title: `第 ${shotNumber} 镜关键帧`,
+                            thumbnail: shot.imagePreview.thumbnail,
+                          });
+                        }}
+                        className="px-3 py-2 rounded-xl bg-black/70 text-white text-[11px] font-bold shadow-sm hover:bg-black/80"
+                      >
+                        预览效果
+                      </span>
                       <span
                         onClick={(e) => {
                           e.preventDefault();
@@ -618,7 +768,7 @@ function ShotCard({
                 <button
                   type="button"
                   onClick={() => onGenerate(shot.id, 'image')}
-                  className="border border-amber-200 rounded-xl bg-amber-50/70 text-amber-700 flex flex-col items-center justify-center min-h-[112px] transition-colors shadow-sm"
+                  className="w-full h-full border rounded-xl text-amber-700 flex flex-col items-center justify-center min-h-[112px] transition-all shadow-sm border-amber-300 bg-amber-50/80 ring-2 ring-amber-200/60"
                 >
                   <div className="w-8 h-8 rounded-full border-2 border-amber-200 border-t-amber-500 animate-spin mb-2" />
                   <div className="text-[11px] font-bold">关键帧生成中</div>
@@ -628,18 +778,20 @@ function ShotCard({
                 <button
                   type="button"
                   onClick={() => onGenerate(shot.id, 'image')}
-                  className="border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center bg-slate-50 cursor-pointer hover:border-emerald-400 hover:bg-emerald-50 text-slate-400 transition-colors group shadow-sm min-h-[112px]"
+                  className="w-full h-full border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer text-slate-400 transition-all group shadow-sm min-h-[112px] border-emerald-300 bg-emerald-50/70 ring-2 ring-emerald-200/60"
                 >
                   <ImageIcon className="w-5 h-5 mb-1 group-hover:text-emerald-500 transition-colors" />
                   <span className="text-[10px] font-bold text-slate-600 group-hover:text-emerald-600">点击生成关键帧</span>
                 </button>
               )}
+              </div>
 
+              <div className="transition-all">
               {shot.videoPreview.status === 'completed' ? (
                 <button
                   type="button"
                   onClick={() => onGenerate(shot.id, 'video')}
-                  className="group/asset border border-blue-200 rounded-xl overflow-hidden bg-white text-left hover:border-blue-300 transition-colors shadow-sm relative"
+                  className="group/asset w-full h-full border rounded-xl overflow-hidden bg-white text-left transition-all shadow-sm relative border-slate-200 hover:border-blue-200"
                 >
                   <div className="absolute top-2 right-2 z-10 px-2 py-1 rounded-full bg-black/60 text-[10px] font-bold text-white">{shot.videoPreview.duration ?? '05s'}</div>
                   <div className="relative h-full min-h-[112px]">
@@ -652,6 +804,21 @@ function ShotCard({
                       </div>
                     </div>
                     <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover/asset:opacity-100 transition-opacity z-10">
+                      <span
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onPreviewAsset({
+                            type: 'video',
+                            title: `第 ${shotNumber} 镜直出视频`,
+                            thumbnail: shot.videoPreview.thumbnail,
+                            duration: shot.videoPreview.duration,
+                          });
+                        }}
+                        className="px-3 py-2 rounded-xl bg-black/70 text-white text-[11px] font-bold shadow-sm hover:bg-black/80"
+                      >
+                        预览效果
+                      </span>
                       <span
                         onClick={(e) => {
                           e.preventDefault();
@@ -682,7 +849,7 @@ function ShotCard({
                 <button
                   type="button"
                   onClick={() => onGenerate(shot.id, 'video')}
-                  className="border border-blue-200 rounded-xl bg-blue-50/70 text-blue-700 flex flex-col items-center justify-center min-h-[112px] transition-colors shadow-sm relative overflow-hidden"
+                  className="w-full h-full border rounded-xl text-blue-700 flex flex-col items-center justify-center min-h-[112px] transition-all shadow-sm relative overflow-hidden border-blue-200 bg-blue-50/70"
                 >
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_60%)]" />
                   <div className="w-8 h-8 rounded-full border-2 border-blue-200 border-t-blue-500 animate-spin mb-2 z-10" />
@@ -693,7 +860,98 @@ function ShotCard({
                 <button
                   type="button"
                   onClick={() => onGenerate(shot.id, 'video')}
-                  className="border-2 border-dashed border-blue-300 rounded-xl flex flex-col items-center justify-center bg-blue-50/50 cursor-pointer hover:bg-blue-100 hover:border-blue-400 text-blue-500 transition-colors group relative overflow-hidden shadow-sm min-h-[112px]"
+                  className="w-full h-full border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer text-blue-500 transition-all group relative overflow-hidden shadow-sm min-h-[112px] border-blue-300 bg-blue-50/50 hover:bg-blue-100 hover:border-blue-400"
+                >
+                  <div className="absolute top-1 right-1 flex items-center gap-1 z-10" onClick={(e) => e.stopPropagation()}>
+                    <select className="bg-white border border-blue-200 text-[10px] font-bold text-blue-700 rounded-lg px-1.5 py-0.5 outline-none cursor-pointer shadow-sm">
+                      <option>5s</option>
+                      <option>10s</option>
+                      <option>15s</option>
+                    </select>
+                  </div>
+                  <Video className="w-6 h-6 mb-1 group-hover:scale-110 transition-transform" />
+                  <span className="text-[11px] font-bold text-blue-700">点击直出视频</span>
+                  <span className="text-[9px] mt-1 text-blue-400 font-bold">消耗 10 算力</span>
+                </button>
+              )}
+              </div>
+            </div>
+            ) : (
+            <div className="w-full h-full flex min-h-[112px] animate-in fade-in duration-300">
+              {shot.videoPreview.status === 'completed' ? (
+                <button
+                  type="button"
+                  onClick={() => onGenerate(shot.id, 'video')}
+                  className="group/asset w-full flex-1 border border-blue-300 ring-2 ring-blue-200/60 rounded-xl overflow-hidden bg-white text-left transition-all shadow-sm relative"
+                >
+                  <div className="absolute top-2 right-2 z-10 px-2 py-1 rounded-full bg-black/60 text-[10px] font-bold text-white">{shot.videoPreview.duration ?? '05s'}</div>
+                  <div className="relative h-full min-h-[112px]">
+                    <img src={shot.videoPreview.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/5 to-transparent" />
+                    <div className="absolute inset-0 bg-black/35 opacity-0 group-hover/asset:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-white/85 flex items-center justify-center shadow-lg">
+                        <Play className="w-5 h-5 text-blue-700 fill-current ml-0.5" />
+                      </div>
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover/asset:opacity-100 transition-opacity z-10">
+                      <span
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onPreviewAsset({
+                            type: 'video',
+                            title: `第 ${shotNumber} 镜直出视频`,
+                            thumbnail: shot.videoPreview.thumbnail,
+                            duration: shot.videoPreview.duration,
+                          });
+                        }}
+                        className="px-3 py-2 rounded-xl bg-black/70 text-white text-[11px] font-bold shadow-sm hover:bg-black/80"
+                      >
+                        预览效果
+                      </span>
+                      <span
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onNext('video');
+                        }}
+                        className="px-3 py-2 rounded-xl bg-white text-slate-800 text-[11px] font-bold shadow-sm hover:bg-slate-50"
+                      >
+                        视频精修
+                      </span>
+                      <span
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onGenerate(shot.id, 'video');
+                        }}
+                        className="px-3 py-2 rounded-xl bg-blue-500 text-white text-[11px] font-bold shadow-sm hover:bg-blue-600"
+                      >
+                        重新生成
+                      </span>
+                    </div>
+                    <div className="absolute bottom-3 left-3 text-white">
+                      <div className="text-[11px] font-bold">已完成直出视频</div>
+                    </div>
+                  </div>
+                </button>
+              ) : shot.videoPreview.status === 'generating' ? (
+                <button
+                  type="button"
+                  onClick={() => onGenerate(shot.id, 'video')}
+                  className="w-full flex-1 border border-blue-300 ring-2 ring-blue-200/60 rounded-xl bg-blue-50/80 text-blue-700 flex flex-col items-center justify-center min-h-[112px] transition-all shadow-sm relative overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_60%)]" />
+                  <div className="w-8 h-8 rounded-full border-2 border-blue-200 border-t-blue-500 animate-spin mb-2 z-10" />
+                  <div className="text-[11px] font-bold z-10">视频生成中</div>
+                  <div className="text-[10px] text-blue-600 mt-1 z-10">点击重新发起任务</div>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onGenerate(shot.id, 'video')}
+                  className="w-full flex-1 border-2 border-dashed border-blue-300 rounded-xl flex flex-col items-center justify-center bg-blue-50/70 ring-2 ring-blue-200/60 cursor-pointer text-blue-500 transition-all group relative overflow-hidden shadow-sm min-h-[112px]"
                 >
                   <div className="absolute top-1 right-1 flex items-center gap-1 z-10" onClick={(e) => e.stopPropagation()}>
                     <select className="bg-white border border-blue-200 text-[10px] font-bold text-blue-700 rounded-lg px-1.5 py-0.5 outline-none cursor-pointer shadow-sm">
@@ -708,6 +966,7 @@ function ShotCard({
                 </button>
               )}
             </div>
+            )
           ) : cardMode === 'image' ? (
             <div className="w-full h-full flex gap-2 min-h-[90px] animate-in fade-in duration-300">
               {currentPreview.status === 'completed' ? (
@@ -722,6 +981,20 @@ function ShotCard({
                     <div className="absolute inset-0 bg-black/35 opacity-0 group-hover/asset:opacity-100 transition-opacity" />
                     <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-white/90 text-[10px] font-bold text-emerald-700">已生成关键帧</div>
                     <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover/asset:opacity-100 transition-opacity z-10">
+                      <span
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onPreviewAsset({
+                            type: 'image',
+                            title: `第 ${shotNumber} 镜关键帧`,
+                            thumbnail: currentPreview.thumbnail,
+                          });
+                        }}
+                        className="px-3 py-2 rounded-xl bg-black/70 text-white text-[11px] font-bold shadow-sm hover:bg-black/80"
+                      >
+                        预览效果
+                      </span>
                       <span
                         onClick={(e) => {
                           e.preventDefault();
@@ -793,6 +1066,21 @@ function ShotCard({
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
+                          onPreviewAsset({
+                            type: 'video',
+                            title: `第 ${shotNumber} 镜直出视频`,
+                            thumbnail: currentPreview.thumbnail,
+                            duration: currentPreview.duration,
+                          });
+                        }}
+                        className="px-3 py-2 rounded-xl bg-black/70 text-white text-[11px] font-bold shadow-sm hover:bg-black/80"
+                      >
+                        预览效果
+                      </span>
+                      <span
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
                           onNext('video');
                         }}
                         className="px-3 py-2 rounded-xl bg-white text-slate-800 text-[11px] font-bold shadow-sm hover:bg-slate-50"
@@ -849,6 +1137,145 @@ function ShotCard({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function PromptAssetEditor({
+  value,
+  assets,
+  onChange,
+}: {
+  value: string;
+  assets: Array<{ type: AssetType; label: string; image?: string }>;
+  onChange: (value: string) => void;
+}) {
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [mentionRange, setMentionRange] = useState<{ start: number; end: number; query: string } | null>(null);
+
+  const assetMap = useMemo(
+    () => Object.fromEntries(assets.map((asset) => [asset.label, asset])),
+    [assets]
+  );
+
+  const mentionOptions = useMemo(() => {
+    if (!mentionRange) return [];
+    const keyword = mentionRange.query.toLowerCase();
+    return assets.filter((asset) => asset.label.toLowerCase().includes(keyword));
+  }, [assets, mentionRange]);
+
+  const updateMentionState = (nextValue: string, caretPosition: number) => {
+    const beforeCursor = nextValue.slice(0, caretPosition);
+    const lastAt = beforeCursor.lastIndexOf('@');
+    if (lastAt === -1) {
+      setMentionRange(null);
+      return;
+    }
+
+    const between = beforeCursor.slice(lastAt + 1);
+    if (between.includes(' ') || between.includes('\n') || beforeCursor.slice(lastAt).startsWith('@{')) {
+      setMentionRange(null);
+      return;
+    }
+
+    setMentionRange({
+      start: lastAt,
+      end: caretPosition,
+      query: between,
+    });
+  };
+
+  const applyMention = (label: string) => {
+    if (!mentionRange || !textareaRef.current) return;
+    const nextValue = `${value.slice(0, mentionRange.start)}@{${label}} ${value.slice(mentionRange.end)}`;
+    onChange(nextValue);
+    setMentionRange(null);
+
+    requestAnimationFrame(() => {
+      const nextCaret = mentionRange.start + label.length + 4;
+      textareaRef.current?.focus();
+      textareaRef.current?.setSelectionRange(nextCaret, nextCaret);
+    });
+  };
+
+  const promptParts = value.split(/(@\{[^}]+\})/g).filter(Boolean);
+
+  const toneClassName = (type?: AssetType) => {
+    if (type === 'character') return 'bg-sky-50 border-sky-100 text-sky-700';
+    if (type === 'scene') return 'bg-emerald-50 border-emerald-100 text-emerald-700';
+    if (type === 'prop') return 'bg-violet-50 border-violet-100 text-violet-700';
+    return 'bg-slate-100 border-slate-200 text-slate-700';
+  };
+
+  return (
+    <div className="mb-3 rounded-2xl border border-slate-200 bg-slate-50 shadow-inner overflow-hidden relative">
+      <div className="px-3 pt-3 pb-1 min-h-[72px] text-sm leading-7 text-slate-700">
+        <div className="flex flex-wrap gap-x-1.5 gap-y-2">
+          {promptParts.length === 0 && (
+            <span className="text-slate-400 text-xs">输入提示词，使用 @ 快捷引用已绑定资产。</span>
+          )}
+          {promptParts.map((part, index) => {
+            const match = part.match(/^@\{(.+)\}$/);
+            if (match) {
+              const asset = assetMap[match[1]];
+              return (
+                <span
+                  key={`${part}-${index}`}
+                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold ${toneClassName(asset?.type)}`}
+                >
+                  {asset?.image && (
+                    <img src={asset.image} alt="" className="w-4 h-4 rounded-full object-cover border border-white/60" />
+                  )}
+                  {match[1]}
+                </span>
+              );
+            }
+
+            return (
+              <span key={`${part}-${index}`} className="whitespace-pre-wrap">
+                {part}
+              </span>
+            );
+          })}
+        </div>
+      </div>
+
+      <textarea
+        ref={textareaRef}
+        value={value}
+        onChange={(e) => {
+          onChange(e.target.value);
+          updateMentionState(e.target.value, e.target.selectionStart);
+        }}
+        onClick={(e) => updateMentionState(e.currentTarget.value, e.currentTarget.selectionStart)}
+        onKeyUp={(e) => updateMentionState(e.currentTarget.value, e.currentTarget.selectionStart)}
+        className="w-full text-xs font-medium text-slate-700 bg-transparent px-3 pb-3 pt-1 h-24 resize-none outline-none leading-relaxed"
+        placeholder="请输入提示词，输入 @ 可引用已绑定资产"
+      />
+
+      {mentionRange && mentionOptions.length > 0 && (
+        <div className="absolute left-3 bottom-3 w-56 rounded-2xl border border-slate-200 bg-white shadow-xl p-2 z-10">
+          <div className="text-[10px] font-bold text-slate-400 px-2 pb-1">已绑定资产</div>
+          <div className="space-y-1">
+            {mentionOptions.map((asset) => (
+              <button
+                key={asset.label}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => applyMention(asset.label)}
+                className="w-full flex items-center gap-2 rounded-xl px-2 py-2 text-left hover:bg-slate-50 transition-colors"
+              >
+                <div className={`inline-flex items-center gap-2 rounded-full border px-2 py-1 text-[10px] font-bold ${toneClassName(asset.type)}`}>
+                  {asset.image && (
+                    <img src={asset.image} alt="" className="w-4 h-4 rounded-full object-cover border border-white/60" />
+                  )}
+                  {asset.label}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

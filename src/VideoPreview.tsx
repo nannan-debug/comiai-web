@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Play, Pause, SkipBack, SkipForward, MessageSquare, 
   Share2, CheckCircle2, Clock, ChevronRight, ChevronLeft,
@@ -10,7 +10,13 @@ import {
   ExternalLink
 } from 'lucide-react';
 
-export default function VideoPreview() {
+type PreviewDraftState = 'clean' | 'draft';
+
+export default function VideoPreview({
+  onDraftStateChange,
+}: {
+  onDraftStateChange?: (state: PreviewDraftState) => void;
+}) {
   // 页面状态控制：'edit' (粗剪) | 'review' (审阅)
   const [pageMode, setPageMode] = useState('edit'); 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -28,6 +34,10 @@ export default function VideoPreview() {
   const [showVersionMenu, setShowVersionMenu] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false); // 提交审阅状态
+  const [previewAdjustment, setPreviewAdjustment] = useState('保留当前镜头节奏，优先检查角色情绪与转场流畅度。');
+  const [draftState, setDraftState] = useState<PreviewDraftState>('clean');
+  const [isAssetsCollapsed, setIsAssetsCollapsed] = useState(false);
+  const [isReviewCollapsed, setIsReviewCollapsed] = useState(false);
 
   // 1. 全局素材库
   const assetLibrary = [
@@ -96,19 +106,53 @@ export default function VideoPreview() {
     }, 2000);
   };
 
+  useEffect(() => {
+    onDraftStateChange?.(draftState);
+  }, [draftState, onDraftStateChange]);
+
+  const handlePreviewAdjustmentChange = (value: string) => {
+    setPreviewAdjustment(value);
+    if (draftState !== 'draft') {
+      setDraftState('draft');
+    }
+  };
+
+  const handleApplyDraft = () => {
+    setDraftState('clean');
+  };
+
   return (
     <>
       {/* 2. 主内容区 */}
       <div className="flex-1 flex overflow-hidden p-3 gap-3 pb-0">
         
         {/* 左侧：资产池 (白色主题) */}
-        <aside className={`bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden transition-all duration-300 ${pageMode === 'edit' ? 'w-72 opacity-100' : 'w-0 opacity-0 invisible'}`}>
-          <div className="p-4 flex flex-col gap-4">
-            <div className="flex items-center justify-between text-slate-700">
-              <span className="font-bold text-base">剧集资产</span>
-              <button className="text-slate-400 hover:text-emerald-500"><List size={18}/></button>
+        <aside className={`bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden transition-all duration-300 ${pageMode === 'edit' ? (isAssetsCollapsed ? 'w-14 opacity-100' : 'w-72 opacity-100') : 'w-0 opacity-0 invisible'}`}>
+          <div className="p-4 border-b border-slate-100 bg-slate-50/40 flex items-center justify-between shrink-0">
+            {!isAssetsCollapsed && <span className="font-bold text-base text-slate-700">剧集资产</span>}
+            <button
+              onClick={() => setIsAssetsCollapsed((prev) => !prev)}
+              className="ml-auto rounded-xl p-2 text-slate-400 transition-colors hover:bg-white hover:text-emerald-600"
+              title={isAssetsCollapsed ? '展开剧集资产' : '收起剧集资产'}
+            >
+              <List size={18} />
+            </button>
+          </div>
+          {isAssetsCollapsed ? (
+            <div className="flex flex-1 flex-col items-center gap-3 py-4">
+              {[1, 2, 3, 4, 5, 6].map((id) => (
+                <button
+                  key={id}
+                  onClick={() => setActiveSb(id)}
+                  className={`flex h-9 w-9 items-center justify-center rounded-xl text-[11px] font-bold transition-all ${activeSb === id ? 'bg-emerald-50 text-emerald-600' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-700'}`}
+                >
+                  {id}
+                </button>
+              ))}
             </div>
-
+          ) : (
+            <>
+          <div className="p-4 flex flex-col gap-4">
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
                 <button onClick={() => setShowTypeMenu(!showTypeMenu)} className="w-full flex items-center justify-between bg-slate-50 text-slate-600 px-3 py-1.5 rounded-xl text-xs border border-slate-200">
@@ -158,6 +202,8 @@ export default function VideoPreview() {
               </div>
             ))}
           </div>
+            </>
+          )}
         </aside>
 
         {/* 中间：播放器区域 */}
@@ -167,8 +213,23 @@ export default function VideoPreview() {
               <button onClick={() => setPageMode('edit')} className={`px-5 py-1 rounded-lg text-[11px] font-bold transition-all ${pageMode === 'edit' ? 'bg-white shadow-sm text-emerald-600' : 'text-slate-500'}`}>🚧 粗剪模式</button>
               <button onClick={() => setPageMode('review')} className={`px-5 py-1 rounded-lg text-[11px] font-bold transition-all ${pageMode === 'review' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500'}`}>🎬 审阅模式</button>
             </div>
-            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 bg-white px-2 py-1 rounded border border-slate-100 uppercase tracking-widest">
-               {activeVersion} 版本状态：{pageMode === 'edit' ? '正在粗剪' : '审阅进行中'}
+            <div className="flex items-center gap-3">
+              <input
+                value={previewAdjustment}
+                onChange={(e) => handlePreviewAdjustmentChange(e.target.value)}
+                className="hidden w-64 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[11px] text-slate-600 outline-none transition-colors placeholder:text-slate-400 focus:border-emerald-400 md:block"
+                placeholder="补充一句当前预览调整说明"
+              />
+              <button
+                onClick={handleApplyDraft}
+                disabled={draftState === 'clean'}
+                className={`rounded-xl px-3 py-1.5 text-[11px] font-bold transition-colors ${draftState === 'draft' ? 'bg-emerald-500 text-white shadow-sm hover:bg-emerald-600' : 'cursor-not-allowed bg-slate-200 text-slate-400'}`}
+              >
+                应用到当前版本
+              </button>
+              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 bg-white px-2 py-1 rounded border border-slate-100 uppercase tracking-widest">
+                {activeVersion} 版本状态：{pageMode === 'edit' ? '正在粗剪' : '审阅进行中'}
+              </div>
             </div>
           </div>
 
@@ -203,12 +264,28 @@ export default function VideoPreview() {
         </main>
 
         {/* 右侧：审阅面板 */}
-        <aside className="w-72 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+        <aside className={`bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden transition-all duration-300 ${isReviewCollapsed ? 'w-14' : 'w-72'}`}>
           <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center text-slate-700">
-            <h3 className="font-bold flex items-center gap-2"><MessageSquare size={16} className="text-emerald-500" /> 审阅反馈</h3>
-            <span className="text-[10px] bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full font-bold">{currentVersion.comments.length}</span>
+            {!isReviewCollapsed && (
+              <>
+                <h3 className="font-bold flex items-center gap-2"><MessageSquare size={16} className="text-emerald-500" /> 审阅反馈</h3>
+                <span className="text-[10px] bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full font-bold">{currentVersion.comments.length}</span>
+              </>
+            )}
+            <button
+              onClick={() => setIsReviewCollapsed((prev) => !prev)}
+              className="ml-auto rounded-xl p-2 text-slate-400 transition-colors hover:bg-white hover:text-emerald-600"
+              title={isReviewCollapsed ? '展开审阅反馈' : '收起审阅反馈'}
+            >
+              <MessageSquare size={18} />
+            </button>
           </div>
-
+          {isReviewCollapsed ? (
+            <div className="flex flex-1 flex-col items-center gap-3 py-4">
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-600">{currentVersion.comments.length}</span>
+            </div>
+          ) : (
+            <>
           <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-slate-50/30">
             {currentVersion.comments.map(c => (
               <div 
@@ -247,6 +324,8 @@ export default function VideoPreview() {
                </div>
              </div>
           </div>
+            </>
+          )}
         </aside>
       </div>
 

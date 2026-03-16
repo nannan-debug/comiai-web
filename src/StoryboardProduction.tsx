@@ -3,15 +3,17 @@ import {
   Film, Image as ImageIcon, LayoutTemplate, User, Coins, 
   Upload, ArrowRightLeft, Download, CheckCircle2, 
   Maximize2, ChevronDown, Filter, Zap, LayoutGrid,
-  Scissors, Share, ArrowUpFromLine, PlayCircle
+  Scissors, Share, ArrowUpFromLine, PlayCircle, Eye
 } from 'lucide-react';
 
 export default function StoryboardProduction({
   initialGlobalMode = 'video',
   initialTaskMode = 'first-last',
+  onOpenPreview,
 }: {
   initialGlobalMode?: 'video' | 'image';
   initialTaskMode?: 'all' | 'first-last' | 'img2video';
+  onOpenPreview?: () => void;
 }) {
   // 1. 全局任务切换
   const [globalMode, setGlobalMode] = useState<'video' | 'image'>(initialGlobalMode);
@@ -494,6 +496,13 @@ export default function StoryboardProduction({
           </div>
           
           <div className="flex items-center gap-2">
+            <button
+              onClick={onOpenPreview}
+              className="px-3 py-1.5 border border-emerald-200 bg-emerald-50 rounded-lg text-xs font-medium text-emerald-700 flex items-center gap-1.5 hover:bg-emerald-100 transition-colors"
+            >
+              <Eye size={14} />
+              查看视频预览
+            </button>
             <button className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 flex items-center gap-1.5 hover:bg-gray-50 transition-colors">
               <LayoutGrid size={14} />
               一键补充
