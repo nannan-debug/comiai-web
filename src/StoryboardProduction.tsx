@@ -15,6 +15,17 @@ export default function StoryboardProduction({
   initialTaskMode?: 'all' | 'first-last' | 'img2video';
   onOpenPreview?: () => void;
 }) {
+  const ui = {
+    primary: '#01cd74',
+    text: '#1c2329',
+    bg: '#e8e9ea',
+    subText: '#a4a7a9',
+    navBg: '#1c2329e6',
+    navOption: '#8e9194',
+    border: '#d2d3d4',
+    window: '#f8f8f9',
+    disabled: '#dddddd',
+  };
   // 1. 全局任务切换
   const [globalMode, setGlobalMode] = useState<'video' | 'image'>(initialGlobalMode);
   
@@ -29,11 +40,12 @@ export default function StoryboardProduction({
 
   return (
     <>
-      <div className="flex-1 flex overflow-hidden p-3 gap-3 pb-0">
+      <div className="flex-1 flex overflow-hidden p-3 gap-3 pb-0" style={{ backgroundColor: ui.bg }}>
         {/* 1. 最左侧全局任务切换栏 */}
-        <div className="w-14 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center py-4 gap-4 shrink-0 z-10">
+        <div className="w-14 rounded-2xl border shadow-sm flex flex-col items-center py-4 gap-4 shrink-0 z-10" style={{ backgroundColor: ui.window, borderColor: ui.border }}>
           <div 
-            className={`p-2.5 rounded-xl cursor-pointer group relative ${globalMode === 'video' ? 'bg-emerald-50 text-emerald-600' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
+            className={`p-2.5 rounded-xl cursor-pointer group relative ${globalMode === 'video' ? '' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
+            style={globalMode === 'video' ? { backgroundColor: '#d8f8ea', color: ui.primary } : undefined}
             onClick={() => setGlobalMode('video')}
           >
             <Film size={20} />
@@ -42,7 +54,8 @@ export default function StoryboardProduction({
             </div>
           </div>
           <div 
-            className={`p-2.5 rounded-xl cursor-pointer group relative ${globalMode === 'image' ? 'bg-emerald-50 text-emerald-600' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
+            className={`p-2.5 rounded-xl cursor-pointer group relative ${globalMode === 'image' ? '' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
+            style={globalMode === 'image' ? { backgroundColor: '#d8f8ea', color: ui.primary } : undefined}
             onClick={() => setGlobalMode('image')}
           >
             <ImageIcon size={20} />
@@ -59,7 +72,7 @@ export default function StoryboardProduction({
         </div>
 
         {/* 2. 左侧任务面板 */}
-        <div className="w-72 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col shrink-0 z-10 overflow-y-auto">
+        <div className="w-72 rounded-2xl border shadow-sm flex flex-col shrink-0 z-10 overflow-y-auto" style={{ backgroundColor: ui.window, borderColor: ui.border }}>
           {globalMode === 'image' ? (
             <div className="p-4 flex flex-col h-full">
               {/* Title */}
@@ -141,8 +154,8 @@ export default function StoryboardProduction({
               </div>
 
               {/* 底部生成按钮 */}
-              <button className="w-full mt-6 bg-[#1A202C] hover:bg-gray-800 text-white rounded-xl py-3 flex items-center justify-center gap-2 font-medium transition-colors">
-                <div className="flex items-center gap-1 text-emerald-400">
+              <button className="w-full mt-6 text-white rounded-xl py-3 flex items-center justify-center gap-2 font-medium transition-colors" style={{ backgroundColor: ui.navBg }}>
+                <div className="flex items-center gap-1" style={{ color: '#8ef2c8' }}>
                   <Coins size={14} />
                   <span>10</span>
                 </div>
@@ -252,9 +265,9 @@ export default function StoryboardProduction({
             </div>
 
               {/* 底部生成按钮 */}
-              <button className="w-full mt-6 bg-[#1A202C] hover:bg-gray-800 text-white rounded-xl py-3 flex items-center justify-center gap-2 font-medium transition-colors">
-                <Zap size={16} className="text-emerald-400" />
-                <span className="text-emerald-400">10</span>
+              <button className="w-full mt-6 text-white rounded-xl py-3 flex items-center justify-center gap-2 font-medium transition-colors" style={{ backgroundColor: ui.navBg }}>
+                <Zap size={16} style={{ color: '#8ef2c8' }} />
+                <span style={{ color: '#8ef2c8' }}>10</span>
                 生成视频
               </button>
             </div>
@@ -264,7 +277,7 @@ export default function StoryboardProduction({
         {/* 中间区域：画布 + 底部卡片 */}
         <div className="flex-1 flex flex-col gap-3 min-w-0">
           {/* 3. 中心画布大图 */}
-          <div className="flex-1 flex flex-col relative min-w-0 bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <div className="flex-1 flex flex-col relative min-w-0 rounded-2xl border shadow-sm" style={{ backgroundColor: ui.window, borderColor: ui.border }}>
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
             <button className="bg-white/90 backdrop-blur shadow-sm border border-gray-200 px-4 py-2 rounded-full text-xs font-medium text-gray-700 flex items-center gap-2 hover:bg-white transition-colors">
               <Scissors size={14} />
@@ -305,8 +318,8 @@ export default function StoryboardProduction({
         </div>
 
         {/* 4. 右侧历史记录 */}
-        <div className="w-72 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm flex flex-col shrink-0 z-10">
-          <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-white">
+        <div className="w-72 rounded-2xl border shadow-sm flex flex-col shrink-0 z-10" style={{ backgroundColor: ui.window, borderColor: ui.border }}>
+          <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: ui.border, backgroundColor: '#f2f3f4' }}>
             <div className="flex items-center gap-2 font-medium text-gray-800">
               {globalMode === 'video' ? <Film size={16} /> : <ImageIcon size={16} />}
               {globalMode === 'video' ? '视频记录' : '生图记录'}
@@ -362,19 +375,19 @@ export default function StoryboardProduction({
                       <span>Nano Banana Pro 2</span>
                     </div>
                   </div>
-                  <div className="bg-emerald-50 rounded-xl p-3 border-2 border-emerald-400 shadow-sm relative group">
+                  <div className="rounded-xl p-3 border-2 shadow-sm relative group" style={{ backgroundColor: '#d8f8ea', borderColor: ui.primary }}>
                     <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-700">
+                      <div className="flex items-center gap-1.5 text-xs font-medium" style={{ color: ui.primary }}>
                         <ImageIcon size={14} />
                         历史-3
                       </div>
                       <div className="flex items-center gap-1">
-                        <button className="p-1 text-emerald-600 hover:bg-emerald-100 rounded" title="应用"><CheckCircle2 size={14} /></button>
-                        <button className="p-1 text-emerald-600 hover:bg-emerald-100 rounded"><Download size={14} /></button>
-                        <button className="p-1 text-emerald-600 hover:bg-emerald-100 rounded"><ChevronDown size={14} /></button>
+                        <button className="p-1 rounded" style={{ color: ui.primary, backgroundColor: '#c9f5df' }} title="应用"><CheckCircle2 size={14} /></button>
+                        <button className="p-1 rounded" style={{ color: ui.primary, backgroundColor: '#c9f5df' }}><Download size={14} /></button>
+                        <button className="p-1 rounded" style={{ color: ui.primary, backgroundColor: '#c9f5df' }}><ChevronDown size={14} /></button>
                       </div>
                     </div>
-                    <p className="text-[10px] text-emerald-600/80 line-clamp-3">
+                    <p className="text-[10px] line-clamp-3" style={{ color: '#129861' }}>
                       画风：超写实风格。景别：全景。视角：平视视角。机位：正面机位。内容：广阔而宁静的湖面，湖水呈现出蓝、绿、黄、青等多层次的色彩，清澈见底，能清晰看到水底的枯树和钙华沉积。湖面平静，反射着...
                     </p>
                     
@@ -434,16 +447,16 @@ export default function StoryboardProduction({
                   <span>Sora 2 | 1080p | 6s</span>
                 </div>
               </div>
-              <div className="bg-emerald-50 rounded-xl p-3 border-2 border-emerald-400 shadow-sm relative group">
+              <div className="rounded-xl p-3 border-2 shadow-sm relative group" style={{ backgroundColor: '#d8f8ea', borderColor: ui.primary }}>
                 <div className="flex justify-between items-start mb-2">
-                  <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-700">
+                  <div className="flex items-center gap-1.5 text-xs font-medium" style={{ color: ui.primary }}>
                     <LayoutGrid size={14} />
                     多图参考-3
                   </div>
                   <div className="flex items-center gap-1">
-                    <button className="p-1 text-emerald-600 hover:bg-emerald-100 rounded" title="应用"><CheckCircle2 size={14} /></button>
-                    <button className="p-1 text-emerald-600 hover:bg-emerald-100 rounded"><Download size={14} /></button>
-                    <button className="p-1 text-emerald-600 hover:bg-emerald-100 rounded"><ChevronDown size={14} /></button>
+                    <button className="p-1 rounded" style={{ color: ui.primary, backgroundColor: '#c9f5df' }} title="应用"><CheckCircle2 size={14} /></button>
+                    <button className="p-1 rounded" style={{ color: ui.primary, backgroundColor: '#c9f5df' }}><Download size={14} /></button>
+                    <button className="p-1 rounded" style={{ color: ui.primary, backgroundColor: '#c9f5df' }}><ChevronDown size={14} /></button>
                   </div>
                 </div>
                 <div className="flex gap-1.5 mb-2 overflow-x-auto pb-1">
@@ -451,7 +464,7 @@ export default function StoryboardProduction({
                     <img key={i} src={`https://picsum.photos/seed/ref${i}/60/60`} className="w-8 h-8 rounded object-cover border border-emerald-200 shrink-0" referrerPolicy="no-referrer" />
                   ))}
                 </div>
-                <p className="text-[10px] text-emerald-600/80 line-clamp-2">
+                <p className="text-[10px] line-clamp-2" style={{ color: '#129861' }}>
                   画风：超写实风格。景别：全景。视角：平视视角。机位：正面机位。内容：广阔而宁静的湖面...
                 </p>
                 
@@ -475,11 +488,11 @@ export default function StoryboardProduction({
       </div>
 
       {/* 5. 底部分镜项目区 (Moved to bottom) */}
-      <footer className="h-48 bg-white border-t border-slate-200 flex flex-col shrink-0 p-3 z-10 shadow-inner">
+      <footer className="h-48 border-t flex flex-col shrink-0 p-3 z-10 shadow-inner" style={{ backgroundColor: ui.window, borderColor: ui.border }}>
         <div className="flex items-center justify-between px-2 pb-2 border-b border-gray-100">
           <div className="flex items-center gap-4 text-xs">
             <span className="text-gray-500">总共分镜数: <span className="text-gray-900 font-medium">39</span></span>
-            <span className="text-gray-500">已验收完成: <span className="text-emerald-600 font-medium">6</span></span>
+            <span className="text-gray-500">已验收完成: <span className="font-medium" style={{ color: ui.primary }}>6</span></span>
             
             <div className="flex items-center gap-2 ml-4">
               <Filter size={14} className="text-gray-400" />
@@ -498,7 +511,8 @@ export default function StoryboardProduction({
           <div className="flex items-center gap-2">
             <button
               onClick={onOpenPreview}
-              className="px-3 py-1.5 border border-emerald-200 bg-emerald-50 rounded-lg text-xs font-medium text-emerald-700 flex items-center gap-1.5 hover:bg-emerald-100 transition-colors"
+              className="px-3 py-1.5 border rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
+              style={{ borderColor: '#b7f0d7', backgroundColor: '#d8f8ea', color: ui.primary }}
             >
               <Eye size={14} />
               查看视频预览
@@ -525,8 +539,9 @@ export default function StoryboardProduction({
               key={item}
               onClick={() => setActiveStoryboard(item)}
               className={`w-40 h-full rounded-lg border-2 flex flex-col overflow-hidden cursor-pointer shrink-0 transition-colors ${
-                activeStoryboard === item ? 'border-emerald-500 shadow-sm' : 'border-transparent bg-gray-100 hover:border-gray-300'
+                activeStoryboard === item ? 'shadow-sm' : 'border-transparent bg-gray-100 hover:border-gray-300'
               }`}
+              style={activeStoryboard === item ? { borderColor: ui.primary } : undefined}
             >
               <div className="px-2 py-1 flex justify-between items-center text-[10px] text-gray-500 bg-white/50">
                 <span className="font-medium text-gray-700">{item}. 1-1-{item}</span>

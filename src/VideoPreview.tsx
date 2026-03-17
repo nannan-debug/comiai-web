@@ -17,6 +17,20 @@ export default function VideoPreview({
 }: {
   onDraftStateChange?: (state: PreviewDraftState) => void;
 }) {
+  const ui = {
+    primary: '#01cd74',
+    text: '#1c2329',
+    bg: '#e8e9ea',
+    subText: '#a4a7a9',
+    navBg: '#1c2329e6',
+    navOption: '#8e9194',
+    border: '#d2d3d4',
+    window: '#f8f8f9',
+    mask: '#4a4f5433',
+    disabled: '#dddddd',
+    inProgress: '#35bbf0',
+    error: '#ff6668',
+  };
   // 页面状态控制：'edit' (粗剪) | 'review' (审阅)
   const [pageMode, setPageMode] = useState('edit'); 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -124,12 +138,12 @@ export default function VideoPreview({
   return (
     <>
       {/* 2. 主内容区 */}
-      <div className="flex-1 flex overflow-hidden p-3 gap-3 pb-0">
+      <div className="flex-1 flex overflow-hidden p-3 gap-3 pb-0" style={{ backgroundColor: ui.bg }}>
         
         {/* 左侧：资产池 (白色主题) */}
-        <aside className={`bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden transition-all duration-300 ${pageMode === 'edit' ? (isAssetsCollapsed ? 'w-14 opacity-100' : 'w-72 opacity-100') : 'w-0 opacity-0 invisible'}`}>
-          <div className="p-4 border-b border-slate-100 bg-slate-50/40 flex items-center justify-between shrink-0">
-            {!isAssetsCollapsed && <span className="font-bold text-base text-slate-700">剧集资产</span>}
+        <aside className={`rounded-2xl border shadow-sm flex flex-col overflow-hidden transition-all duration-300 ${pageMode === 'edit' ? (isAssetsCollapsed ? 'w-14 opacity-100' : 'w-72 opacity-100') : 'w-0 opacity-0 invisible'}`} style={{ backgroundColor: ui.window, borderColor: ui.border }}>
+          <div className="p-4 border-b flex items-center justify-between shrink-0" style={{ borderColor: ui.border, backgroundColor: '#f2f3f4' }}>
+            {!isAssetsCollapsed && <span className="font-bold text-base" style={{ color: ui.text }}>剧集资产</span>}
             <button
               onClick={() => setIsAssetsCollapsed((prev) => !prev)}
               className="ml-auto rounded-xl p-2 text-slate-400 transition-colors hover:bg-white hover:text-emerald-600"
@@ -144,7 +158,8 @@ export default function VideoPreview({
                 <button
                   key={id}
                   onClick={() => setActiveSb(id)}
-                  className={`flex h-9 w-9 items-center justify-center rounded-xl text-[11px] font-bold transition-all ${activeSb === id ? 'bg-emerald-50 text-emerald-600' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-700'}`}
+                  className={`flex h-9 w-9 items-center justify-center rounded-xl text-[11px] font-bold transition-all ${activeSb === id ? '' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-700'}`}
+                  style={activeSb === id ? { backgroundColor: '#d8f8ea', color: ui.primary } : undefined}
                 >
                   {id}
                 </button>
@@ -207,11 +222,11 @@ export default function VideoPreview({
         </aside>
 
         {/* 中间：播放器区域 */}
-        <main className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden relative">
-          <div className="h-10 border-b border-slate-100 flex items-center justify-between px-4 bg-slate-50/30">
-            <div className="flex bg-slate-200/50 rounded-xl p-0.5 shadow-inner">
-              <button onClick={() => setPageMode('edit')} className={`px-5 py-1 rounded-lg text-[11px] font-bold transition-all ${pageMode === 'edit' ? 'bg-white shadow-sm text-emerald-600' : 'text-slate-500'}`}>🚧 粗剪模式</button>
-              <button onClick={() => setPageMode('review')} className={`px-5 py-1 rounded-lg text-[11px] font-bold transition-all ${pageMode === 'review' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500'}`}>🎬 审阅模式</button>
+        <main className="flex-1 rounded-2xl border shadow-sm flex flex-col overflow-hidden relative" style={{ backgroundColor: ui.window, borderColor: ui.border }}>
+          <div className="h-10 border-b flex items-center justify-between px-4" style={{ borderColor: ui.border, backgroundColor: '#f2f3f4' }}>
+            <div className="flex rounded-xl p-0.5 shadow-inner" style={{ backgroundColor: '#dde0e3' }}>
+              <button onClick={() => setPageMode('edit')} className={`px-5 py-1 rounded-lg text-[11px] font-bold transition-all ${pageMode === 'edit' ? 'bg-white shadow-sm' : ''}`} style={{ color: pageMode === 'edit' ? ui.primary : ui.navOption }}>🚧 粗剪模式</button>
+              <button onClick={() => setPageMode('review')} className={`px-5 py-1 rounded-lg text-[11px] font-bold transition-all ${pageMode === 'review' ? 'bg-white shadow-sm' : ''}`} style={{ color: pageMode === 'review' ? ui.inProgress : ui.navOption }}>🎬 审阅模式</button>
             </div>
             <div className="flex items-center gap-3">
               <input
@@ -223,7 +238,8 @@ export default function VideoPreview({
               <button
                 onClick={handleApplyDraft}
                 disabled={draftState === 'clean'}
-                className={`rounded-xl px-3 py-1.5 text-[11px] font-bold transition-colors ${draftState === 'draft' ? 'bg-emerald-500 text-white shadow-sm hover:bg-emerald-600' : 'cursor-not-allowed bg-slate-200 text-slate-400'}`}
+                className={`rounded-xl px-3 py-1.5 text-[11px] font-bold transition-colors ${draftState === 'draft' ? 'text-white shadow-sm' : 'cursor-not-allowed text-slate-400'}`}
+                style={draftState === 'draft' ? { backgroundColor: ui.primary } : { backgroundColor: ui.disabled }}
               >
                 应用到当前版本
               </button>
@@ -233,7 +249,7 @@ export default function VideoPreview({
             </div>
           </div>
 
-          <div className="flex-1 flex items-center justify-center p-8 bg-[#EBEEF2] relative">
+          <div className="flex-1 flex items-center justify-center p-8 relative" style={{ backgroundColor: ui.bg }}>
             <div className="relative w-[300px] h-[533px] bg-black rounded-3xl shadow-2xl overflow-hidden group border-[6px] border-white">
                {pageMode === 'review' && Math.abs(currentTime - 45) < 3 && (
                  <div className="absolute inset-0 z-20 pointer-events-none">
@@ -264,12 +280,12 @@ export default function VideoPreview({
         </main>
 
         {/* 右侧：审阅面板 */}
-        <aside className={`bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden transition-all duration-300 ${isReviewCollapsed ? 'w-14' : 'w-72'}`}>
-          <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center text-slate-700">
+        <aside className={`rounded-2xl border shadow-sm flex flex-col overflow-hidden transition-all duration-300 ${isReviewCollapsed ? 'w-14' : 'w-72'}`} style={{ backgroundColor: ui.window, borderColor: ui.border }}>
+          <div className="p-4 border-b flex justify-between items-center" style={{ borderColor: ui.border, backgroundColor: '#f2f3f4', color: ui.text }}>
             {!isReviewCollapsed && (
               <>
-                <h3 className="font-bold flex items-center gap-2"><MessageSquare size={16} className="text-emerald-500" /> 审阅反馈</h3>
-                <span className="text-[10px] bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full font-bold">{currentVersion.comments.length}</span>
+                <h3 className="font-bold flex items-center gap-2"><MessageSquare size={16} style={{ color: ui.primary }} /> 审阅反馈</h3>
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: '#d8f8ea', color: ui.primary }}>{currentVersion.comments.length}</span>
               </>
             )}
             <button
@@ -282,7 +298,7 @@ export default function VideoPreview({
           </div>
           {isReviewCollapsed ? (
             <div className="flex flex-1 flex-col items-center gap-3 py-4">
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-600">{currentVersion.comments.length}</span>
+              <span className="rounded-full px-3 py-1 text-[11px] font-bold" style={{ backgroundColor: '#d8f8ea', color: ui.primary }}>{currentVersion.comments.length}</span>
             </div>
           ) : (
             <>
@@ -330,18 +346,18 @@ export default function VideoPreview({
       </div>
 
       {/* 3. 底部时间轴区 */}
-      <footer className="h-44 bg-white border-t border-slate-200 flex flex-col shrink-0 p-3 pt-0 z-10 shadow-inner">
+      <footer className="h-44 border-t flex flex-col shrink-0 p-3 pt-0 z-10 shadow-inner" style={{ backgroundColor: ui.window, borderColor: ui.border }}>
         <div className="h-12 flex items-center justify-between px-2">
            <div className="flex items-center gap-4">
              {/* 版本快照切换 */}
              <div className="relative group">
-               <button onClick={() => setShowVersionMenu(!showVersionMenu)} className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-xl text-[11px] font-bold hover:bg-slate-800 transition-all shadow-md">
+               <button onClick={() => setShowVersionMenu(!showVersionMenu)} className="flex items-center gap-2 px-3 py-1.5 text-white rounded-xl text-[11px] font-bold transition-all shadow-md" style={{ backgroundColor: ui.navBg }}>
                  <History size={14}/> {activeVersion.toUpperCase()} 分支 <ChevronDown size={14} className={showVersionMenu ? 'rotate-180 transition-all' : ''}/>
                </button>
                {showVersionMenu && (
                  <div className="absolute bottom-full left-0 mb-3 w-52 bg-white border border-slate-200 rounded-2xl shadow-2xl p-2 z-[60]">
                    {['v2', 'v1'].map(v => (
-                     <button key={v} onClick={() => { setActiveVersion(v); setShowVersionMenu(false); }} className={`w-full text-left p-2.5 rounded-xl text-xs font-bold flex items-center justify-between ${activeVersion === v ? 'bg-emerald-50 text-emerald-600' : 'hover:bg-slate-50 text-slate-600'}`}>
+                     <button key={v} onClick={() => { setActiveVersion(v); setShowVersionMenu(false); }} className={`w-full text-left p-2.5 rounded-xl text-xs font-bold flex items-center justify-between ${activeVersion === v ? '' : 'hover:bg-slate-50 text-slate-600'}`} style={activeVersion === v ? { backgroundColor: '#d8f8ea', color: ui.primary } : undefined}>
                        <span className="uppercase">{v} 分支预览</span> {activeVersion === v && <Check size={14}/>}
                      </button>
                    ))}
@@ -358,7 +374,7 @@ export default function VideoPreview({
              <div className="h-4 w-px bg-slate-200 mx-1"></div>
              <div className="flex items-center gap-2 bg-slate-50 px-3 py-1 rounded-full border border-slate-100 shadow-inner">
                <button className="text-[10px] font-bold text-slate-300 hover:text-slate-600">－</button>
-               <div className="w-32 h-1 bg-slate-200 rounded-full"><div className="w-1/2 h-full bg-emerald-500 rounded-full shadow-sm"></div></div>
+               <div className="w-32 h-1 bg-slate-200 rounded-full"><div className="w-1/2 h-full rounded-full shadow-sm" style={{ backgroundColor: ui.primary }}></div></div>
                <button className="text-[10px] font-bold text-slate-300 hover:text-slate-600">＋</button>
              </div>
            </div>
@@ -375,7 +391,7 @@ export default function VideoPreview({
                </button>
              )}
              
-             <button className="px-5 py-2 bg-emerald-500 text-white rounded-xl text-[11px] font-bold flex items-center gap-2 shadow-md hover:bg-emerald-600">导出成片</button>
+             <button className="px-5 py-2 text-white rounded-xl text-[11px] font-bold flex items-center gap-2 shadow-md transition-colors" style={{ backgroundColor: ui.primary }}>导出成片</button>
            </div>
         </div>
 
@@ -407,15 +423,15 @@ export default function VideoPreview({
              ))}
            </div>
            {/* 播放指针 */}
-           <div className="absolute top-0 bottom-0 w-0.5 bg-emerald-500 z-40 shadow-[0_0_15px_rgba(16,185,129,0.6)] pointer-events-none transition-all duration-100" style={{ left: `${(currentTime / duration) * 100}%` }}>
-             <div className="w-4 h-4 bg-emerald-500 rounded-md absolute -top-2 -left-[7px] rotate-45 border-2 border-white shadow-xl"></div>
+           <div className="absolute top-0 bottom-0 w-0.5 z-40 pointer-events-none transition-all duration-100" style={{ left: `${(currentTime / duration) * 100}%`, backgroundColor: ui.primary, boxShadow: '0 0 15px rgba(1,205,116,0.45)' }}>
+             <div className="w-4 h-4 rounded-md absolute -top-2 -left-[7px] rotate-45 border-2 border-white shadow-xl" style={{ backgroundColor: ui.primary }}></div>
            </div>
         </div>
       </footer>
 
       {/* 提交审阅 全屏反馈反馈 */}
       {isSubmitting && (
-        <div className="fixed inset-0 bg-[#333A3F]/80 backdrop-blur-md z-[200] flex items-center justify-center animate-in fade-in duration-300">
+        <div className="fixed inset-0 backdrop-blur-md z-[200] flex items-center justify-center animate-in fade-in duration-300" style={{ backgroundColor: ui.mask }}>
            <div className="bg-white p-10 rounded-[32px] shadow-2xl flex flex-col items-center gap-6 animate-in zoom-in-95 duration-500">
              <div className="relative">
                <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center">

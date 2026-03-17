@@ -145,6 +145,17 @@ const initialShotRecords: ShotRecord[] = [
   },
 ];
 
+const ui = {
+  primary: '#01cd74',
+  text: '#1c2329',
+  bg: '#e8e9ea',
+  border: '#d2d3d4',
+  window: '#f8f8f9',
+  subText: '#a4a7a9',
+  navBg: '#1c2329e6',
+  disabled: '#dddddd',
+};
+
 export default function StoryboardManagement({ onNext, initialMode }: { onNext: (panelMode: CardMode) => void, initialMode: StoryboardMode }) {
   const [isScriptPanelOpen, setIsScriptPanelOpen] = useState(true);
   const [shots, setShots] = useState(initialShotRecords);
@@ -265,17 +276,18 @@ export default function StoryboardManagement({ onNext, initialMode }: { onNext: 
     : { label: '图生视频', description: '当前按图生视频模式初始化', textColor: 'text-emerald-700', bgColor: 'bg-emerald-50', borderColor: 'border-emerald-200', icon: <ImageIcon className="w-3.5 h-3.5" /> };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden p-3 gap-3 pb-0">
+    <div className="flex-1 flex flex-col overflow-hidden p-3 gap-3 pb-0" style={{ backgroundColor: ui.bg }}>
       <div className="flex-1 flex overflow-hidden gap-3">
         {/* 左侧：剧本回显 */}
         <aside 
-          className={`bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden transition-all duration-300 shrink-0 ${
+          className={`rounded-2xl border shadow-sm flex flex-col overflow-hidden transition-all duration-300 shrink-0 ${
             isScriptPanelOpen ? 'w-80 opacity-100' : 'w-0 opacity-0 invisible border-none'
           }`}
+          style={{ backgroundColor: ui.window, borderColor: ui.border }}
         >
-        <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+        <div className="px-4 py-3 border-b flex justify-between items-center" style={{ borderColor: ui.border, backgroundColor: '#f3f4f4' }}>
           <span className="text-sm font-bold text-slate-700 flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-emerald-500" /> 剧本上下文
+            <BookOpen className="w-4 h-4" style={{ color: ui.primary }} /> 剧本上下文
           </span>
           <span className="text-[10px] text-slate-400 border border-slate-200 px-1.5 py-0.5 rounded bg-white font-bold">只读参考</span>
         </div>
@@ -297,26 +309,27 @@ export default function StoryboardManagement({ onNext, initialMode }: { onNext: 
       </aside>
 
       {/* 右侧：分镜编辑器区 */}
-      <main className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden relative min-w-0">
+      <main className="flex-1 rounded-2xl border shadow-sm flex flex-col overflow-hidden relative min-w-0" style={{ backgroundColor: ui.window, borderColor: ui.border }}>
         {/* 工具栏 */}
-        <div className="border-b border-slate-100 px-6 py-3 shrink-0 flex items-center justify-between z-30 bg-slate-50/50">
+        <div className="border-b px-6 py-3 shrink-0 flex items-center justify-between z-30" style={{ borderColor: ui.border, backgroundColor: '#f3f4f4' }}>
           <div className="flex items-center gap-4">
             <button 
-              className="text-slate-400 hover:text-emerald-600 p-1.5 rounded-lg hover:bg-emerald-50 transition-colors border border-transparent hover:border-emerald-100" 
+              className="text-slate-400 p-1.5 rounded-lg transition-colors border border-transparent" 
+              style={{ color: ui.subText }}
               onClick={() => setIsScriptPanelOpen(!isScriptPanelOpen)}
               title="显示/隐藏原文"
             >
               {isScriptPanelOpen ? <PanelLeftClose className="w-5 h-5" /> : <PanelLeftOpen className="w-5 h-5" />}
             </button>
             
-            <div className="h-4 w-px bg-slate-200"></div>
+            <div className="h-4 w-px" style={{ backgroundColor: ui.border }}></div>
 
             <span className="text-sm font-bold text-slate-800">
               全集分镜管理 <span className="text-xs font-normal text-slate-500 ml-1">(共 {shots.length} 镜)</span>
             </span>
             
             {/* 风格与尺寸选择 */}
-            <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-xl p-1 shadow-sm ml-2">
+            <div className="flex items-center gap-3 border rounded-xl p-1 shadow-sm ml-2" style={{ backgroundColor: '#ffffff', borderColor: ui.border }}>
               {/* Style Dropdown */}
               <div className="flex items-center gap-1.5">
                 <span className="text-[10px] font-bold text-slate-400 pl-1.5">风格:</span>
@@ -348,7 +361,7 @@ export default function StoryboardManagement({ onNext, initialMode }: { onNext: 
                 </div>
               </div>
 
-              <div className="w-px h-4 bg-slate-200"></div>
+              <div className="w-px h-4" style={{ backgroundColor: ui.border }}></div>
 
               {/* Orientation Dropdown */}
               <div className="flex items-center gap-1.5">
@@ -390,7 +403,7 @@ export default function StoryboardManagement({ onNext, initialMode }: { onNext: 
               </div>
             </div>
             
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border ml-2 shadow-sm ${modeMeta.bgColor} ${modeMeta.borderColor} ${modeMeta.textColor}`}>
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border ml-2 shadow-sm ${modeMeta.textColor}`} style={{ backgroundColor: '#e9f8f0', borderColor: '#9ce9c7' }}>
               {modeMeta.icon}
               <div>
                 <div className="text-[11px] font-bold leading-none">{modeMeta.label}</div>
@@ -403,7 +416,8 @@ export default function StoryboardManagement({ onNext, initialMode }: { onNext: 
             <div className="relative group">
               <button 
                 onClick={() => setShowModelMenu(!showModelMenu)}
-                className="px-3 py-1.5 text-[11px] font-bold bg-white text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-emerald-600 flex items-center gap-1.5 shadow-sm transition-colors"
+                className="px-3 py-1.5 text-[11px] font-bold bg-white text-slate-600 border rounded-xl hover:bg-slate-50 flex items-center gap-1.5 shadow-sm transition-colors"
+                style={{ borderColor: ui.border }}
               >
                 <Cpu className="w-3.5 h-3.5" /> 模型偏好
               </button>
@@ -441,14 +455,14 @@ export default function StoryboardManagement({ onNext, initialMode }: { onNext: 
               )}
             </div>
 
-            <button className="px-4 py-1.5 text-[11px] font-bold bg-slate-800 text-white rounded-xl hover:bg-slate-900 flex items-center gap-1.5 shadow-md active:scale-95 transition-all">
-              <Play className="w-3.5 h-3.5 fill-current text-emerald-400" /> 批量执行生成
+            <button className="px-4 py-1.5 text-[11px] font-bold text-white rounded-xl flex items-center gap-1.5 shadow-md active:scale-95 transition-all" style={{ backgroundColor: ui.navBg }}>
+              <Play className="w-3.5 h-3.5 fill-current" style={{ color: ui.primary }} /> 批量执行生成
             </button>
           </div>
         </div>
         
         {/* 列表区 */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/30 pb-20 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 pb-20 custom-scrollbar" style={{ backgroundColor: '#f3f4f4' }}>
           {shots.map((shot, index) => (
             <ShotCard 
               key={shot.id} 
@@ -584,14 +598,17 @@ function ShotCard({
   const isImageVideoWorkflow = initialMode === 'image-video';
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex transition-colors hover:border-emerald-300 group/card">
+    <div
+      className="rounded-2xl shadow-sm border overflow-hidden flex transition-colors group/card"
+      style={{ backgroundColor: ui.window, borderColor: ui.border }}
+    >
       {/* 左侧序号栏 */}
-      <div className="bg-slate-50/50 w-12 border-r border-slate-100 flex flex-col items-center pt-5 shrink-0 gap-3 group relative">
+      <div className="w-12 border-r flex flex-col items-center pt-5 shrink-0 gap-3 group relative" style={{ backgroundColor: '#f3f4f4', borderColor: ui.border }}>
         <span className="font-bold text-slate-700 bg-white border border-slate-200 w-7 h-7 flex items-center justify-center rounded-full shadow-sm text-xs">
           {shotNumber}
         </span>
         <div className="flex flex-col gap-2 opacity-0 group-hover/card:opacity-100 transition-opacity">
-          <button onClick={() => onNext(cardMode)} className="text-emerald-500 hover:text-emerald-700 bg-emerald-50 shadow-sm border border-emerald-200 rounded-lg p-1.5 transition-colors" title="进入精修模式">
+          <button onClick={() => onNext(cardMode)} className="shadow-sm border rounded-lg p-1.5 transition-colors" style={{ color: ui.primary, backgroundColor: '#e9f8f0', borderColor: '#9ce9c7' }} title="进入精修模式">
             <SlidersHorizontal className="w-3.5 h-3.5" />
           </button>
           <button className="text-slate-400 hover:text-slate-600 bg-white shadow-sm border border-slate-200 rounded-lg p-1.5 transition-colors" title="复制此镜">
@@ -606,7 +623,7 @@ function ShotCard({
       {/* 内容区 */}
       <div className="flex-1 p-4 grid grid-cols-12 gap-5">
         {/* 列1：绑定资产 */}
-        <div className="col-span-3 border-r border-slate-100 pr-5 flex flex-col gap-4">
+        <div className="col-span-3 border-r pr-5 flex flex-col gap-4" style={{ borderColor: ui.border }}>
           <div>
             <label className="text-[10px] text-slate-400 uppercase font-bold mb-2 block tracking-wider">绑定资产</label>
             <div className="flex flex-wrap gap-2">
@@ -662,10 +679,10 @@ function ShotCard({
         </div>
         
         {/* 列2：提示词 */}
-        <div className="col-span-5 border-r border-slate-100 pr-5 flex flex-col">
+        <div className="col-span-5 border-r pr-5 flex flex-col" style={{ borderColor: ui.border }}>
           <label className="text-[10px] text-slate-400 uppercase font-bold mb-2 flex items-center justify-between tracking-wider">
             画面内容与AIGC提示词
-            <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded cursor-pointer hover:bg-emerald-100 transition-colors shadow-sm border border-emerald-100">AI 优化</span>
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded cursor-pointer transition-colors shadow-sm border" style={{ color: ui.primary, backgroundColor: '#e9f8f0', borderColor: '#9ce9c7' }}>AI 优化</span>
           </label>
           <PromptAssetEditor
             value={shot.prompt}
@@ -688,20 +705,22 @@ function ShotCard({
         <div className="col-span-4 flex flex-col relative">
           <div className="flex items-center justify-between mb-2">
             <label className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">预览与生成</label>
-            <div className="flex bg-slate-200/50 p-0.5 rounded-lg border border-slate-100 shadow-inner">
+            <div className="flex p-0.5 rounded-lg border shadow-inner" style={{ backgroundColor: '#eceeee', borderColor: ui.border }}>
               <button 
                 onClick={() => setCardMode('image')}
                 className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1 ${
-                  cardMode === 'image' ? 'bg-white shadow-sm text-emerald-600' : 'text-slate-500 hover:text-slate-700'
+                  cardMode === 'image' ? 'bg-white shadow-sm' : 'text-slate-500 hover:text-slate-700'
                 }`}
+                style={cardMode === 'image' ? { color: ui.primary } : undefined}
               >
                 <ImageIcon className="w-3 h-3" /> 图生
               </button>
               <button 
                 onClick={() => setCardMode('video')}
                 className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1 ${
-                  cardMode === 'video' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'
+                  cardMode === 'video' ? 'bg-white shadow-sm' : 'text-slate-500 hover:text-slate-700'
                 }`}
+                style={cardMode === 'video' ? { color: ui.primary } : undefined}
               >
                 <Video className="w-3 h-3" /> 直出
               </button>
