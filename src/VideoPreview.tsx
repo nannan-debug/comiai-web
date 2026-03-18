@@ -1,467 +1,725 @@
-import React, { useEffect, useState } from 'react';
-import { 
-  Play, Pause, SkipBack, SkipForward, MessageSquare, 
-  Share2, CheckCircle2, Clock, ChevronRight, ChevronLeft,
-  Pencil, MousePointer2, Type, Eraser, Layers, MoreHorizontal,
-  Upload, History, Settings, User, ChevronDown, Plus, Eye,
-  AlertCircle, Check, Scissors, Volume2, FastForward, Download,
-  Filter, CheckSquare, Trash2, Film, CheckCircle, RefreshCcw, Send,
-  Target, List, Image as ImageIcon, RotateCcw, Square, MoveUpRight, X,
-  ExternalLink
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Pause,
+  Play,
+  Plus,
+  RefreshCcw,
+  SkipBack,
+  SkipForward,
+  Trash2,
+  X,
 } from 'lucide-react';
+import VideoPreviewReviewMode from './VideoPreviewReviewMode';
 
 type PreviewDraftState = 'clean' | 'draft';
+
+type AssetItem = {
+  id: string;
+  storyboardId: number;
+  name: string;
+  type: '视频' | '图片';
+  durationSec: number;
+  thumb: string;
+};
+
+type TimelineClip = {
+  id: string;
+  sourceAssetId: string;
+  name: string;
+  durationSec: number;
+  thumb: string;
+};
+
+const TIMELINE_STORAGE_KEY = 'comiai_video_preview_timeline_v2';
+
+const storyboardAssetSeeds: Record<number, Array<Omit<AssetItem, 'id'>>> = {
+  1: [
+    { storyboardId: 1, name: '电视塔_全景.mp4', type: '视频', durationSec: 5, thumb: 'https://picsum.photos/seed/tower-1/240/420' },
+    { storyboardId: 1, name: '电视塔_特写.mp4', type: '视频', durationSec: 5, thumb: 'https://picsum.photos/seed/tower-2/240/420' },
+    { storyboardId: 1, name: '塔顶云层.jpg', type: '图片', durationSec: 5, thumb: 'https://picsum.photos/seed/tower-still/240/420' },
+  ],
+  2: [
+    { storyboardId: 2, name: '主角祈祷.mp4', type: '视频', durationSec: 5, thumb: 'https://picsum.photos/seed/girl-pray/240/420' },
+    { storyboardId: 2, name: '主角侧脸.jpg', type: '图片', durationSec: 5, thumb: 'https://picsum.photos/seed/girl-side/240/420' },
+  ],
+  3: [
+    { storyboardId: 3, name: '塔下门洞.mp4', type: '视频', durationSec: 5, thumb: 'https://picsum.photos/seed/door-1/240/420' },
+    { storyboardId: 3, name: '门洞补帧.jpg', type: '图片', durationSec: 5, thumb: 'https://picsum.photos/seed/door-still/240/420' },
+  ],
+  4: [
+    { storyboardId: 4, name: '手部特写.mp4', type: '视频', durationSec: 5, thumb: 'https://picsum.photos/seed/hand-1/240/420' },
+    { storyboardId: 4, name: '老城外景.mp4', type: '视频', durationSec: 5, thumb: 'https://picsum.photos/seed/street-1/240/420' },
+  ],
+  5: [
+    { storyboardId: 5, name: '街巷广角.mp4', type: '视频', durationSec: 5, thumb: 'https://picsum.photos/seed/street-wide/240/420' },
+    { storyboardId: 5, name: '场景补帧.jpg', type: '图片', durationSec: 5, thumb: 'https://picsum.photos/seed/still-1/240/420' },
+  ],
+  6: [
+    { storyboardId: 6, name: '远景推镜.mp4', type: '视频', durationSec: 5, thumb: 'https://picsum.photos/seed/city-pan/240/420' },
+    { storyboardId: 6, name: '剪影参考.jpg', type: '图片', durationSec: 5, thumb: 'https://picsum.photos/seed/city-still/240/420' },
+  ],
+};
+
+const getLatestStoryboardAssets = (refreshMap: Record<number, number> = {}): AssetItem[] => {
+  const results: AssetItem[] = [];
+  Object.keys(storyboardAssetSeeds).forEach((key) => {
+    const sbId = Number(key);
+    const token = refreshMap[sbId] ?? 0;
+    storyboardAssetSeeds[sbId].forEach((asset, index) => {
+      results.push({
+        ...asset,
+        id: `sb-${sbId}-${index}-${token}`,
+        // mock 刷新后不同素材版本
+        thumb: `${asset.thumb}?v=${token}`,
+        name: token > 0 && asset.type === '视频' ? `${asset.name.replace('.mp4', '')}_v${token}.mp4` : asset.name,
+      });
+    });
+  });
+  return results;
+};
+
+const toTimelineClips = (assets: AssetItem[]) =>
+  assets
+    .filter((item) => item.type === '视频')
+    .slice(0, 6)
+    .map((item, index) => ({
+      id: `clip-${index + 1}`,
+      sourceAssetId: item.id,
+      name: item.name,
+      durationSec: item.durationSec,
+      thumb: item.thumb,
+    }));
 
 export default function VideoPreview({
   onDraftStateChange,
 }: {
   onDraftStateChange?: (state: PreviewDraftState) => void;
 }) {
-  const ui = {
-    primary: '#01cd74',
-    text: '#1c2329',
-    bg: '#e8e9ea',
-    subText: '#a4a7a9',
-    navBg: '#1c2329e6',
-    navOption: '#8e9194',
-    border: '#d2d3d4',
-    window: '#f8f8f9',
-    mask: '#4a4f5433',
-    disabled: '#dddddd',
-    inProgress: '#35bbf0',
-    error: '#ff6668',
-  };
-  // 页面状态控制：'edit' (粗剪) | 'review' (审阅)
-  const [pageMode, setPageMode] = useState('edit'); 
+  const [allAssets, setAllAssets] = useState<AssetItem[]>([]);
+  const [activeStoryboardId, setActiveStoryboardId] = useState(1);
+  const [showStoryboardMenu, setShowStoryboardMenu] = useState(false);
+  const [playheadSec, setPlayheadSec] = useState(0);
+  const [timelineClips, setTimelineClips] = useState<TimelineClip[]>([]);
+  const [assetRefreshMap, setAssetRefreshMap] = useState<Record<number, number>>({});
+  const [showOverwriteConfirm, setShowOverwriteConfirm] = useState(false);
+  const [showReviewMode, setShowReviewMode] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [showCreateExportTaskModal, setShowCreateExportTaskModal] = useState(false);
+  const [showDownloadConfirm, setShowDownloadConfirm] = useState(false);
+  const [jianyingPath, setJianyingPath] = useState('/Users/anna/Movies/JianyingPro/User Data/Projects/com.lveditor.draft');
+  const [draftExportPath, setDraftExportPath] = useState('');
+  const [exportTasks, setExportTasks] = useState([
+    { id: 189, operator: '郭楠楠', progress: '100%', createdAt: '2026-03-18 11:27:42', action: '下载' },
+  ]);
+  const [exportPage, setExportPage] = useState(1);
+  const [exportPageSize, setExportPageSize] = useState(10);
+  const [exportJumpPage, setExportJumpPage] = useState('1');
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(45);
-  const [duration] = useState(300); 
-  
-  // 资源池状态
-  const [activeSb, setActiveSb] = useState(1); 
-  const [assetType, setAssetType] = useState('全部'); 
-  const [showTypeMenu, setShowTypeMenu] = useState(false);
-  const [isFixedOnly, setIsFixedOnly] = useState(false);
+  const timelineTrackRef = useRef<HTMLDivElement | null>(null);
 
-  // 版本与同步
-  const [activeVersion, setActiveVersion] = useState('v2');
-  const [showVersionMenu, setShowVersionMenu] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false); // 提交审阅状态
-  const [previewAdjustment, setPreviewAdjustment] = useState('保留当前镜头节奏，优先检查角色情绪与转场流畅度。');
-  const [draftState, setDraftState] = useState<PreviewDraftState>('clean');
-  const [isAssetsCollapsed, setIsAssetsCollapsed] = useState(false);
-  const [isReviewCollapsed, setIsReviewCollapsed] = useState(false);
+  useEffect(() => {
+    onDraftStateChange?.('clean');
+  }, [onDraftStateChange]);
 
-  // 1. 全局素材库
-  const assetLibrary = [
-    { id: 'v1', sbId: 1, name: '电视塔_全景.mp4', type: '视频', duration: '00:09', isFixed: true, thumb: 'bg-orange-100' },
-    { id: 'v2', sbId: 1, name: '电视塔_特写.mp4', type: '视频', duration: '00:04', isFixed: false, thumb: 'bg-orange-50' },
-    { id: 'p1', sbId: 1, name: '背景草稿.jpg', type: '图片', duration: '--', isFixed: true, thumb: 'bg-slate-200' },
-    { id: 'v3', sbId: 2, name: '主角_特写_祈祷.mp4', type: '视频', duration: '00:05', isFixed: true, thumb: 'bg-emerald-100' },
-    { id: 'v4', sbId: 3, name: '废墟_全景.mp4', type: '视频', duration: '00:06', isFixed: true, thumb: 'bg-blue-100' },
-    { id: 'p2', sbId: 3, name: '概念图.jpg', type: '图片', duration: '--', isFixed: false, thumb: 'bg-slate-300' },
-  ];
+  useEffect(() => {
+    const latestAssets = getLatestStoryboardAssets(assetRefreshMap);
+    setAllAssets(latestAssets);
 
-  // 2. 版本快照数据
-  const [versionData, setVersionData] = useState({
-    v1: {
-      tracks: [
-        { id: 'clip_1', assetId: 'v1', label: '电视塔_全景.mp4', duration: '3.0s', thumb: 'bg-orange-100' },
-        { id: 'clip_2', assetId: 'v3', label: '主角_特写_祈祷.mp4', duration: '5.2s', thumb: 'bg-emerald-100' },
-      ],
-      comments: [
-        { id: 101, time: 24, author: '编导-张三', text: 'V1：这里建议加个特写转场。', status: 'resolved', hasAnnotation: false },
-      ]
-    },
-    v2: {
-      tracks: [
-        { id: 'clip_3', assetId: 'v4', label: '废墟_全景.mp4', duration: '4.0s', thumb: 'bg-blue-100' },
-        { id: 'clip_4', assetId: 'v3', label: '主角_特写_祈祷.mp4', duration: '5.2s', thumb: 'bg-emerald-100' },
-        { id: 'clip_5', assetId: 'v1', label: '电视塔_全景.mp4', duration: '3.5s', thumb: 'bg-orange-100' },
-      ],
-      comments: [
-        { id: 102, time: 45, author: '编导-张三', text: '此处表情过于夸张，建议微调。', status: 'pending', hasAnnotation: true },
-        { id: 103, time: 142, author: '监制-李四', text: '加入一张背景参考图。', status: 'pending', hasAnnotation: false, attachment: 'bg-slate-200' },
-      ]
+    const saved = localStorage.getItem(TIMELINE_STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as TimelineClip[];
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setTimelineClips(parsed);
+          return;
+        }
+      } catch {
+        // ignore corrupted saved data
+      }
     }
-  });
+    setTimelineClips(toTimelineClips(latestAssets));
+  // 进入页面都拉最新素材，但时间轴只在首次无缓存时初始化
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const currentVersion = versionData[activeVersion as keyof typeof versionData];
-  
-  const filteredAssets = assetLibrary.filter(asset => {
-    if (asset.sbId !== activeSb) return false;
-    if (assetType !== '全部' && asset.type !== assetType) return false;
-    if (isFixedOnly && !asset.isFixed) return false;
+  useEffect(() => {
+    localStorage.setItem(TIMELINE_STORAGE_KEY, JSON.stringify(timelineClips));
+  }, [timelineClips]);
+
+  const filteredAssets = allAssets.filter((item) => {
+    if (item.storyboardId !== activeStoryboardId) return false;
+    if (item.type !== '视频') return false;
     return true;
   });
 
-  const formatTime = (s: number) => {
-    const min = Math.floor(s / 60);
-    const sec = Math.floor(s % 60);
-    return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+  const totalDuration = useMemo(
+    () => Math.max(5, timelineClips.reduce((sum, clip) => sum + clip.durationSec, 0)),
+    [timelineClips]
+  );
+  const pxPerSecond = 26;
+  const timelineWidth = Math.max(900, totalDuration * pxPerSecond);
+  const tickMarks = useMemo(() => {
+    const marks: number[] = [];
+    for (let i = 0; i <= totalDuration; i += 5) marks.push(i);
+    if (marks[marks.length - 1] !== totalDuration) marks.push(totalDuration);
+    return marks;
+  }, [totalDuration]);
+  const playheadPercent = totalDuration > 0 ? (playheadSec / totalDuration) * 100 : 0;
+
+  const activePreviewClip = useMemo(() => {
+    let cursor = 0;
+    for (const clip of timelineClips) {
+      cursor += clip.durationSec;
+      if (playheadSec <= cursor) return clip;
+    }
+    return timelineClips[timelineClips.length - 1] || null;
+  }, [timelineClips, playheadSec]);
+
+  const formatTime = (sec: number) => {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const handleSeek = (time: number) => {
-    setCurrentTime(time);
+  const handleRefreshAssets = () => {
+    const nextMap = { ...assetRefreshMap, [activeStoryboardId]: (assetRefreshMap[activeStoryboardId] ?? 0) + 1 };
+    setAssetRefreshMap(nextMap);
+    setAllAssets(getLatestStoryboardAssets(nextMap));
+  };
+
+  const handleAddToTimeline = (asset: AssetItem) => {
+    const insertionIndex = (() => {
+      let cursor = 0;
+      for (let i = 0; i < timelineClips.length; i += 1) {
+        cursor += timelineClips[i].durationSec;
+        if (playheadSec < cursor) return i + 1;
+      }
+      return timelineClips.length;
+    })();
+
+    const nextClip: TimelineClip = {
+      id: `clip-${Date.now()}`,
+      sourceAssetId: asset.id,
+      name: asset.name,
+      durationSec: asset.durationSec,
+      thumb: asset.thumb,
+    };
+
+    setTimelineClips((prev) => [...prev.slice(0, insertionIndex), nextClip, ...prev.slice(insertionIndex)]);
+  };
+
+  const handleDeleteClip = (clipId: string) => {
+    setTimelineClips((prev) => prev.filter((clip) => clip.id !== clipId));
+  };
+
+  const handleOverwriteTimeline = () => {
+    setTimelineClips(toTimelineClips(getLatestStoryboardAssets(assetRefreshMap)));
+    setShowOverwriteConfirm(false);
+    setPlayheadSec(0);
     setIsPlaying(false);
   };
 
-  const handleSync = () => {
-    setIsSyncing(true);
-    setTimeout(() => setIsSyncing(false), 1500);
+  const handleConfirmCreateExportTask = () => {
+    const nextPath = draftExportPath.trim();
+    if (!nextPath) return;
+
+    setJianyingPath(nextPath);
+    const nextId = exportTasks.length > 0 ? exportTasks[0].id + 1 : 1;
+    const now = new Date();
+    const pad = (n: number) => `${n}`.padStart(2, '0');
+    const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    setExportTasks((prev) => [
+      { id: nextId, operator: '郭楠楠', progress: '100%', createdAt: stamp, action: '下载' },
+      ...prev,
+    ]);
+    setExportPage(1);
+    setExportJumpPage('1');
+    setShowCreateExportTaskModal(false);
   };
 
-  const handleSubmitReview = () => {
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setPageMode('review');
-    }, 2000);
+  const handleDownload = () => {
+    setShowDownloadConfirm(true);
+  };
+
+  const handleConfirmDownload = () => {
+    setShowDownloadConfirm(false);
+  };
+
+  const exportTotalPages = Math.max(1, Math.ceil(exportTasks.length / exportPageSize));
+  const safeExportPage = Math.min(exportTotalPages, Math.max(1, exportPage));
+  const pagedExportTasks = exportTasks.slice((safeExportPage - 1) * exportPageSize, safeExportPage * exportPageSize);
+
+  const seekTo = (next: number) => {
+    const safe = Math.min(totalDuration, Math.max(0, next));
+    setPlayheadSec(safe);
+  };
+
+  const seekBy = (delta: number) => seekTo(playheadSec + delta);
+
+  const getClipStart = (index: number) => timelineClips.slice(0, index).reduce((sum, clip) => sum + clip.durationSec, 0);
+
+  const seekPrevClip = () => {
+    const starts = timelineClips.map((_, i) => getClipStart(i));
+    const prev = [...starts].reverse().find((start) => start < Math.max(0, playheadSec - 0.001));
+    seekTo(prev ?? 0);
+  };
+
+  const seekNextClip = () => {
+    const starts = timelineClips.map((_, i) => getClipStart(i));
+    const next = starts.find((start) => start > playheadSec + 0.001);
+    seekTo(next ?? totalDuration);
   };
 
   useEffect(() => {
-    onDraftStateChange?.(draftState);
-  }, [draftState, onDraftStateChange]);
-
-  const handlePreviewAdjustmentChange = (value: string) => {
-    setPreviewAdjustment(value);
-    if (draftState !== 'draft') {
-      setDraftState('draft');
-    }
-  };
-
-  const handleApplyDraft = () => {
-    setDraftState('clean');
-  };
+    if (!isPlaying) return undefined;
+    const timer = setInterval(() => {
+      setPlayheadSec((prev) => {
+        const next = prev + 1;
+        if (next >= totalDuration) {
+          setIsPlaying(false);
+          return totalDuration;
+        }
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isPlaying, totalDuration]);
 
   return (
     <>
-      {/* 2. 主内容区 */}
-      <div className="flex-1 flex overflow-hidden p-3 gap-3 pb-0" style={{ backgroundColor: ui.bg }}>
-        
-        {/* 左侧：资产池 (白色主题) */}
-        <aside className={`rounded-2xl border shadow-sm flex flex-col overflow-hidden transition-all duration-300 ${pageMode === 'edit' ? (isAssetsCollapsed ? 'w-14 opacity-100' : 'w-72 opacity-100') : 'w-0 opacity-0 invisible'}`} style={{ backgroundColor: ui.window, borderColor: ui.border }}>
-          <div className="p-4 border-b flex items-center justify-between shrink-0" style={{ borderColor: ui.border, backgroundColor: '#f2f3f4' }}>
-            {!isAssetsCollapsed && <span className="font-bold text-base" style={{ color: ui.text }}>剧集资产</span>}
+      <div className="flex-1 flex overflow-hidden p-3 pb-0 gap-3 bg-[#e8e9ea]">
+        <aside className="w-[300px] rounded-3xl border border-[#d2d3d4] bg-[#f8f8f9] shadow-sm overflow-hidden flex flex-col">
+          <div className="px-4 py-3 border-b border-[#d2d3d4] bg-[#f2f3f4] flex items-center justify-between">
+            <div className="font-bold text-slate-700">分镜素材</div>
             <button
-              onClick={() => setIsAssetsCollapsed((prev) => !prev)}
-              className="ml-auto rounded-xl p-2 text-slate-400 transition-colors hover:bg-white hover:text-emerald-600"
-              title={isAssetsCollapsed ? '展开剧集资产' : '收起剧集资产'}
+              onClick={handleRefreshAssets}
+              className="text-xs text-slate-500 hover:text-emerald-600 flex items-center gap-1"
             >
-              <List size={18} />
+              <RefreshCcw size={12} />
+              刷新
             </button>
           </div>
-          {isAssetsCollapsed ? (
-            <div className="flex flex-1 flex-col items-center gap-3 py-4">
-              {[1, 2, 3, 4, 5, 6].map((id) => (
-                <button
-                  key={id}
-                  onClick={() => setActiveSb(id)}
-                  className={`flex h-9 w-9 items-center justify-center rounded-xl text-[11px] font-bold transition-all ${activeSb === id ? '' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-700'}`}
-                  style={activeSb === id ? { backgroundColor: '#d8f8ea', color: ui.primary } : undefined}
-                >
-                  {id}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <>
-          <div className="p-4 flex flex-col gap-4">
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <button onClick={() => setShowTypeMenu(!showTypeMenu)} className="w-full flex items-center justify-between bg-slate-50 text-slate-600 px-3 py-1.5 rounded-xl text-xs border border-slate-200">
-                  {assetType} <ChevronDown size={14} className={showTypeMenu ? 'rotate-180 transition-all' : ''}/>
-                </button>
-                {showTypeMenu && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl z-[70] overflow-hidden">
-                    {['全部', '图片', '视频'].map(t => (
-                      <button key={t} onClick={() => {setAssetType(t); setShowTypeMenu(false);}} className={`w-full text-left px-4 py-2 text-xs hover:bg-slate-50 ${assetType === t ? 'text-emerald-600 font-bold bg-emerald-50' : 'text-slate-500'}`}>{t}</button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <label className="flex items-center gap-2 cursor-pointer bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
-                <div onClick={() => setIsFixedOnly(!isFixedOnly)} className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isFixedOnly ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300 bg-white'}`}>
-                  {isFixedOnly && <Check size={12} className="text-white font-bold" />}
+          <div className="px-4 pt-2 pb-1 flex items-center gap-3 text-xs font-semibold text-slate-500 border-b border-slate-200">
+            {[1, 2, 3, 4].map((id) => (
+              <button
+                key={id}
+                onClick={() => setActiveStoryboardId(id)}
+                className={`pb-1 border-b-2 ${activeStoryboardId === id ? 'border-emerald-500 text-emerald-600' : 'border-transparent hover:text-slate-700'}`}
+              >
+                分镜{id}
+              </button>
+            ))}
+            <div className="relative ml-auto">
+              <button
+                onClick={() => setShowStoryboardMenu((prev) => !prev)}
+                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 bg-white hover:bg-slate-50"
+              >
+                分 <ChevronDown size={12} />
+              </button>
+              {showStoryboardMenu ? (
+                <div className="absolute right-0 top-full mt-1 w-20 rounded-xl border border-slate-200 bg-white shadow-lg z-20 overflow-hidden">
+                  {[1, 2, 3, 4, 5, 6].map((id) => (
+                    <button
+                      key={id}
+                      onClick={() => {
+                        setActiveStoryboardId(id);
+                        setShowStoryboardMenu(false);
+                      }}
+                      className={`w-full text-left px-3 py-1.5 text-xs ${activeStoryboardId === id ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-slate-600 hover:bg-slate-50'}`}
+                    >
+                      分镜{id}
+                    </button>
+                  ))}
                 </div>
-                <span className="text-[11px] font-bold text-slate-500">已定稿</span>
-              </label>
-            </div>
-
-            <div className="flex gap-4 overflow-x-auto hide-scrollbar border-b border-slate-100 pb-1 text-[11px] font-bold text-slate-400">
-              {[1, 2, 3, 4, 5, 6].map(id => (
-                <button 
-                  key={id} 
-                  onClick={() => setActiveSb(id)}
-                  className={`whitespace-nowrap pb-2 border-b-2 transition-all ${activeSb === id ? 'text-emerald-500 border-emerald-500' : 'border-transparent hover:text-slate-600'}`}
-                >
-                  分镜 {id}
-                </button>
-              ))}
-              <button className="text-slate-400 pb-2"><MoreHorizontal size={14}/></button>
+              ) : null}
             </div>
           </div>
-
-          <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 gap-3 content-start bg-slate-50/30">
+          <div className="p-3 grid grid-cols-2 gap-3 overflow-y-auto">
             {filteredAssets.map((asset) => (
-              <div key={asset.id} className="group relative bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-emerald-400 hover:shadow-md transition-all cursor-pointer">
-                <div className={`aspect-[9/16] w-full ${asset.thumb} opacity-80 flex items-center justify-center relative`}>
-                  {asset.isFixed && <span className="absolute top-2 left-2 bg-emerald-500 text-white text-[9px] px-1.5 py-0.5 rounded font-bold shadow-sm">已定稿</span>}
-                  {asset.type === '视频' && <span className="absolute bottom-2 right-2 bg-black/50 text-white text-[9px] px-1.5 rounded font-mono font-bold">{asset.duration}</span>}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/20 transition-opacity">
-                    <button className="bg-white p-2 rounded-full text-emerald-500 shadow-xl hover:scale-110 active:scale-95 transition-transform"><Plus size={18}/></button>
-                  </div>
+              <div key={asset.id} className="rounded-xl bg-[#e8e9ea] p-2 border border-slate-200">
+                <div className="relative rounded-lg overflow-hidden">
+                  <img src={asset.thumb} className="w-full aspect-[9/14] object-cover" referrerPolicy="no-referrer" />
+                  <span className="absolute top-1 left-1 text-[10px] bg-white/95 text-slate-700 px-1.5 py-0.5 rounded-full">{formatTime(asset.durationSec)}</span>
+                  <button
+                    onClick={() => handleAddToTimeline(asset)}
+                    className="absolute top-1 right-1 w-7 h-7 rounded-full bg-white text-slate-700 border border-slate-200 flex items-center justify-center hover:text-emerald-600"
+                    title="添加到时间轴（在时间指针后）"
+                  >
+                    <Plus size={14} />
+                  </button>
                 </div>
-                <div className="p-2 text-[10px] text-slate-500 font-bold truncate">{asset.name}</div>
               </div>
             ))}
           </div>
-            </>
-          )}
         </aside>
 
-        {/* 中间：播放器区域 */}
-        <main className="flex-1 rounded-2xl border shadow-sm flex flex-col overflow-hidden relative" style={{ backgroundColor: ui.window, borderColor: ui.border }}>
-          <div className="h-10 border-b flex items-center justify-between px-4" style={{ borderColor: ui.border, backgroundColor: '#f2f3f4' }}>
-            <div className="flex rounded-xl p-0.5 shadow-inner" style={{ backgroundColor: '#dde0e3' }}>
-              <button onClick={() => setPageMode('edit')} className={`px-5 py-1 rounded-lg text-[11px] font-bold transition-all ${pageMode === 'edit' ? 'bg-white shadow-sm' : ''}`} style={{ color: pageMode === 'edit' ? ui.primary : ui.navOption }}>🚧 粗剪模式</button>
-              <button onClick={() => setPageMode('review')} className={`px-5 py-1 rounded-lg text-[11px] font-bold transition-all ${pageMode === 'review' ? 'bg-white shadow-sm' : ''}`} style={{ color: pageMode === 'review' ? ui.inProgress : ui.navOption }}>🎬 审阅模式</button>
-            </div>
-            <div className="flex items-center gap-3">
-              <input
-                value={previewAdjustment}
-                onChange={(e) => handlePreviewAdjustmentChange(e.target.value)}
-                className="hidden w-64 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[11px] text-slate-600 outline-none transition-colors placeholder:text-slate-400 focus:border-emerald-400 md:block"
-                placeholder="补充一句当前预览调整说明"
-              />
-              <button
-                onClick={handleApplyDraft}
-                disabled={draftState === 'clean'}
-                className={`rounded-xl px-3 py-1.5 text-[11px] font-bold transition-colors ${draftState === 'draft' ? 'text-white shadow-sm' : 'cursor-not-allowed text-slate-400'}`}
-                style={draftState === 'draft' ? { backgroundColor: ui.primary } : { backgroundColor: ui.disabled }}
-              >
-                应用到当前版本
-              </button>
-              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 bg-white px-2 py-1 rounded border border-slate-100 uppercase tracking-widest">
-                {activeVersion} 版本状态：{pageMode === 'edit' ? '正在粗剪' : '审阅进行中'}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex-1 flex items-center justify-center p-8 relative" style={{ backgroundColor: ui.bg }}>
-            <div className="relative w-[300px] h-[533px] bg-black rounded-3xl shadow-2xl overflow-hidden group border-[6px] border-white">
-               {pageMode === 'review' && Math.abs(currentTime - 45) < 3 && (
-                 <div className="absolute inset-0 z-20 pointer-events-none">
-                    <div className="absolute top-[20%] left-[20%] w-24 h-24 text-red-500">
-                       <MoveUpRight size={64} className="rotate-180 drop-shadow-lg" />
-                       <div className="absolute top-16 left-16 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded font-bold whitespace-nowrap">此处表情需修改</div>
-                    </div>
-                 </div>
-               )}
-               <div className="w-full h-full bg-slate-900 flex items-center justify-center text-white/5 font-black text-6xl select-none uppercase tracking-tighter">
-                 {activeVersion}
-               </div>
-            </div>
-          </div>
-
-          <div className="h-12 border-t border-slate-100 flex items-center justify-between px-6 bg-white shrink-0">
-            <div className="text-[10px] font-mono text-slate-400 font-bold">{formatTime(currentTime)} / {formatTime(duration)}</div>
-            <div className="flex items-center gap-6">
-              <button onClick={() => setIsPlaying(!isPlaying)} className="w-10 h-10 bg-slate-800 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all">
-                {isPlaying ? <Pause size={18}/> : <Play size={18} className="ml-0.5"/>}
-              </button>
-            </div>
-            <div className="flex gap-4">
-              <button className="p-1.5 text-slate-400 hover:text-emerald-500 transition-colors"><Volume2 size={16}/></button>
-              <button className="p-1.5 text-slate-400 hover:text-emerald-500 transition-colors"><Share2 size={16}/></button>
+        <main className="flex-1 rounded-3xl border border-[#d2d3d4] bg-[#f8f8f9] shadow-sm overflow-hidden flex flex-col">
+          <div className="flex-1 flex items-center justify-center bg-[#e8e9ea] p-6">
+            <div className="w-[420px] max-w-[52%] aspect-[9/16] rounded-2xl overflow-hidden bg-black shadow-2xl">
+              {activePreviewClip ? (
+                <img src={activePreviewClip.thumb} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm">暂无视频片段</div>
+              )}
             </div>
           </div>
         </main>
-
-        {/* 右侧：审阅面板 */}
-        <aside className={`rounded-2xl border shadow-sm flex flex-col overflow-hidden transition-all duration-300 ${isReviewCollapsed ? 'w-14' : 'w-72'}`} style={{ backgroundColor: ui.window, borderColor: ui.border }}>
-          <div className="p-4 border-b flex justify-between items-center" style={{ borderColor: ui.border, backgroundColor: '#f2f3f4', color: ui.text }}>
-            {!isReviewCollapsed && (
-              <>
-                <h3 className="font-bold flex items-center gap-2"><MessageSquare size={16} style={{ color: ui.primary }} /> 审阅反馈</h3>
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: '#d8f8ea', color: ui.primary }}>{currentVersion.comments.length}</span>
-              </>
-            )}
-            <button
-              onClick={() => setIsReviewCollapsed((prev) => !prev)}
-              className="ml-auto rounded-xl p-2 text-slate-400 transition-colors hover:bg-white hover:text-emerald-600"
-              title={isReviewCollapsed ? '展开审阅反馈' : '收起审阅反馈'}
-            >
-              <MessageSquare size={18} />
-            </button>
-          </div>
-          {isReviewCollapsed ? (
-            <div className="flex flex-1 flex-col items-center gap-3 py-4">
-              <span className="rounded-full px-3 py-1 text-[11px] font-bold" style={{ backgroundColor: '#d8f8ea', color: ui.primary }}>{currentVersion.comments.length}</span>
-            </div>
-          ) : (
-            <>
-          <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-slate-50/30">
-            {currentVersion.comments.map(c => (
-              <div 
-                key={c.id} 
-                onClick={() => handleSeek(c.time)}
-                className={`p-3 bg-white border rounded-xl transition-all cursor-pointer shadow-sm hover:border-emerald-300 ${Math.abs(currentTime - c.time) < 2 ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/10' : 'border-slate-100'}`}
-              >
-                <div className="flex justify-between items-start mb-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold text-slate-700">{c.author}</span>
-                    <span className="text-[10px] text-emerald-500 font-mono font-bold bg-emerald-50 px-1.5 py-0.5 rounded flex items-center gap-1">
-                       {formatTime(c.time)}
-                       {c.hasAnnotation && <Pencil size={10} className="text-emerald-600 animate-pulse"/>}
-                    </span>
-                  </div>
-                  <span className="text-[9px] text-slate-400 italic">来自 V1</span>
-                </div>
-                <p className="text-[11px] text-slate-600 leading-relaxed">{c.text}</p>
-                {c.attachment && <div className={`mt-2 h-16 w-full rounded-lg ${c.attachment} border border-dashed border-slate-300 flex items-center justify-center text-[10px] text-slate-400`}>图片附件</div>}
-              </div>
-            ))}
-          </div>
-
-          {/* 批注工具与评论输入 */}
-          <div className="p-4 border-t border-slate-100 bg-slate-50 flex flex-col gap-2">
-             <div className="relative group">
-               <textarea 
-                 placeholder="在审阅模式下输入建议..." 
-                 disabled={pageMode === 'edit'}
-                 className={`w-full p-3 pr-20 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 outline-none resize-none bg-white shadow-inner transition-all ${pageMode === 'edit' ? 'bg-slate-50 cursor-not-allowed opacity-60' : ''}`}
-                 rows="3"
-               ></textarea>
-               <div className="absolute right-2 bottom-2 flex items-center gap-1">
-                 <button className="p-1.5 text-slate-400 hover:text-emerald-500"><ImageIcon size={16}/></button>
-                 <button className="ml-1 bg-slate-800 text-white p-2 rounded-lg shadow-md hover:bg-slate-900 transition-all"><Send size={14}/></button>
-               </div>
-             </div>
-          </div>
-            </>
-          )}
-        </aside>
       </div>
 
-      {/* 3. 底部时间轴区 */}
-      <footer className="h-44 border-t flex flex-col shrink-0 p-3 pt-0 z-10 shadow-inner" style={{ backgroundColor: ui.window, borderColor: ui.border }}>
-        <div className="h-12 flex items-center justify-between px-2">
-           <div className="flex items-center gap-4">
-             {/* 版本快照切换 */}
-             <div className="relative group">
-               <button onClick={() => setShowVersionMenu(!showVersionMenu)} className="flex items-center gap-2 px-3 py-1.5 text-white rounded-xl text-[11px] font-bold transition-all shadow-md" style={{ backgroundColor: ui.navBg }}>
-                 <History size={14}/> {activeVersion.toUpperCase()} 分支 <ChevronDown size={14} className={showVersionMenu ? 'rotate-180 transition-all' : ''}/>
-               </button>
-               {showVersionMenu && (
-                 <div className="absolute bottom-full left-0 mb-3 w-52 bg-white border border-slate-200 rounded-2xl shadow-2xl p-2 z-[60]">
-                   {['v2', 'v1'].map(v => (
-                     <button key={v} onClick={() => { setActiveVersion(v); setShowVersionMenu(false); }} className={`w-full text-left p-2.5 rounded-xl text-xs font-bold flex items-center justify-between ${activeVersion === v ? '' : 'hover:bg-slate-50 text-slate-600'}`} style={activeVersion === v ? { backgroundColor: '#d8f8ea', color: ui.primary } : undefined}>
-                       <span className="uppercase">{v} 分支预览</span> {activeVersion === v && <Check size={14}/>}
-                     </button>
-                   ))}
-                 </div>
-               )}
-             </div>
-
-             {pageMode === 'edit' && (
-               <button onClick={handleSync} className="flex items-center gap-1.5 px-4 py-1.5 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl text-[10px] font-bold hover:bg-amber-100 transition-all">
-                 <RefreshCcw size={12} className={isSyncing ? 'animate-spin' : ''}/>
-                 {isSyncing ? '同步中...' : '同步分镜'}
-               </button>
-             )}
-             <div className="h-4 w-px bg-slate-200 mx-1"></div>
-             <div className="flex items-center gap-2 bg-slate-50 px-3 py-1 rounded-full border border-slate-100 shadow-inner">
-               <button className="text-[10px] font-bold text-slate-300 hover:text-slate-600">－</button>
-               <div className="w-32 h-1 bg-slate-200 rounded-full"><div className="w-1/2 h-full rounded-full shadow-sm" style={{ backgroundColor: ui.primary }}></div></div>
-               <button className="text-[10px] font-bold text-slate-300 hover:text-slate-600">＋</button>
-             </div>
-           </div>
-           <div className="flex gap-2">
-             <button className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-bold flex items-center gap-1.5 shadow-sm hover:bg-slate-50"><Scissors size={14}/> 分割</button>
-             
-             {/* 粗剪模式下的提交审阅按钮 */}
-             {pageMode === 'edit' && (
-               <button 
-                onClick={handleSubmitReview}
-                className="px-5 py-2 bg-blue-600 text-white rounded-xl text-[11px] font-bold flex items-center gap-2 shadow-md hover:bg-blue-700 transition-all active:scale-95"
-               >
-                <Send size={14}/> 提交审阅
-               </button>
-             )}
-             
-             <button className="px-5 py-2 text-white rounded-xl text-[11px] font-bold flex items-center gap-2 shadow-md transition-colors" style={{ backgroundColor: ui.primary }}>导出成片</button>
-           </div>
+      <footer className="h-44 border-t border-[#d2d3d4] bg-[#f8f8f9] px-3 pb-3">
+        <div className="h-12 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowOverwriteConfirm(true)}
+              className="h-8 px-3 rounded-full border border-slate-400 text-xs font-semibold text-slate-700 hover:bg-slate-100 flex items-center gap-1.5"
+            >
+              <RefreshCcw size={13} />
+              更新分镜
+            </button>
+            <div className="text-xs text-slate-500">{formatTime(playheadSec)} / {formatTime(totalDuration)}</div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="mr-2 flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-1.5 py-1">
+              <button
+                onClick={seekPrevClip}
+                className="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-600 flex items-center justify-center"
+                title="上一段"
+              >
+                <SkipBack size={14} />
+              </button>
+              <button
+                onClick={() => setIsPlaying((prev) => !prev)}
+                className="w-8 h-8 rounded-lg bg-slate-800 text-white hover:bg-slate-700 flex items-center justify-center"
+                title={isPlaying ? '暂停' : '播放'}
+              >
+                {isPlaying ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
+              </button>
+              <button
+                onClick={seekNextClip}
+                className="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-600 flex items-center justify-center"
+                title="下一段"
+              >
+                <SkipForward size={14} />
+              </button>
+            </div>
+            <button
+              onClick={() => setShowReviewMode(true)}
+              className="h-9 px-4 rounded-xl border border-slate-500 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-100"
+            >
+              审阅模式
+            </button>
+            <button
+              onClick={() => setShowExportModal(true)}
+              className="h-9 px-4 rounded-xl border border-slate-500 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-100"
+            >
+              导出到剪映
+            </button>
+          </div>
         </div>
 
-        {/* 轨道主体 */}
-        <div className="flex-1 bg-slate-50 rounded-2xl border border-slate-200 overflow-x-auto flex flex-col relative hide-scrollbar shadow-inner">
-           <div className="h-6 flex items-end gap-24 px-4 pb-1 opacity-40 text-[9px] font-mono border-b border-slate-200 bg-white/50 sticky top-0 z-10">
-             <span>00:00:00</span><span>00:00:10</span><span>00:00:20</span><span>00:00:30</span><span>00:00:40</span>
-           </div>
-           <div className="flex-1 flex gap-0.5 p-2 min-w-max items-center relative">
-             {/* 评论锚点 */}
-             {currentVersion.comments.map(c => (
-                <div key={`marker-${c.id}`} onClick={() => handleSeek(c.time)} className="absolute top-1/2 -translate-y-1/2 z-30 cursor-pointer group flex flex-col items-center transition-all" style={{ left: `${(c.time / duration) * 100}%` }}>
-                  <div className={`w-3.5 h-3.5 rounded-full border-2 border-white shadow-lg flex items-center justify-center ${c.hasAnnotation ? 'bg-emerald-400 ring-2 ring-emerald-500/20' : (c.status === 'resolved' ? 'bg-slate-300' : 'bg-red-400')}`}>
-                    {c.hasAnnotation && <Pencil size={6} className="text-white"/>}
+        <div className="h-[92px] rounded-2xl border border-slate-200 bg-slate-50 overflow-x-auto">
+          <div className="relative p-2.5 min-w-max" style={{ width: `${timelineWidth}px` }}>
+            <div className="relative h-5 mb-1">
+              {tickMarks.map((sec) => {
+                const left = (sec / totalDuration) * timelineWidth;
+                const major = sec % 10 === 0 || sec === 0 || sec === totalDuration;
+                return (
+                  <div key={sec} className="absolute top-0" style={{ left }}>
+                    <div className={`w-px ${major ? 'h-4 bg-slate-500' : 'h-2.5 bg-slate-300'}`} />
+                    {major ? <span className="absolute -left-3 top-4 text-[10px] text-slate-500">{formatTime(sec)}</span> : null}
                   </div>
-                </div>
-             ))}
+                );
+              })}
+            </div>
 
-             {currentVersion.tracks.map((clip, i) => (
-                <div key={clip.id} className={`h-[85%] min-w-[160px] rounded-xl border-2 transition-all relative group flex flex-col overflow-hidden cursor-pointer ${Math.abs(currentTime - (i * 60)) < 30 ? 'border-emerald-500 bg-white shadow-lg z-10' : 'border-white bg-white shadow-sm'}`}>
-                  <div className={`absolute inset-0 opacity-15 ${clip.thumb || 'bg-slate-200'}`}></div>
-                  <div className="relative z-10 p-2.5 flex flex-col h-full justify-between">
-                      <span className="text-[10px] font-bold text-slate-700 truncate">{clip.label}</span>
-                      <span className="text-[10px] font-mono font-bold text-slate-400 bg-white/60 px-1.5 self-end rounded shadow-sm">片段 #{i+1}</span>
+            <div
+              ref={timelineTrackRef}
+              className="relative h-14 rounded-xl border border-slate-200 bg-white overflow-hidden cursor-pointer"
+              onClick={(e) => {
+                if (!timelineTrackRef.current) return;
+                const rect = timelineTrackRef.current.getBoundingClientRect();
+                const ratio = (e.clientX - rect.left) / rect.width;
+                seekTo(Math.round(ratio * totalDuration));
+              }}
+            >
+              {timelineClips.map((clip, idx) => {
+                const startSec = getClipStart(idx);
+                const left = (startSec / totalDuration) * 100;
+                const width = (clip.durationSec / totalDuration) * 100;
+                const active = activePreviewClip?.id === clip.id;
+                return (
+                  <div
+                    key={clip.id}
+                    className={`absolute top-1 bottom-1 rounded-lg border overflow-hidden group ${active ? 'border-emerald-500 ring-1 ring-emerald-300' : 'border-slate-200'}`}
+                    style={{ left: `${left}%`, width: `${Math.max(6, width)}%` }}
+                  >
+                    <img src={clip.thumb} className="absolute inset-0 w-full h-full object-cover opacity-70" referrerPolicy="no-referrer" />
+                    <div className="absolute inset-0 bg-black/20" />
+                    <div className="relative z-10 px-1.5 pt-1 text-[10px] font-semibold text-white truncate">{idx + 1}. {clip.name}</div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteClip(clip.id);
+                      }}
+                      className="absolute bottom-1 right-1 w-5 h-5 rounded-full bg-black/55 text-white hidden group-hover:flex items-center justify-center"
+                      title="删除片段"
+                    >
+                      <Trash2 size={10} />
+                    </button>
                   </div>
-                  <div className="absolute inset-y-0 left-0 w-2 bg-emerald-500 opacity-0 group-hover:opacity-100 cursor-col-resize"></div>
-                  <div className="absolute inset-y-0 right-0 w-2 bg-emerald-500 opacity-0 group-hover:opacity-100 cursor-col-resize"></div>
-                </div>
-             ))}
-           </div>
-           {/* 播放指针 */}
-           <div className="absolute top-0 bottom-0 w-0.5 z-40 pointer-events-none transition-all duration-100" style={{ left: `${(currentTime / duration) * 100}%`, backgroundColor: ui.primary, boxShadow: '0 0 15px rgba(1,205,116,0.45)' }}>
-             <div className="w-4 h-4 rounded-md absolute -top-2 -left-[7px] rotate-45 border-2 border-white shadow-xl" style={{ backgroundColor: ui.primary }}></div>
-           </div>
+                );
+              })}
+
+              <div className="absolute top-0 bottom-0 w-[2px] bg-emerald-500 z-20" style={{ left: `${playheadPercent}%` }}>
+                <div className="absolute -top-1 -left-[5px] w-3 h-3 rounded-sm rotate-45 bg-emerald-500" />
+              </div>
+            </div>
+          </div>
         </div>
       </footer>
 
-      {/* 提交审阅 全屏反馈反馈 */}
-      {isSubmitting && (
-        <div className="fixed inset-0 backdrop-blur-md z-[200] flex items-center justify-center animate-in fade-in duration-300" style={{ backgroundColor: ui.mask }}>
-           <div className="bg-white p-10 rounded-[32px] shadow-2xl flex flex-col items-center gap-6 animate-in zoom-in-95 duration-500">
-             <div className="relative">
-               <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center">
-                 <CheckCircle2 size={48} className="text-emerald-500 animate-in zoom-in-50 duration-500"/>
-               </div>
-               <div className="absolute -top-1 -right-1">
-                 <span className="flex h-4 w-4">
-                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                   <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500"></span>
-                 </span>
-               </div>
-             </div>
-             <div className="text-center space-y-2">
-               <h2 className="text-2xl font-black text-slate-800 tracking-tight">提交审阅成功</h2>
-               <p className="text-slate-500 font-medium">版本 {activeVersion.toUpperCase()} 已锁定，通知已发送至编导侧</p>
-             </div>
-             <div className="flex items-center gap-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest bg-slate-50 px-4 py-2 rounded-full border border-slate-100">
-               <Film size={12}/> {activeVersion} 快照已固化
-             </div>
-           </div>
+      {showOverwriteConfirm && (
+        <div className="fixed inset-0 z-[140] bg-black/45 backdrop-blur-[1px] flex items-center justify-center p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white border border-slate-200 p-4 shadow-2xl">
+            <div className="font-bold text-slate-800 mb-2">确认更新分镜</div>
+            <p className="text-sm text-slate-500 leading-6">
+              更新分镜会拉取最新素材并覆盖当前时间轴，之前的手动编辑将被替换。是否继续？
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button onClick={() => setShowOverwriteConfirm(false)} className="h-9 px-3 rounded-lg bg-slate-100 text-slate-700 text-sm">取消</button>
+              <button onClick={handleOverwriteTimeline} className="h-9 px-3 rounded-lg bg-[#01cd74] text-white text-sm">确认覆盖</button>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* 同步数据 Loading */}
-      {isSyncing && (
-        <div className="fixed inset-0 bg-white/40 backdrop-blur-sm z-[200] flex items-center justify-center">
-           <div className="bg-slate-900 text-white px-8 py-5 rounded-3xl shadow-2xl flex flex-col items-center gap-4 animate-in zoom-in-95 duration-200">
-             <RefreshCcw size={32} className="animate-spin text-emerald-400"/>
-             <span className="text-base font-bold tracking-widest">同步 Step 3 分镜定稿...</span>
-           </div>
+      {showReviewMode && (
+        <div className="fixed inset-0 z-[130] bg-black/45 backdrop-blur-sm p-4">
+          <div className="w-full h-full rounded-3xl overflow-hidden border border-[#d2d3d4] bg-[#f8f8f9] shadow-2xl relative">
+            <button
+              onClick={() => setShowReviewMode(false)}
+              className="absolute top-3 right-3 z-[140] w-9 h-9 rounded-full bg-black/45 text-white flex items-center justify-center hover:bg-black/60"
+              title="关闭审阅模式"
+            >
+              <X size={16} />
+            </button>
+            <VideoPreviewReviewMode onDraftStateChange={onDraftStateChange} />
+          </div>
+        </div>
+      )}
+
+      {showExportModal && (
+        <div className="fixed inset-0 z-[150] bg-black/45 backdrop-blur-sm p-6 flex items-center justify-center">
+          <div className="w-full max-w-[920px] rounded-[22px] bg-[#f8f8f9] border border-[#d2d3d4] shadow-2xl p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-[28px] font-bold leading-none text-slate-900">导出任务列表</h3>
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="w-10 h-10 rounded-full border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 flex items-center justify-center"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-4 mb-5">
+              <button
+                onClick={() => {
+                  setDraftExportPath('');
+                  setShowCreateExportTaskModal(true);
+                }}
+                className="h-10 px-5 rounded-lg bg-[#01cd74] text-white text-sm font-semibold leading-none hover:opacity-95"
+              >
+                +新建导出任务
+              </button>
+
+              <button
+                onClick={() => setExportTasks((prev) => [...prev])}
+                className="ml-auto h-10 px-5 rounded-lg border border-slate-300 bg-white text-sm text-slate-600 font-medium hover:bg-slate-50 inline-flex items-center gap-1.5"
+              >
+                <RefreshCcw className="w-4 h-4" />
+                刷新列表
+              </button>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 overflow-hidden bg-white">
+              <div className="grid grid-cols-5 bg-[#eceeef] text-slate-700 text-sm font-semibold px-6 py-3">
+                <div>序号</div>
+                <div>操作人</div>
+                <div>进度</div>
+                <div>创建时间</div>
+                <div>操作</div>
+              </div>
+              {pagedExportTasks.map((task) => (
+                <div key={task.id} className="grid grid-cols-5 px-6 py-3.5 text-sm text-slate-700 border-t border-slate-100">
+                  <div>{task.id}</div>
+                  <div>{task.operator}</div>
+                  <div>{task.progress}</div>
+                  <div>{task.createdAt}</div>
+                  <button
+                    onClick={handleDownload}
+                    className="text-[#01cd74] font-semibold text-left hover:underline"
+                  >
+                    {task.action}
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 flex items-center justify-end text-sm text-slate-500 gap-4">
+              <span>共 {exportTasks.length} 条</span>
+
+              <button
+                type="button"
+                className="h-8 min-w-10 px-2 rounded-lg border border-slate-300 bg-white text-slate-500 inline-flex items-center justify-center"
+                onClick={() => {
+                  const next = exportPageSize === 10 ? 20 : 10;
+                  setExportPageSize(next);
+                  setExportPage(1);
+                  setExportJumpPage('1');
+                }}
+              >
+                <ChevronDown className="w-4 h-4" />
+              </button>
+
+              <button
+                type="button"
+                className="p-1 text-slate-400 disabled:opacity-40"
+                disabled={safeExportPage <= 1}
+                onClick={() => {
+                  const next = Math.max(1, safeExportPage - 1);
+                  setExportPage(next);
+                  setExportJumpPage(String(next));
+                }}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              <span className="text-[#01cd74] font-semibold">{safeExportPage}</span>
+
+              <button
+                type="button"
+                className="p-1 text-slate-400 disabled:opacity-40"
+                disabled={safeExportPage >= exportTotalPages}
+                onClick={() => {
+                  const next = Math.min(exportTotalPages, safeExportPage + 1);
+                  setExportPage(next);
+                  setExportJumpPage(String(next));
+                }}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+
+              <span>前往</span>
+
+              <input
+                value={exportJumpPage}
+                onChange={(e) => setExportJumpPage(e.target.value.replace(/[^\d]/g, ''))}
+                onBlur={() => {
+                  const parsed = Number(exportJumpPage || '1');
+                  const next = Math.min(exportTotalPages, Math.max(1, parsed || 1));
+                  setExportPage(next);
+                  setExportJumpPage(String(next));
+                }}
+                className="w-14 h-8 rounded-lg border border-slate-300 bg-white text-center text-slate-700 outline-none"
+              />
+
+              <span>页</span>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {showCreateExportTaskModal && (
+        <div className="fixed inset-0 z-[160] bg-black/45 backdrop-blur-sm p-6 flex items-center justify-center">
+          <div className="w-full max-w-[760px] rounded-[20px] bg-[#f8f8f9] border border-[#d2d3d4] shadow-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-slate-900">新建导出任务</h3>
+              <button
+                onClick={() => setShowCreateExportTaskModal(false)}
+                className="w-9 h-9 rounded-full border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 flex items-center justify-center"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">导出地址</label>
+              <p className="text-xs text-slate-500 mb-2">请粘贴本地剪映草稿地址</p>
+              <input
+                value={draftExportPath}
+                onChange={(e) => setDraftExportPath(e.target.value)}
+                placeholder="请输入剪映草稿地址"
+                className="w-full h-10 px-4 rounded-xl border border-slate-300 bg-white text-sm text-slate-700 outline-none focus:border-emerald-400"
+              />
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-4">
+              <div className="text-sm font-semibold text-slate-700 mb-2">注：</div>
+              <div className="text-xs leading-6 text-slate-600 whitespace-pre-line">
+                在剪映的全局设置中可查看剪映的草稿位置，请正确粘贴内容，否则会保存失败。参考案例如下：
+                {'\n'}Windows 系统默认位置一般在：C:\Users\你的用户名\AppData\Local\JianyingPro\User Data\Projects\com.lveditor.draft
+                {'\n'}Mac 系统默认位置一般在：/Users/你的用户名/Movies/JianyingPro/User Data/Projects/com.lveditor.draft
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                onClick={() => setShowCreateExportTaskModal(false)}
+                className="h-9 px-4 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 hover:bg-slate-50"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleConfirmCreateExportTask}
+                className="h-9 px-4 rounded-lg bg-[#1c2329] text-white text-sm font-semibold hover:opacity-95"
+              >
+                确认
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDownloadConfirm && (
+        <div className="fixed inset-0 z-[165] bg-black/45 backdrop-blur-sm p-6 flex items-center justify-center">
+          <div className="w-full max-w-[760px] rounded-[20px] bg-[#f8f8f9] border border-[#d2d3d4] shadow-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-slate-900">导出剪映草稿</h3>
+              <button
+                onClick={() => setShowDownloadConfirm(false)}
+                className="w-9 h-9 rounded-full border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 flex items-center justify-center"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-4">
+              <div className="text-sm leading-7 text-slate-600">
+                <p>您的文件将被保存到</p>
+                <p className="my-1 font-semibold text-slate-800 break-all">{jianyingPath}</p>
+                <p>请到该路径下解压文件，并重启剪映即可看到导入草稿。</p>
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                onClick={() => setShowDownloadConfirm(false)}
+                className="h-9 px-4 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 hover:bg-slate-50"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleConfirmDownload}
+                className="h-9 px-4 rounded-lg bg-[#1c2329] text-white text-sm font-semibold hover:opacity-95"
+              >
+                确认
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </>

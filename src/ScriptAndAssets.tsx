@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, Upload, Wand2, Users, User, ChevronDown, ChevronUp, MapPinned, Package, Plus, Trash2, ScanSearch, Settings2 } from 'lucide-react';
+import { Check, FileText, Upload, Wand2, Users, User, ChevronDown, ChevronUp, MapPinned, Package, Plus, Trash2, ScanSearch, Settings2 } from 'lucide-react';
 
 type PlanId = 'multi-parameter' | 'image-video';
 type RightTab = 'assets' | 'preview';
@@ -28,6 +28,7 @@ const planOptions = [
 const initialPreviewShots: Record<PlanId, Array<{
   id: number;
   status: string;
+  splitNo: string;
   characters: string[];
   scenes: string[];
   props: string[];
@@ -40,6 +41,7 @@ const initialPreviewShots: Record<PlanId, Array<{
     {
       id: 1,
       status: '初始化',
+      splitNo: '1-1-1',
       characters: ['老兵甲', '士兵群演'],
       scenes: ['陷阵营地'],
       props: ['青铜方鼎', '篝火火堆'],
@@ -50,6 +52,7 @@ const initialPreviewShots: Record<PlanId, Array<{
     {
       id: 2,
       status: '初始化',
+      splitNo: '1-1-2',
       characters: ['士兵群演'],
       scenes: ['陷阵营地', '篝火区域'],
       props: ['铁甲兵器', '篝火火堆'],
@@ -60,6 +63,7 @@ const initialPreviewShots: Record<PlanId, Array<{
     {
       id: 3,
       status: '初始化',
+      splitNo: '1-1-3',
       characters: ['老兵甲'],
       scenes: ['陷阵营地'],
       props: ['铁甲兵器'],
@@ -72,6 +76,7 @@ const initialPreviewShots: Record<PlanId, Array<{
     {
       id: 1,
       status: '初始化',
+      splitNo: '1-1-1',
       characters: ['老兵甲', '士兵群演'],
       scenes: ['陷阵营地'],
       props: ['青铜方鼎', '篝火火堆'],
@@ -83,6 +88,7 @@ const initialPreviewShots: Record<PlanId, Array<{
     {
       id: 2,
       status: '初始化',
+      splitNo: '1-1-2',
       characters: ['士兵群演'],
       scenes: ['陷阵营地'],
       props: ['铁甲兵器', '篝火火堆'],
@@ -94,6 +100,7 @@ const initialPreviewShots: Record<PlanId, Array<{
     {
       id: 3,
       status: '初始化',
+      splitNo: '1-1-3',
       characters: ['老兵甲'],
       scenes: ['篝火区域'],
       props: ['铁甲兵器'],
@@ -105,6 +112,7 @@ const initialPreviewShots: Record<PlanId, Array<{
     {
       id: 4,
       status: '初始化',
+      splitNo: '1-1-4',
       characters: ['士兵群演'],
       scenes: ['篝火区域'],
       props: ['篝火火堆', '铁甲兵器'],
@@ -116,6 +124,7 @@ const initialPreviewShots: Record<PlanId, Array<{
     {
       id: 5,
       status: '初始化',
+      splitNo: '1-1-5',
       characters: ['老兵甲', '士兵群演'],
       scenes: ['陷阵营地'],
       props: ['青铜方鼎'],
@@ -130,6 +139,7 @@ const initialPreviewShots: Record<PlanId, Array<{
 const createEmptyPreviewShot = (planId: PlanId, id: number) => ({
   id,
   status: '初始化',
+  splitNo: `1-1-${id}`,
   characters: [],
   scenes: [],
   props: [],
@@ -224,6 +234,8 @@ export default function ScriptAndAssets({ onNext }: { onNext: (mode: StoryboardM
   const [scriptText, setScriptText] = useState(
     `1日，夜，陷阵营地\n出场人物：老兵甲，士兵群演\n\n上帝视角垂直俯拍，极简几何构图。背景是深不见底的黑，中央是一个巨大的正方形朱砂红地毯区域。正中心是一团金色的圆形火焰（青铜方鼎）。三十个黑色的圆点（士兵）整齐围坐在火周围。\n老兵甲：（啃着羊腿，含糊不清）林兄弟，今天可太解气了！\n\n`
   );
+  const [isScriptEditing, setIsScriptEditing] = useState(false);
+  const [scriptDraftText, setScriptDraftText] = useState(scriptText);
   
   // Style and Orientation State
   const [isStyleDropdownOpen, setIsStyleDropdownOpen] = useState(false);
@@ -255,14 +267,26 @@ export default function ScriptAndAssets({ onNext }: { onNext: (mode: StoryboardM
   const [activeRightTab, setActiveRightTab] = useState<RightTab>('assets');
   const [previewPlan, setPreviewPlan] = useState<PlanId>('multi-parameter');
   const [adoptedPlan, setAdoptedPlan] = useState<PlanId | null>(null);
+  const [checkedShotIdsByPlan, setCheckedShotIdsByPlan] = useState<Record<PlanId, number[]>>({
+    'multi-parameter': [],
+    'image-video': [],
+  });
+  const [adoptedShotIdsByPlan, setAdoptedShotIdsByPlan] = useState<Record<PlanId, number[]>>({
+    'multi-parameter': [],
+    'image-video': [],
+  });
   const [editablePreviewShots, setEditablePreviewShots] = useState(initialPreviewShots);
+  const [editingSplitNoTarget, setEditingSplitNoTarget] = useState<{ planId: PlanId; shotId: number } | null>(null);
+  const [editingSplitNoValue, setEditingSplitNoValue] = useState('');
 
   const selectedPlanOptions = planOptions.filter((plan) => selectedPlans.includes(plan.id));
   const previewPlanOptions = planOptions.filter((plan) => selectedPlans.includes(plan.id));
   const currentPreviewShots = editablePreviewShots[previewPlan];
-  const previewGridClass = previewPlan === 'multi-parameter'
-    ? 'grid-cols-[56px_110px_132px_132px_132px_minmax(420px,1.8fr)_170px_150px]'
-    : 'grid-cols-[56px_110px_132px_132px_132px_minmax(520px,2.1fr)_170px_150px]';
+  const currentCheckedShotIds = checkedShotIdsByPlan[previewPlan] ?? [];
+  const currentAdoptedShotIds = adoptedShotIdsByPlan[previewPlan] ?? [];
+  const allCurrentChecked = currentPreviewShots.length > 0 && currentCheckedShotIds.length === currentPreviewShots.length;
+  const canSelectShots = adoptedPlan !== null;
+  const canProceed = adoptedPlan !== null && (adoptedShotIdsByPlan[adoptedPlan]?.length ?? 0) > 0;
 
   const togglePlan = (planId: PlanId) => {
     setSelectedPlans((currentPlans) => {
@@ -282,6 +306,14 @@ export default function ScriptAndAssets({ onNext }: { onNext: (mode: StoryboardM
       setEditablePreviewShots(initialPreviewShots);
       setPreviewPlan(selectedPlans[0]);
       setAdoptedPlan(null);
+      setCheckedShotIdsByPlan({
+        'multi-parameter': [],
+        'image-video': [],
+      });
+      setAdoptedShotIdsByPlan({
+        'multi-parameter': [],
+        'image-video': [],
+      });
       setActiveRightTab('preview');
     }, 1500);
   };
@@ -289,7 +321,7 @@ export default function ScriptAndAssets({ onNext }: { onNext: (mode: StoryboardM
   const updatePreviewShot = (
     planId: PlanId,
     shotId: number,
-    field: 'status' | 'visualPrompt' | 'videoPrompt' | 'dialogue' | 'sound',
+    field: 'status' | 'splitNo' | 'visualPrompt' | 'videoPrompt' | 'dialogue' | 'sound',
     value: string
   ) => {
     setEditablePreviewShots((currentShots) => ({
@@ -303,6 +335,25 @@ export default function ScriptAndAssets({ onNext }: { onNext: (mode: StoryboardM
         };
       }),
     }));
+  };
+
+  const startEditingSplitNo = (planId: PlanId, shotId: number, currentValue: string) => {
+    setEditingSplitNoTarget({ planId, shotId });
+    setEditingSplitNoValue(currentValue);
+  };
+
+  const saveEditingSplitNo = () => {
+    if (!editingSplitNoTarget) return;
+    const nextValue = editingSplitNoValue.trim();
+    if (!nextValue) {
+      setEditingSplitNoTarget(null);
+      setEditingSplitNoValue('');
+      return;
+    }
+
+    updatePreviewShot(editingSplitNoTarget.planId, editingSplitNoTarget.shotId, 'splitNo', nextValue);
+    setEditingSplitNoTarget(null);
+    setEditingSplitNoValue('');
   };
 
   const addPreviewTag = (planId: PlanId, shotId: number, field: 'characters' | 'scenes' | 'props', value: string) => {
@@ -359,6 +410,17 @@ export default function ScriptAndAssets({ onNext }: { onNext: (mode: StoryboardM
         [planId]: reindexedShots,
       };
     });
+
+    setCheckedShotIdsByPlan((current) => {
+      const selectedIds = current[planId] ?? [];
+      const shifted = selectedIds.map((id) => (id > shotId ? id + 1 : id));
+      return { ...current, [planId]: shifted };
+    });
+    setAdoptedShotIdsByPlan((current) => {
+      const selectedIds = current[planId] ?? [];
+      const shifted = selectedIds.map((id) => (id > shotId ? id + 1 : id));
+      return { ...current, [planId]: shifted };
+    });
   };
 
   const deletePreviewShot = (planId: PlanId, shotId: number) => {
@@ -378,11 +440,86 @@ export default function ScriptAndAssets({ onNext }: { onNext: (mode: StoryboardM
         [planId]: reindexedShots,
       };
     });
+
+    setCheckedShotIdsByPlan((current) => {
+      const selectedIds = current[planId] ?? [];
+      const reindexed = selectedIds
+        .filter((id) => id !== shotId)
+        .map((id) => (id > shotId ? id - 1 : id));
+      return { ...current, [planId]: reindexed };
+    });
+    setAdoptedShotIdsByPlan((current) => {
+      const selectedIds = current[planId] ?? [];
+      const reindexed = selectedIds
+        .filter((id) => id !== shotId)
+        .map((id) => (id > shotId ? id - 1 : id));
+      return { ...current, [planId]: reindexed };
+    });
+  };
+
+  const toggleShotChecked = (planId: PlanId, shotId: number) => {
+    if (!adoptedPlan) return;
+    setCheckedShotIdsByPlan((current) => {
+      const selectedIds = current[planId] ?? [];
+      const nextIds = selectedIds.includes(shotId)
+        ? selectedIds.filter((id) => id !== shotId)
+        : [...selectedIds, shotId].sort((a, b) => a - b);
+      return { ...current, [planId]: nextIds };
+    });
+  };
+
+  const toggleSelectAllShots = (planId: PlanId) => {
+    if (!adoptedPlan) return;
+    setCheckedShotIdsByPlan((current) => {
+      const allIds = editablePreviewShots[planId].map((shot) => shot.id);
+      const currentIds = current[planId] ?? [];
+      return {
+        ...current,
+        [planId]: currentIds.length === allIds.length ? [] : allIds,
+      };
+    });
+  };
+
+  const adoptSingleShot = (planId: PlanId, shotId: number) => {
+    if (!adoptedPlan) return;
+    const checked = checkedShotIdsByPlan[planId] ?? [];
+    if (!checked.includes(shotId)) return;
+
+    setAdoptedShotIdsByPlan((current) => {
+      const adopted = current[planId] ?? [];
+      const next = adopted.includes(shotId)
+        ? adopted.filter((id) => id !== shotId)
+        : [...adopted, shotId].sort((a, b) => a - b);
+      return { ...current, [planId]: next };
+    });
+  };
+
+  const adoptCheckedShots = (planId: PlanId) => {
+    if (!adoptedPlan) return;
+    const checked = checkedShotIdsByPlan[planId] ?? [];
+    if (checked.length === 0) return;
+
+    setAdoptedShotIdsByPlan((current) => {
+      const adoptedSet = new Set(current[planId] ?? []);
+      checked.forEach((id) => adoptedSet.add(id));
+      return { ...current, [planId]: Array.from(adoptedSet).sort((a, b) => a - b) };
+    });
   };
 
   const handleProceed = () => {
-    if (!adoptedPlan) return;
+    if (!canProceed || !adoptedPlan) return;
     onNext(adoptedPlan === 'multi-parameter' ? 'direct-video' : 'image-video');
+  };
+
+  const toggleScriptEditing = () => {
+    if (!isScriptEditing) {
+      setScriptDraftText(scriptText);
+      setIsScriptEditing(true);
+      return;
+    }
+
+    setScriptText(scriptDraftText);
+    setIsScriptEditing(false);
   };
 
   return (
@@ -393,21 +530,28 @@ export default function ScriptAndAssets({ onNext }: { onNext: (mode: StoryboardM
           <h2 className="font-bold text-sm flex items-center gap-2 text-slate-700">
             <FileText className="w-4 h-4" style={{ color: ui.primary }} /> 本集剧本
           </h2>
-          <div className="flex items-center gap-3">
-            <button className="text-xs flex items-center gap-1 transition-colors font-medium text-slate-500 hover:text-slate-700">
-              <Upload className="w-3 h-3" /> 导入剧本
-            </button>
-            <button className="text-xs flex items-center gap-1 transition-colors font-medium" style={{ color: '#8e9194' }}>
-              <FileText className="w-3 h-3" /> 手动编辑
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={toggleScriptEditing}
+            className="text-xs flex items-center gap-1 transition-colors font-medium hover:text-slate-700"
+            style={{ color: isScriptEditing ? ui.primary : '#8e9194' }}
+          >
+            <FileText className="w-3 h-3" />
+            {isScriptEditing ? '保存编辑' : '手动编辑'}
+          </button>
         </div>
         <div className="flex-1 p-0 relative">
           <textarea
-            className="w-full h-full p-4 resize-none outline-none text-slate-700 text-sm leading-relaxed placeholder:text-slate-400"
+            className={`w-full h-full p-4 resize-none text-slate-700 text-sm leading-relaxed placeholder:text-slate-400 ${
+              isScriptEditing ? 'outline-none bg-white' : 'outline-none bg-transparent cursor-default'
+            }`}
             placeholder="在此粘贴剧本内容..."
-            value={scriptText}
-            onChange={(e) => setScriptText(e.target.value)}
+            value={isScriptEditing ? scriptDraftText : scriptText}
+            onChange={(e) => {
+              if (!isScriptEditing) return;
+              setScriptDraftText(e.target.value);
+            }}
+            readOnly={!isScriptEditing}
           ></textarea>
         </div>
         
@@ -513,24 +657,45 @@ export default function ScriptAndAssets({ onNext }: { onNext: (mode: StoryboardM
 
       {/* 右侧：资产绑定面板 */}
       <main className="flex-1 rounded-2xl border shadow-sm flex flex-col overflow-hidden relative" style={{ backgroundColor: ui.window, borderColor: ui.border }}>
-        <div className="px-4 pt-3 pb-2 border-b" style={{ borderColor: ui.border, backgroundColor: '#f2f3f4' }}>
-          <div className="grid grid-cols-2 rounded-full border p-1 gap-1" style={{ borderColor: ui.border, backgroundColor: '#eceeef' }}>
+        <div className="px-4 pt-3 pb-2 border-b space-y-2" style={{ borderColor: ui.border, backgroundColor: '#f2f3f4' }}>
+          <div className="flex items-center justify-end">
+            <div className="relative group">
+              <button
+                type="button"
+                onClick={handleProceed}
+                disabled={!canProceed}
+                className="px-4 py-2 rounded-xl text-sm font-bold transition-colors shadow-sm disabled:cursor-not-allowed"
+                style={!canProceed ? { backgroundColor: ui.disabled, color: '#8e9194' } : { backgroundColor: ui.primary, color: '#fff' }}
+              >
+                下一步：制作分镜表
+              </button>
+              {!canProceed && (
+                <div className="pointer-events-none absolute right-0 top-full mt-2 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150 z-20">
+                  <div className="whitespace-nowrap rounded-lg bg-[#1c2329] text-white text-xs px-3 py-1.5 shadow-lg">
+                    暂无采用分镜，不可点
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 rounded-full border p-1 gap-1 max-w-[360px]" style={{ borderColor: ui.border, backgroundColor: '#eceeef' }}>
             <button
               type="button"
               onClick={() => setActiveRightTab('assets')}
-              className={`h-9 rounded-full text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${activeRightTab === 'assets' ? 'bg-white' : 'text-slate-500'}`}
+              className={`h-8 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors ${activeRightTab === 'assets' ? 'bg-white' : 'text-slate-500'}`}
               style={activeRightTab === 'assets' ? { color: ui.text } : undefined}
             >
-              <Users className="w-4 h-4" />
+              <Users className="w-3.5 h-3.5" />
               设定资产
             </button>
             <button
               type="button"
               onClick={() => setActiveRightTab('preview')}
-              className={`h-9 rounded-full text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${activeRightTab === 'preview' ? 'bg-white' : 'text-slate-500'}`}
+              className={`h-8 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors ${activeRightTab === 'preview' ? 'bg-white' : 'text-slate-500'}`}
               style={activeRightTab === 'preview' ? { color: ui.text } : undefined}
             >
-              <ScanSearch className="w-4 h-4" />
+              <ScanSearch className="w-3.5 h-3.5" />
               拆分镜预览
             </button>
           </div>
@@ -625,156 +790,273 @@ export default function ScriptAndAssets({ onNext }: { onNext: (mode: StoryboardM
               )}
 
               {activeRightTab === 'preview' && (
-                <div className="flex-1 overflow-y-auto p-6 bg-slate-50/30 animate-in fade-in duration-500 custom-scrollbar space-y-5">
-                  <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-                    <div className="flex items-center justify-between gap-4 mb-4">
+                <div className="flex-1 overflow-y-auto p-6 bg-slate-50/30 animate-in fade-in duration-500 custom-scrollbar space-y-4">
+                  <section className="rounded-3xl border border-slate-300 bg-[#f3f4f5] p-4 shadow-sm">
+                    <div className="flex items-start justify-between gap-4">
                       <div>
-                        <h4 className="text-sm font-bold text-slate-800">拆分镜方案预览</h4>
-                        <p className="text-xs text-slate-500 mt-1">先预览分镜内容，再决定采用哪个版本进入分镜管理页。</p>
+                        <h4 className="text-base leading-none font-bold text-slate-800">拆分镜方案预览</h4>
+                        <p className="text-xs text-slate-500 mt-2">先预览分镜内容，再决定采用哪个版本进入分镜管理页。</p>
                       </div>
                       <button
                         type="button"
-                        onClick={() => setAdoptedPlan(previewPlan)}
-                        className={`px-4 py-2 rounded-2xl text-sm font-bold transition-colors ${adoptedPlan === previewPlan ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}
+                        onClick={() => {
+                          setAdoptedPlan(previewPlan);
+                          setPreviewPlan(previewPlan);
+                        }}
+                        disabled={adoptedPlan === previewPlan}
+                        className="px-4 h-10 rounded-full text-sm font-bold bg-[#1c2329] text-white hover:opacity-95 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
                       >
                         {adoptedPlan === previewPlan ? '当前方案已选定' : '选定当前方案'}
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="mt-4 grid grid-cols-2 gap-3">
                       {previewPlanOptions.map((plan) => (
                         <button
                           key={plan.id}
                           type="button"
-                          onClick={() => setPreviewPlan(plan.id)}
-                          className={`text-left rounded-xl border px-4 py-3 transition-colors ${previewPlan === plan.id ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200 bg-slate-50 hover:border-emerald-200'}`}
+                          onClick={() => {
+                            if (adoptedPlan) return;
+                            setPreviewPlan(plan.id);
+                          }}
+                          disabled={adoptedPlan !== null}
+                          title={adoptedPlan !== null ? '方案已选定，不可切换' : ''}
+                          className={`rounded-2xl border px-4 py-4 text-center transition-colors ${
+                            previewPlan === plan.id ? 'bg-white border-emerald-400' : 'bg-[#eceeef] border-transparent hover:border-slate-300'
+                          }`}
                         >
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-sm font-bold text-slate-800">{plan.title}</span>
-                            {adoptedPlan === plan.id && <span className="text-[10px] font-medium text-emerald-700 bg-white border border-emerald-200 rounded-full px-2 py-0.5">已选定</span>}
+                          <div className="text-sm leading-none font-bold text-slate-800">
+                            {plan.id === 'multi-parameter' ? '多参生视频' : '图生视频'}
                           </div>
-                          <div className="text-[11px] text-slate-500 mt-1">{plan.badge}</div>
-                          <div className="text-[11px] text-slate-500 mt-2">{editablePreviewShots[plan.id].length} 镜</div>
+                          <div className="text-base leading-none text-slate-500 mt-2">10 分镜</div>
                         </button>
                       ))}
                     </div>
-                  </div>
+                  </section>
 
-                  <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-                    <div className="overflow-x-auto custom-scrollbar">
-                    <div className={`grid ${previewGridClass} min-w-max text-[12px] font-bold text-white bg-[#374151]`}>
-                      <div className="px-3 py-4 border-r border-white/10">镜号</div>
-                      <div className="px-4 py-4 border-r border-white/10">状态</div>
-                      <div className="px-4 py-4 border-r border-white/10">角色</div>
-                      <div className="px-4 py-4 border-r border-white/10">场景</div>
-                      <div className="px-4 py-4 border-r border-white/10">道具</div>
-                      <div className="px-4 py-4 border-r border-white/10">
-                        {previewPlan === 'image-video' ? '画面描述词' : '视频描述词'}
+                  <section className="rounded-3xl border border-slate-300 bg-[#f3f4f5] p-3 shadow-sm">
+                    <div className="flex items-center justify-between px-2 py-1">
+                      <div className="flex items-center gap-3 text-sm text-slate-700">
+                        <button
+                          type="button"
+                          onClick={() => toggleSelectAllShots(previewPlan)}
+                          disabled={!canSelectShots}
+                          title={!canSelectShots ? '请先选方案' : ''}
+                          className={`w-7 h-7 rounded-full border inline-flex items-center justify-center transition-colors ${
+                            allCurrentChecked ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-300 bg-white text-transparent'
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                        <span>全选</span>
+                        <span className="text-slate-500">已选{currentCheckedShotIds.length}个</span>
+                        <button className="h-9 px-3 rounded-xl border border-slate-300 bg-[#dfe2e5] text-slate-400 text-xs font-bold">批量删除</button>
+                        <button
+                          title={!canSelectShots ? '请先选方案' : ''}
+                          className="h-9 px-3 rounded-xl border border-slate-300 bg-[#dfe2e5] text-slate-400 text-xs font-bold disabled:cursor-not-allowed"
+                          disabled={!canSelectShots || currentCheckedShotIds.length === 0}
+                          onClick={() => adoptCheckedShots(previewPlan)}
+                        >
+                          批量采用
+                        </button>
                       </div>
-                      <div className="px-4 py-4 border-r border-white/10">台词</div>
-                      <div className="px-4 py-4">音效</div>
+                      <button className="h-10 px-4 rounded-full border-2 border-slate-700 text-slate-700 text-sm font-bold flex items-center gap-2 bg-white">
+                        <Upload className="w-4 h-4" />
+                        导出表格
+                      </button>
                     </div>
 
-                    {currentPreviewShots.map((shot, index) => (
-                      <div
-                        key={`${previewPlan}-${shot.id}`}
-                        className={`group/shot relative grid ${previewGridClass} min-w-max text-sm text-slate-700 bg-white ${index !== currentPreviewShots.length - 1 ? 'border-b border-slate-200' : ''}`}
-                      >
-                        {index !== 0 && (
-                          <button
-                            type="button"
-                            onClick={() => insertPreviewShotAfter(previewPlan, currentPreviewShots[index - 1].id)}
-                            className="absolute left-1/2 top-0 z-20 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/25 flex items-center justify-center opacity-0 group-hover/shot:opacity-100 transition-opacity hover:bg-emerald-600"
-                            aria-label={`在第 ${shot.id - 1} 镜后新增分镜`}
-                          >
-                            <Plus className="w-4 h-4" />
-                          </button>
-                        )}
+                    <div className="space-y-3 mt-3">
+                      {currentPreviewShots.map((shot, index) => (
+                        <div key={`${previewPlan}-${shot.id}`} className="group/shot relative rounded-2xl border border-slate-300 bg-[#f7f8f9] overflow-hidden">
+                          <div className="px-3 py-2 border-b border-slate-300 flex items-center gap-2">
+                            <div className="min-w-[200px]">
+                              <div className="text-base leading-none text-slate-800 font-medium flex items-center gap-1">
+                                <span>{shot.id}.</span>
+                                {editingSplitNoTarget?.planId === previewPlan && editingSplitNoTarget?.shotId === shot.id ? (
+                                  <input
+                                    autoFocus
+                                    value={editingSplitNoValue}
+                                    onChange={(e) => setEditingSplitNoValue(e.target.value)}
+                                    onBlur={saveEditingSplitNo}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') saveEditingSplitNo();
+                                      if (e.key === 'Escape') {
+                                        setEditingSplitNoTarget(null);
+                                        setEditingSplitNoValue('');
+                                      }
+                                    }}
+                                    className="h-7 min-w-[120px] px-2 rounded-md border border-emerald-300 bg-white text-sm outline-none"
+                                  />
+                                ) : (
+                                  <span
+                                    onDoubleClick={() => startEditingSplitNo(previewPlan, shot.id, shot.splitNo)}
+                                    className="cursor-text"
+                                    title="双击可编辑分镜号"
+                                  >
+                                    分镜{shot.splitNo}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="mt-1 flex items-center gap-1.5">
+                                <span className="px-2 py-0.5 rounded-full text-xs border border-slate-400 text-slate-700 bg-white">手动创建</span>
+                                <span className="px-2 py-0.5 rounded-full text-xs border border-slate-300 text-slate-400 bg-slate-200">草稿已保存</span>
+                              </div>
+                            </div>
 
-                        <div className="px-3 py-4 border-r border-slate-200 font-bold text-slate-800 flex items-start justify-between gap-2">
-                          <span className="pt-1">{shot.id}</span>
-                          <button
-                            type="button"
-                            onClick={() => deletePreviewShot(previewPlan, shot.id)}
-                            disabled={currentPreviewShots.length <= 1}
-                            className="mt-0.5 rounded-lg border border-slate-200 bg-white p-1 text-slate-400 opacity-0 group-hover/shot:opacity-100 transition-opacity hover:border-rose-200 hover:text-rose-500 disabled:opacity-30 disabled:cursor-not-allowed"
-                            aria-label={`删除第 ${shot.id} 镜`}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                            <div className="h-8 w-px bg-slate-300" />
+                            <AssetChipGroup
+                              title="角色"
+                              tone="character"
+                              tags={shot.characters}
+                              onAdd={() => addPreviewTag(previewPlan, shot.id, 'characters', `角色${shot.characters.length + 1}`)}
+                              onRemove={(value) => removePreviewTag(previewPlan, shot.id, 'characters', value)}
+                            />
+                            <div className="h-8 w-px bg-slate-300" />
+                            <AssetChipGroup
+                              title="场景"
+                              tone="scene"
+                              tags={shot.scenes}
+                              onAdd={() => addPreviewTag(previewPlan, shot.id, 'scenes', `场景${shot.scenes.length + 1}`)}
+                              onRemove={(value) => removePreviewTag(previewPlan, shot.id, 'scenes', value)}
+                            />
+                            <div className="h-8 w-px bg-slate-300" />
+                            <AssetChipGroup
+                              title="道具"
+                              tone="prop"
+                              tags={shot.props}
+                              onAdd={() => addPreviewTag(previewPlan, shot.id, 'props', `道具${shot.props.length + 1}`)}
+                              onRemove={(value) => removePreviewTag(previewPlan, shot.id, 'props', value)}
+                            />
 
-                        <div className="px-3 py-4 border-r border-slate-200">
-                          <input
-                            value={shot.status}
-                            onChange={(e) => updatePreviewShot(previewPlan, shot.id, 'status', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700 outline-none focus:border-emerald-300 focus:bg-white"
-                          />
-                        </div>
+                            <div className="ml-auto flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => deletePreviewShot(previewPlan, shot.id)}
+                                className="px-3 py-1.5 rounded-xl border border-red-300 text-red-400 text-sm leading-none hover:bg-red-50 disabled:opacity-40"
+                                disabled={currentPreviewShots.length <= 1}
+                              >
+                                删除
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => adoptSingleShot(previewPlan, shot.id)}
+                                disabled={!canSelectShots || !currentCheckedShotIds.includes(shot.id)}
+                                title={!canSelectShots ? '请先选方案' : !currentCheckedShotIds.includes(shot.id) ? '请先勾选该分镜' : ''}
+                                className="px-3 py-1.5 rounded-xl border border-slate-600 text-slate-700 text-sm leading-none bg-white hover:bg-slate-50 disabled:opacity-45 disabled:cursor-not-allowed"
+                              >
+                                {currentAdoptedShotIds.includes(shot.id) ? '已采用' : '采用'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => toggleShotChecked(previewPlan, shot.id)}
+                                disabled={!canSelectShots}
+                                title={!canSelectShots ? '请先选方案' : ''}
+                                className={`w-7 h-7 rounded-full inline-flex items-center justify-center border transition-colors disabled:opacity-45 disabled:cursor-not-allowed ${
+                                  currentCheckedShotIds.includes(shot.id)
+                                    ? 'border-emerald-500 bg-emerald-500 text-white'
+                                    : 'border-slate-300 bg-slate-200 text-transparent'
+                                }`}
+                              >
+                                <Check className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
 
-                        <div className="px-3 py-4 border-r border-slate-200">
-                          <TagEditor
-                            tags={shot.characters}
-                            placeholder="输入角色后回车"
-                            tone="character"
-                            onAdd={(value) => addPreviewTag(previewPlan, shot.id, 'characters', value)}
-                            onRemove={(value) => removePreviewTag(previewPlan, shot.id, 'characters', value)}
-                          />
-                        </div>
+                          <div className="px-3 py-2 space-y-2">
+                            <div>
+                              <div className="text-xs font-bold text-slate-700 mb-1">画面提示词:</div>
+                              <textarea
+                                value={previewPlan === 'image-video' ? shot.visualPrompt ?? '' : shot.videoPrompt}
+                                onChange={(e) => updatePreviewShot(previewPlan, shot.id, previewPlan === 'image-video' ? 'visualPrompt' : 'videoPrompt', e.target.value)}
+                                className="w-full min-h-[66px] resize-y rounded-xl border border-slate-300 bg-[#f3f4f5] px-3 py-2 text-sm leading-6 text-slate-700 outline-none focus:border-emerald-300 focus:bg-white"
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <div className="text-xs font-bold text-slate-700 mb-1">台词:</div>
+                                <textarea
+                                  value={shot.dialogue}
+                                  onChange={(e) => updatePreviewShot(previewPlan, shot.id, 'dialogue', e.target.value)}
+                                  className="w-full min-h-[56px] resize-y rounded-xl border border-slate-300 bg-[#f3f4f5] px-3 py-2 text-sm leading-6 text-slate-700 outline-none focus:border-emerald-300 focus:bg-white"
+                                />
+                              </div>
+                              <div>
+                                <div className="text-xs font-bold text-slate-700 mb-1">{previewPlan === 'image-video' ? '视频提示词:' : '音效:'}</div>
+                                <textarea
+                                  value={previewPlan === 'image-video' ? shot.videoPrompt : shot.sound}
+                                  onChange={(e) => updatePreviewShot(previewPlan, shot.id, previewPlan === 'image-video' ? 'videoPrompt' : 'sound', e.target.value)}
+                                  className="w-full min-h-[56px] resize-y rounded-xl border border-slate-300 bg-[#f3f4f5] px-3 py-2 text-sm leading-6 text-slate-700 outline-none focus:border-emerald-300 focus:bg-white"
+                                />
+                              </div>
+                            </div>
+                          </div>
 
-                        <div className="px-3 py-4 border-r border-slate-200">
-                          <TagEditor
-                            tags={shot.scenes}
-                            placeholder="输入场景后回车"
-                            tone="scene"
-                            onAdd={(value) => addPreviewTag(previewPlan, shot.id, 'scenes', value)}
-                            onRemove={(value) => removePreviewTag(previewPlan, shot.id, 'scenes', value)}
-                          />
+                          {index < currentPreviewShots.length - 1 && (
+                            <button
+                              type="button"
+                              onClick={() => insertPreviewShotAfter(previewPlan, shot.id)}
+                              className="absolute left-1/2 bottom-0 z-20 -translate-x-1/2 translate-y-1/2 h-8 rounded-full bg-[#374151] text-white px-3 flex items-center gap-2 opacity-0 group-hover/shot:opacity-100 transition-opacity"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              <Trash2 className="w-3.5 h-3.5 opacity-80" />
+                            </button>
+                          )}
                         </div>
-
-                        <div className="px-3 py-4 border-r border-slate-200">
-                          <TagEditor
-                            tags={shot.props}
-                            placeholder="输入道具后回车"
-                            tone="prop"
-                            onAdd={(value) => addPreviewTag(previewPlan, shot.id, 'props', value)}
-                            onRemove={(value) => removePreviewTag(previewPlan, shot.id, 'props', value)}
-                          />
-                        </div>
-
-                        <div className="px-4 py-4 border-r border-slate-200">
-                          <textarea
-                            value={previewPlan === 'image-video' ? shot.visualPrompt ?? '' : shot.videoPrompt}
-                            onChange={(e) => updatePreviewShot(previewPlan, shot.id, previewPlan === 'image-video' ? 'visualPrompt' : 'videoPrompt', e.target.value)}
-                            className="w-full min-h-[140px] resize-y rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm leading-7 text-slate-700 outline-none focus:border-emerald-300 focus:bg-white"
-                          />
-                        </div>
-
-                        <div className="px-4 py-4 border-r border-slate-200">
-                          <textarea
-                            value={shot.dialogue}
-                            onChange={(e) => updatePreviewShot(previewPlan, shot.id, 'dialogue', e.target.value)}
-                            className="w-full min-h-[140px] resize-y rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm leading-7 text-slate-700 outline-none focus:border-emerald-300 focus:bg-white"
-                          />
-                        </div>
-
-                        <div className="px-4 py-4">
-                          <textarea
-                            value={shot.sound}
-                            onChange={(e) => updatePreviewShot(previewPlan, shot.id, 'sound', e.target.value)}
-                            className="w-full min-h-[140px] resize-y rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm leading-7 text-slate-700 outline-none focus:border-emerald-300 focus:bg-white"
-                          />
-                        </div>
-                      </div>
-                    ))}
+                      ))}
                     </div>
-                  </div>
+                  </section>
                 </div>
               )}
             </>
           )}
         </div>
       </main>
+    </div>
+  );
+}
+
+function AssetChipGroup({
+  title,
+  tone,
+  tags,
+  onAdd,
+  onRemove,
+}: {
+  title: string;
+  tone: 'character' | 'scene' | 'prop';
+  tags: string[];
+  onAdd: () => void;
+  onRemove: (value: string) => void;
+}) {
+  const chipClassName = tone === 'character'
+    ? 'bg-[#08b87b] border-[#08b87b] text-white'
+    : tone === 'scene'
+      ? 'bg-[#08a7b8] border-[#08a7b8] text-white'
+      : 'bg-[#b89900] border-[#b89900] text-white';
+
+  return (
+    <div className="flex items-center gap-1.5 flex-wrap">
+      <span className="text-sm font-medium text-slate-700">{title}:</span>
+      {tags.map((tag) => (
+        <span
+          key={tag}
+          className={`relative inline-flex items-center gap-1 rounded-lg border pl-1.5 pr-2 py-1 text-xs font-medium whitespace-nowrap ${chipClassName}`}
+        >
+          <span className="w-4 h-4 rounded bg-white/85 shrink-0" />
+          <span>{tag}</span>
+          <button
+            type="button"
+            onClick={() => onRemove(tag)}
+            className="absolute -right-1 -top-1 w-3.5 h-3.5 rounded-full bg-slate-400 text-white text-[10px] leading-none flex items-center justify-center"
+          >
+            ×
+          </button>
+        </span>
+      ))}
+      <button type="button" onClick={onAdd} className="text-sm text-slate-400 hover:text-emerald-600 transition-colors">
+        添加
+      </button>
     </div>
   );
 }

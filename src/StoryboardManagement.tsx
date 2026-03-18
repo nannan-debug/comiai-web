@@ -156,8 +156,8 @@ const ui = {
   disabled: '#dddddd',
 };
 
-export default function StoryboardManagement({ onNext, initialMode }: { onNext: (panelMode: CardMode) => void, initialMode: StoryboardMode }) {
-  const [isScriptPanelOpen, setIsScriptPanelOpen] = useState(true);
+export default function StoryboardManagement({ onNext, initialMode, embedded = false }: { onNext: (panelMode: CardMode) => void, initialMode: StoryboardMode, embedded?: boolean }) {
+  const [isScriptPanelOpen, setIsScriptPanelOpen] = useState(!embedded);
   const [shots, setShots] = useState(initialShotRecords);
   const [showModelMenu, setShowModelMenu] = useState(false);
   const [previewAsset, setPreviewAsset] = useState<{
@@ -276,9 +276,13 @@ export default function StoryboardManagement({ onNext, initialMode }: { onNext: 
     : { label: '图生视频', description: '当前按图生视频模式初始化', textColor: 'text-emerald-700', bgColor: 'bg-emerald-50', borderColor: 'border-emerald-200', icon: <ImageIcon className="w-3.5 h-3.5" /> };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden p-3 gap-3 pb-0" style={{ backgroundColor: ui.bg }}>
-      <div className="flex-1 flex overflow-hidden gap-3">
+    <div
+      className={`flex-1 flex flex-col overflow-hidden ${embedded ? 'p-0 gap-0 pb-0' : 'p-3 gap-3 pb-0'}`}
+      style={{ backgroundColor: embedded ? 'transparent' : ui.bg }}
+    >
+      <div className={`flex-1 flex overflow-hidden ${embedded ? 'gap-0' : 'gap-3'}`}>
         {/* 左侧：剧本回显 */}
+        {!embedded && (
         <aside 
           className={`rounded-2xl border shadow-sm flex flex-col overflow-hidden transition-all duration-300 shrink-0 ${
             isScriptPanelOpen ? 'w-80 opacity-100' : 'w-0 opacity-0 invisible border-none'
@@ -307,12 +311,14 @@ export default function StoryboardManagement({ onNext, initialMode }: { onNext: 
           ))}
         </div>
       </aside>
+      )}
 
       {/* 右侧：分镜编辑器区 */}
-      <main className="flex-1 rounded-2xl border shadow-sm flex flex-col overflow-hidden relative min-w-0" style={{ backgroundColor: ui.window, borderColor: ui.border }}>
+      <main className={`flex-1 border shadow-sm flex flex-col overflow-hidden relative min-w-0 ${embedded ? 'rounded-none' : 'rounded-2xl'}`} style={{ backgroundColor: ui.window, borderColor: ui.border }}>
         {/* 工具栏 */}
-        <div className="border-b px-6 py-3 shrink-0 flex items-center justify-between z-30" style={{ borderColor: ui.border, backgroundColor: '#f3f4f4' }}>
+        <div className={`border-b shrink-0 flex items-center justify-between z-30 ${embedded ? 'px-4 py-2.5' : 'px-6 py-3'}`} style={{ borderColor: ui.border, backgroundColor: '#f3f4f4' }}>
           <div className="flex items-center gap-4">
+            {!embedded && (
             <button 
               className="text-slate-400 p-1.5 rounded-lg transition-colors border border-transparent" 
               style={{ color: ui.subText }}
@@ -321,15 +327,15 @@ export default function StoryboardManagement({ onNext, initialMode }: { onNext: 
             >
               {isScriptPanelOpen ? <PanelLeftClose className="w-5 h-5" /> : <PanelLeftOpen className="w-5 h-5" />}
             </button>
-            
+            )}
             <div className="h-4 w-px" style={{ backgroundColor: ui.border }}></div>
 
             <span className="text-sm font-bold text-slate-800">
-              全集分镜管理 <span className="text-xs font-normal text-slate-500 ml-1">(共 {shots.length} 镜)</span>
+              {embedded ? '批量分镜管理' : '全集分镜管理'} <span className="text-xs font-normal text-slate-500 ml-1">(共 {shots.length} 镜)</span>
             </span>
             
             {/* 风格与尺寸选择 */}
-            <div className="flex items-center gap-3 border rounded-xl p-1 shadow-sm ml-2" style={{ backgroundColor: '#ffffff', borderColor: ui.border }}>
+            <div className={`flex items-center gap-3 border rounded-xl p-1 shadow-sm ml-2 ${embedded ? 'hidden' : ''}`} style={{ backgroundColor: '#ffffff', borderColor: ui.border }}>
               {/* Style Dropdown */}
               <div className="flex items-center gap-1.5">
                 <span className="text-[10px] font-bold text-slate-400 pl-1.5">风格:</span>
@@ -403,7 +409,7 @@ export default function StoryboardManagement({ onNext, initialMode }: { onNext: 
               </div>
             </div>
             
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border ml-2 shadow-sm ${modeMeta.textColor}`} style={{ backgroundColor: '#e9f8f0', borderColor: '#9ce9c7' }}>
+            <div className={`items-center gap-2 px-3 py-1.5 rounded-xl border ml-2 shadow-sm ${modeMeta.textColor} ${embedded ? 'hidden' : 'flex'}`} style={{ backgroundColor: '#e9f8f0', borderColor: '#9ce9c7' }}>
               {modeMeta.icon}
               <div>
                 <div className="text-[11px] font-bold leading-none">{modeMeta.label}</div>
@@ -413,6 +419,7 @@ export default function StoryboardManagement({ onNext, initialMode }: { onNext: 
           </div>
 
           <div className="flex items-center gap-3">
+            {!embedded && (
             <div className="relative group">
               <button 
                 onClick={() => setShowModelMenu(!showModelMenu)}
@@ -454,15 +461,16 @@ export default function StoryboardManagement({ onNext, initialMode }: { onNext: 
                 </div>
               )}
             </div>
+            )}
 
             <button className="px-4 py-1.5 text-[11px] font-bold text-white rounded-xl flex items-center gap-1.5 shadow-md active:scale-95 transition-all" style={{ backgroundColor: ui.navBg }}>
-              <Play className="w-3.5 h-3.5 fill-current" style={{ color: ui.primary }} /> 批量执行生成
+              <Play className="w-3.5 h-3.5 fill-current" style={{ color: ui.primary }} /> {embedded ? '应用批量操作' : '批量执行生成'}
             </button>
           </div>
         </div>
         
         {/* 列表区 */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 pb-20 custom-scrollbar" style={{ backgroundColor: '#f3f4f4' }}>
+        <div className={`flex-1 overflow-y-auto space-y-4 custom-scrollbar ${embedded ? 'p-4 pb-8' : 'p-6 pb-20'}`} style={{ backgroundColor: '#f3f4f4' }}>
           {shots.map((shot, index) => (
             <ShotCard 
               key={shot.id} 
@@ -475,14 +483,15 @@ export default function StoryboardManagement({ onNext, initialMode }: { onNext: 
               onPreviewAsset={setPreviewAsset}
               onNext={onNext}
               initialMode={initialMode}
+              compact={embedded}
             />
           ))}
 
           {/* 新增分镜按钮 */}
-          <div className="pt-2 pb-6">
+          <div className={`${embedded ? 'pt-1 pb-2' : 'pt-2 pb-6'}`}>
             <button 
               onClick={handleAddShot}
-              className="w-full border-2 border-dashed border-slate-300 rounded-2xl flex items-center justify-center py-6 text-slate-500 hover:text-emerald-600 hover:border-emerald-400 hover:bg-emerald-50 cursor-pointer transition-all shadow-sm bg-white/50 active:scale-[0.99]"
+              className={`w-full border-2 border-dashed border-slate-300 rounded-2xl flex items-center justify-center text-slate-500 hover:text-emerald-600 hover:border-emerald-400 hover:bg-emerald-50 cursor-pointer transition-all shadow-sm bg-white/50 active:scale-[0.99] ${embedded ? 'py-4' : 'py-6'}`}
             >
               <div className="flex items-center gap-2">
                 <PlusCircle className="w-5 h-5" />
@@ -579,6 +588,7 @@ function ShotCard({
   onPreviewAsset,
   onNext,
   initialMode,
+  compact = false,
 }: {
   shot: ShotRecord,
   shotNumber: number,
@@ -588,7 +598,8 @@ function ShotCard({
   onAddAsset: (shotId: number, type: AssetType) => void,
   onPreviewAsset: (asset: { type: CardMode; title: string; thumbnail?: string; duration?: string }) => void,
   onNext: (panelMode: CardMode) => void,
-  initialMode: StoryboardMode
+  initialMode: StoryboardMode,
+  compact?: boolean
 }) {
   const [cardMode, setCardMode] = useState<'image' | 'video'>(initialMode === 'direct-video' ? 'video' : 'image');
   const currentPreview = cardMode === 'image' ? shot.imagePreview : shot.videoPreview;
@@ -603,7 +614,7 @@ function ShotCard({
       style={{ backgroundColor: ui.window, borderColor: ui.border }}
     >
       {/* 左侧序号栏 */}
-      <div className="w-12 border-r flex flex-col items-center pt-5 shrink-0 gap-3 group relative" style={{ backgroundColor: '#f3f4f4', borderColor: ui.border }}>
+      <div className={`w-12 border-r flex flex-col items-center shrink-0 gap-3 group relative ${compact ? 'pt-3' : 'pt-5'}`} style={{ backgroundColor: '#f3f4f4', borderColor: ui.border }}>
         <span className="font-bold text-slate-700 bg-white border border-slate-200 w-7 h-7 flex items-center justify-center rounded-full shadow-sm text-xs">
           {shotNumber}
         </span>
@@ -621,9 +632,9 @@ function ShotCard({
       </div>
 
       {/* 内容区 */}
-      <div className="flex-1 p-4 grid grid-cols-12 gap-5">
+      <div className={`flex-1 grid grid-cols-12 ${compact ? 'p-3 gap-4' : 'p-4 gap-5'}`}>
         {/* 列1：绑定资产 */}
-        <div className="col-span-3 border-r pr-5 flex flex-col gap-4" style={{ borderColor: ui.border }}>
+        <div className={`col-span-3 border-r flex flex-col ${compact ? 'pr-4 gap-3' : 'pr-5 gap-4'}`} style={{ borderColor: ui.border }}>
           <div>
             <label className="text-[10px] text-slate-400 uppercase font-bold mb-2 block tracking-wider">绑定资产</label>
             <div className="flex flex-wrap gap-2">
@@ -679,7 +690,7 @@ function ShotCard({
         </div>
         
         {/* 列2：提示词 */}
-        <div className="col-span-5 border-r pr-5 flex flex-col" style={{ borderColor: ui.border }}>
+        <div className={`col-span-5 border-r flex flex-col ${compact ? 'pr-4' : 'pr-5'}`} style={{ borderColor: ui.border }}>
           <label className="text-[10px] text-slate-400 uppercase font-bold mb-2 flex items-center justify-between tracking-wider">
             画面内容与AIGC提示词
             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded cursor-pointer transition-colors shadow-sm border" style={{ color: ui.primary, backgroundColor: '#e9f8f0', borderColor: '#9ce9c7' }}>AI 优化</span>

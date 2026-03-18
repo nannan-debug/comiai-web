@@ -1,19 +1,21 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { 
   Film, Image as ImageIcon, LayoutTemplate, User, Coins, 
   Upload, ArrowRightLeft, Download, CheckCircle2, 
   Maximize2, ChevronDown, Filter, Zap, LayoutGrid,
-  Scissors, Share, ArrowUpFromLine, PlayCircle, Eye
+  Scissors, Share, ArrowUpFromLine, PlayCircle, Eye, X
 } from 'lucide-react';
 
 export default function StoryboardProduction({
   initialGlobalMode = 'video',
-  initialTaskMode = 'first-last',
+  initialTaskMode = 'all',
   onOpenPreview,
+  onOpenBatchOperations,
 }: {
   initialGlobalMode?: 'video' | 'image';
   initialTaskMode?: 'all' | 'first-last' | 'img2video';
   onOpenPreview?: () => void;
+  onOpenBatchOperations?: () => void;
 }) {
   const ui = {
     primary: '#01cd74',
@@ -34,6 +36,118 @@ export default function StoryboardProduction({
   
   // 模型与参数联动
   const [selectedModel, setSelectedModel] = useState('Seedance2.0');
+  type AssetType = 'character' | 'scene' | 'prop';
+  type RefAsset = { id: string; name: string; type: AssetType; image: string };
+  const omniReferenceAssets: RefAsset[] = [
+    { id: 'c1', name: '美女', type: 'character', image: 'https://picsum.photos/seed/char-beauty/120/80' },
+    { id: 'c2', name: '帅哥', type: 'character', image: 'https://picsum.photos/seed/char-man/120/80' },
+    { id: 's1', name: '沙漠房间', type: 'scene', image: 'https://picsum.photos/seed/scene-room/120/80' },
+    { id: 'p1', name: '菠萝蜜', type: 'prop', image: 'https://picsum.photos/seed/prop-gold/120/80' },
+  ];
+  const extraAssetPool: RefAsset[] = [
+    { id: 'c3', name: '冷澈', type: 'character', image: 'https://picsum.photos/seed/char-cold/120/80' },
+    { id: 's2', name: '昆仑研究所B4层', type: 'scene', image: 'https://picsum.photos/seed/scene-lab/120/80' },
+    { id: 'p2', name: '坐姿', type: 'prop', image: 'https://picsum.photos/seed/prop-pose/120/80' },
+    { id: 'p3', name: '断刃', type: 'prop', image: 'https://picsum.photos/seed/prop-blade/120/80' },
+  ];
+  const [selectedAssets, setSelectedAssets] = useState<RefAsset[]>(omniReferenceAssets);
+  const [videoPromptText, setVideoPromptText] = useState(
+    '营地中央火焰形成视觉焦点，@美女 在前景，@帅哥 在中景，@沙漠房间 作为环境空间，@菠萝蜜 作为趣味道具点缀。'
+  );
+  const [supplementPromptText, setSupplementPromptText] = useState('');
+  const [showMentionMenu, setShowMentionMenu] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionCursor, setMentionCursor] = useState(0);
+  const [confirmRemoveAsset, setConfirmRemoveAsset] = useState<RefAsset | null>(null);
+  const [pendingPromptText, setPendingPromptText] = useState<string | null>(null);
+  const promptRef = useRef<HTMLTextAreaElement | null>(null);
+  const promptOverlayRef = useRef<HTMLDivElement | null>(null);
+  const mentionsInText = (text: string) => {
+    const matches = text.match(/@[\u4e00-\u9fa5A-Za-z0-9_-]+/g) || [];
+    return matches.map((item) => item.slice(1));
+  };
+  const hasMentionInText = (text: string, name: string) => mentionsInText(text).includes(name);
+  const mentionCandidates = selectedAssets.filter((item) =>
+    item.name.toLowerCase().includes(mentionQuery.toLowerCase())
+  );
+  const addAssetToPrompt = (asset: RefAsset) => {
+    if (!hasMentionInText(videoPromptText, asset.name)) {
+      setVideoPromptText((prev) => `${prev}${prev.endsWith(' ') || prev.length === 0 ? '' : ' '}@${asset.name} `);
+    }
+  };
+  const handleAddMockAsset = () => {
+    const next = extraAssetPool.find((item) => !selectedAssets.some((selected) => selected.id === item.id));
+    if (!next) return;
+    setSelectedAssets((prev) => [...prev, next]);
+    addAssetToPrompt(next);
+  };
+  const insertMention = (asset: RefAsset) => {
+    const textarea = promptRef.current;
+    if (!textarea) return;
+    const before = videoPromptText.slice(0, mentionCursor).replace(/@[\u4e00-\u9fa5A-Za-z0-9_-]*$/, '');
+    const after = videoPromptText.slice(mentionCursor);
+    const nextText = `${before}@${asset.name} ${after}`;
+    setVideoPromptText(nextText);
+    setShowMentionMenu(false);
+    setMentionQuery('');
+    requestAnimationFrame(() => {
+      const cursorPos = before.length + asset.name.length + 2;
+      textarea.focus();
+      textarea.setSelectionRange(cursorPos, cursorPos);
+    });
+  };
+  const handleVideoPromptChange = (value: string) => {
+    const prevText = videoPromptText;
+    const prevMentions = new Set(mentionsInText(prevText));
+    const nextMentions = new Set(mentionsInText(value));
+    const removedNames = [...prevMentions].filter((name) => !nextMentions.has(name));
+    const removedBoundAsset = selectedAssets.find((asset) => removedNames.includes(asset.name));
+    if (removedBoundAsset) {
+      setPendingPromptText(value);
+      setConfirmRemoveAsset(removedBoundAsset);
+      return;
+    }
+    setVideoPromptText(value);
+  };
+  const confirmRemoveBinding = () => {
+    if (!confirmRemoveAsset || pendingPromptText === null) return;
+    setVideoPromptText(pendingPromptText);
+    setSelectedAssets((prev) => prev.filter((item) => item.id !== confirmRemoveAsset.id));
+    setConfirmRemoveAsset(null);
+    setPendingPromptText(null);
+  };
+  const cancelRemoveBinding = () => {
+    setConfirmRemoveAsset(null);
+    setPendingPromptText(null);
+  };
+  const getAssetToneClass = (type: AssetType) => {
+    if (type === 'character') return 'bg-[#08b87b]';
+    if (type === 'scene') return 'bg-[#08a7b8]';
+    return 'bg-[#b89900]';
+  };
+  const getAssetToneColor = (type: AssetType) => {
+    if (type === 'character') return '#08b87b';
+    if (type === 'scene') return '#08a7b8';
+    return '#b89900';
+  };
+  const escapeHTML = (value: string) =>
+    value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  const renderPromptWithTags = (rawText: string) => {
+    const escaped = escapeHTML(rawText);
+    return escaped.replace(/@([\u4e00-\u9fa5A-Za-z0-9_-]+)/g, (full, name) => {
+      const asset = selectedAssets.find((item) => item.name === name);
+      if (!asset) return full;
+      const tone = getAssetToneColor(asset.type);
+      return `<span style="display:inline-block;padding:1px 8px;border-radius:999px;background:${tone};color:#fff;line-height:1.45;margin:0 1px;font-weight:600;">@${escapeHTML(
+        name
+      )}</span>`;
+    });
+  };
   
   // 底部选中分镜
   const [activeStoryboard, setActiveStoryboard] = useState(1);
@@ -184,10 +298,33 @@ export default function StoryboardProduction({
               ))}
             </div>
 
-            {/* 参考图区域 (首尾帧模式) */}
+            {/* 参考图区域 */}
             <div className="mb-6">
-              <div className="text-xs font-medium text-gray-700 mb-2">参考图</div>
-              {taskMode === 'first-last' ? (
+              <div className="text-xs font-medium text-gray-700 mb-2">参考内容 <span className="text-gray-400 font-normal">(上限9个)</span></div>
+              {taskMode === 'all' ? (
+                <div className="rounded-xl bg-[#eceeef] border border-[#d2d3d4] p-2">
+                  <div className="grid grid-cols-4 gap-2">
+                    {selectedAssets.map((asset) => {
+                      const toneClass = getAssetToneClass(asset.type);
+                      return (
+                        <div key={asset.id} className="rounded-lg overflow-hidden border border-slate-200 bg-white">
+                          <img src={asset.image} className="w-full h-14 object-cover" referrerPolicy="no-referrer" />
+                          <div className={`text-[10px] text-white text-center py-0.5 font-medium ${toneClass}`}>{asset.name}</div>
+                        </div>
+                      );
+                    })}
+                    <button
+                      type="button"
+                      onClick={handleAddMockAsset}
+                      className="rounded-lg border border-dashed border-slate-400 bg-[#f3f4f5] flex flex-col items-center justify-center text-slate-500 h-[76px] hover:border-emerald-500 hover:text-emerald-700 transition-colors"
+                    >
+                      <Upload size={16} className="mb-1" />
+                      <span className="text-[10px] leading-4 text-center">上传或选择</span>
+                      <span className="text-[10px] leading-4 text-center">分镜图/设定库</span>
+                    </button>
+                  </div>
+                </div>
+              ) : taskMode === 'first-last' ? (
                 <div className="flex items-center gap-2">
                   <div className="flex-1 aspect-square bg-gray-50 border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:bg-gray-100 hover:border-emerald-400 cursor-pointer transition-colors">
                     <Upload size={20} className="mb-2" />
@@ -215,10 +352,77 @@ export default function StoryboardProduction({
             {/* 提示词输入 */}
             <div className="mb-6">
               <div className="text-xs font-medium text-gray-700 mb-2">视频提示词</div>
-              <textarea 
-                className="w-full h-28 p-3 bg-white border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
-                placeholder="请输入提示词"
-              ></textarea>
+              {globalMode === 'video' ? (
+                <div className="relative w-full p-2.5 bg-white border border-gray-200 rounded-lg focus-within:ring-1 focus-within:ring-emerald-500 focus-within:border-emerald-500">
+                  <div
+                    ref={promptOverlayRef}
+                    className="absolute left-2.5 right-2.5 top-2.5 h-28 text-sm leading-6 pointer-events-none whitespace-pre-wrap break-words overflow-hidden"
+                    style={{ color: '#1f2937' }}
+                    dangerouslySetInnerHTML={{ __html: `${renderPromptWithTags(videoPromptText) || '输入提示词，输入 @ 可快捷插入已绑定素材'}` }}
+                  />
+                  <textarea
+                    ref={promptRef}
+                    className="w-full h-28 bg-transparent border-0 p-0 text-sm leading-6 resize-none focus:outline-none"
+                    style={{ color: 'transparent', caretColor: '#1f2937' }}
+                    placeholder="输入提示词，输入 @ 可快捷插入已绑定素材"
+                    value={videoPromptText}
+                    onChange={(e) => handleVideoPromptChange(e.target.value)}
+                    onScroll={(e) => {
+                      if (promptOverlayRef.current) {
+                        promptOverlayRef.current.scrollTop = e.currentTarget.scrollTop;
+                        promptOverlayRef.current.scrollLeft = e.currentTarget.scrollLeft;
+                      }
+                    }}
+                    onClick={(e) => {
+                      const cursor = (e.target as HTMLTextAreaElement).selectionStart || 0;
+                      setMentionCursor(cursor);
+                    }}
+                    onKeyUp={(e) => {
+                      const textarea = e.target as HTMLTextAreaElement;
+                      const cursor = textarea.selectionStart || 0;
+                      setMentionCursor(cursor);
+                      const textBefore = textarea.value.slice(0, cursor);
+                      const match = textBefore.match(/@([\u4e00-\u9fa5A-Za-z0-9_-]*)$/);
+                      if (match) {
+                        setMentionQuery(match[1] || '');
+                        setShowMentionMenu(true);
+                      } else {
+                        setShowMentionMenu(false);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && showMentionMenu && mentionCandidates.length > 0) {
+                        e.preventDefault();
+                        insertMention(mentionCandidates[0]);
+                      }
+                    }}
+                  />
+                  {showMentionMenu && mentionCandidates.length > 0 ? (
+                    <div className="absolute left-2 right-2 bottom-2 translate-y-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-30 max-h-40 overflow-auto">
+                      {mentionCandidates.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => insertMention(item)}
+                          className="w-full px-2 py-1.5 flex items-center gap-2 hover:bg-gray-50 text-left"
+                        >
+                          <img src={item.image} className="w-5 h-5 rounded object-cover" referrerPolicy="no-referrer" />
+                          <span className="text-xs text-gray-800">{item.name}</span>
+                          <span className={`ml-auto px-1.5 py-0.5 rounded-full text-[10px] text-white ${getAssetToneClass(item.type)}`}>
+                            {item.type === 'character' ? '角色' : item.type === 'scene' ? '场景' : '道具'}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <textarea 
+                  className="w-full h-28 p-3 bg-white border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                  placeholder="请输入提示词"
+                ></textarea>
+              )}
             </div>
 
             <div className="mb-6">
@@ -226,7 +430,9 @@ export default function StoryboardProduction({
               <textarea 
                 className="w-full h-20 p-3 bg-white border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
                 placeholder="请输入提示词"
-              ></textarea>
+                value={supplementPromptText}
+                onChange={(e) => setSupplementPromptText(e.target.value)}
+              />
             </div>
 
             {/* 模型与参数选择 */}
@@ -521,6 +727,13 @@ export default function StoryboardProduction({
               <LayoutGrid size={14} />
               一键补充
             </button>
+            <button
+              onClick={onOpenBatchOperations}
+              className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 flex items-center gap-1.5 hover:bg-gray-50 transition-colors"
+            >
+              <Zap size={14} />
+              批量操作
+            </button>
             <button className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 flex items-center gap-1.5 hover:bg-gray-50 transition-colors">
               <Zap size={14} />
               一键生成
@@ -577,6 +790,39 @@ export default function StoryboardProduction({
           ))}
         </div>
       </footer>
+
+      {confirmRemoveAsset ? (
+        <div className="fixed inset-0 bg-black/45 backdrop-blur-[1px] z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-xl bg-[#151922] border border-[#2a3140] p-4 shadow-2xl">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-white font-semibold text-sm">确认删除</div>
+              <button
+                onClick={cancelRemoveBinding}
+                className="p-1 rounded hover:bg-white/10 text-slate-300 hover:text-white"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            <p className="text-xs text-slate-300 leading-5 mb-4">
+              删除标签 <span className="text-white font-medium">@{confirmRemoveAsset.name}</span> 会同步移除对应已上传素材，是否继续？
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={cancelRemoveBinding}
+                className="px-3 py-1.5 text-xs rounded-lg bg-[#252d3b] text-slate-200 hover:bg-[#2f3948]"
+              >
+                取消
+              </button>
+              <button
+                onClick={confirmRemoveBinding}
+                className="px-3 py-1.5 text-xs rounded-lg bg-[#8f42ff] text-white hover:bg-[#9b54ff]"
+              >
+                确定
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }
