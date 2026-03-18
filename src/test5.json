@@ -1,0 +1,367 @@
+{
+  "color": {
+    "frame": {
+      "description": "",
+      "type": "color",
+      "value": "#d2d3d4ff",
+      "blendMode": "normal",
+      "extensions": {
+        "org.lukasoppermann.figmaDesignTokens": {
+          "styleId": "S:ff15f4173f568125058b28082242497707ebec80,",
+          "exportKey": "color"
+        }
+      }
+    }
+  },
+  "gradient": {
+    "首页按钮渐变": {
+      "description": "",
+      "type": "custom-gradient",
+      "value": {
+        "gradientType": "linear",
+        "rotation": 297.4423045872053,
+        "stops": [
+          {
+            "position": 0,
+            "color": "#1c23291a"
+          },
+          {
+            "position": 0.36,
+            "color": "#1c232966"
+          },
+          {
+            "position": 0.46,
+            "color": "#1c2329ff"
+          },
+          {
+            "position": 1,
+            "color": "#1c2329ff"
+          }
+        ]
+      },
+      "extensions": {
+        "org.lukasoppermann.figmaDesignTokens": {
+          "styleId": "S:fee5d8b596b0908937cae2a372d58a9a09adb37e,",
+          "exportKey": "gradient"
+        }
+      }
+    }
+  },
+  "variable collection": {
+    "主色": {
+      "type": "color",
+      "value": "#01cd74ff",
+      "blendMode": "normal",
+      "extensions": {
+        "org.lukasoppermann.figmaDesignTokens": {
+          "collection": "Variable collection",
+          "scopes": [
+            "ALL_SCOPES"
+          ],
+          "variableId": "VariableID:10:118",
+          "exportKey": "variables"
+        }
+      }
+    },
+    "字色": {
+      "type": "color",
+      "value": "#1c2329ff",
+      "blendMode": "normal",
+      "extensions": {
+        "org.lukasoppermann.figmaDesignTokens": {
+          "collection": "Variable collection",
+          "scopes": [
+            "ALL_SCOPES"
+          ],
+          "variableId": "VariableID:829:8",
+          "exportKey": "variables"
+        }
+      }
+    },
+    "背景": {
+      "type": "color",
+      "value": "#e8e9eaff",
+      "blendMode": "normal",
+      "extensions": {
+        "org.lukasoppermann.figmaDesignTokens": {
+          "collection": "Variable collection",
+          "scopes": [
+            "ALL_SCOPES"
+          ],
+          "variableId": "VariableID:829:19",
+          "exportKey": "variables"
+        }
+      }
+    },
+    "白字": {
+      "type": "color",
+      "value": "#ffffffff",
+      "blendMode": "normal",
+      "extensions": {
+        "org.lukasoppermann.figmaDesignTokens": {
+          "collection": "Variable collection",
+          "scopes": [
+            "ALL_SCOPES"
+          ],
+          "variableId": "VariableID:846:35",
+          "exportKey": "variables"
+        }
+      }
+    },
+    "sub text": {
+      "type": "color",
+      "value": "#a4a7a9ff",
+      "blendMode": "normal",
+      "extensions": {
+        "org.lukasoppermann.figmaDesignTokens": {
+          "collection": "Variable collection",
+          "scopes": [
+            "ALL_SCOPES"
+          ],
+          "variableId": "VariableID:846:36",
+          "exportKey": "variables"
+        }
+      }
+    },
+    "导航栏底色": {
+      "type": "color",
+      "value": "#1c2329e6",
+      "blendMode": "normal",
+      "extensions": {
+        "org.lukasoppermann.figmaDesignTokens": {
+          "collection": "Variable collection",
+          "scopes": [
+            "ALL_SCOPES"
+          ],
+          "variableId": "VariableID:846:37",
+          "exportKey": "variables"
+        }
+      }
+    },
+    "导航栏选项": {
+      "type": "color",
+      "value": "#8e9194ff",
+      "blendMode": "normal",
+      "extensions": {
+        "org.lukasoppermann.figmaDesignTokens": {
+          "collection": "Variable collection",
+          "scopes": [
+            "ALL_SCOPES"
+          ],
+          "variableId": "VariableID:846:38",
+          "exportKey": "variables"
+        }
+      }
+    },
+    "导航栏选中": {
+      "type": "color",
+      "value": "#4a4f54ff",
+      "blendMode": "normal",
+      "extensions": {
+        "org.lukasoppermann.figmaDesignTokens": {
+          "collection": "Variable collection",
+          "scopes": [
+            "ALL_SCOPES"
+          ],
+          "variableId": "VariableID:846:39",
+          "exportKey": "variables"
+        }
+      }
+    },
+    "输入边框": {
+      "type": "color",
+      "value": "#d2d3d4ff",
+      "blendMode": "normal",
+      "extensions": {
+        "org.lukasoppermann.figmaDesignTokens": {
+          "collection": "Variable collection",
+          "scopes": [
+            "ALL_SCOPES"
+          ],
+          "variableId": "VariableID:846:40",
+          "exportKey": "variables"
+        }
+      }
+    },
+    "窗口": {
+      "type": "color",
+      "value": "#f8f8f9ff",
+      "blendMode": "normal",
+      "extensions": {
+        "org.lukasoppermann.figmaDesignTokens": {
+          "collection": "Variable collection",
+          "scopes": [
+            "ALL_SCOPES"
+          ],
+          "variableId": "VariableID:846:142",
+          "exportKey": "variables"
+        }
+      }
+    },
+    "灰字": {
+      "type": "color",
+      "value": "#8e9194ff",
+      "blendMode": "normal",
+      "extensions": {
+        "org.lukasoppermann.figmaDesignTokens": {
+          "collection": "Variable collection",
+          "scopes": [
+            "ALL_SCOPES"
+          ],
+          "variableId": "VariableID:846:220",
+          "exportKey": "variables"
+        }
+      }
+    },
+    "窗口重点色": {
+      "type": "color",
+      "value": "#d2d3d4ff",
+      "blendMode": "normal",
+      "extensions": {
+        "org.lukasoppermann.figmaDesignTokens": {
+          "collection": "Variable collection",
+          "scopes": [
+            "ALL_SCOPES"
+          ],
+          "variableId": "VariableID:846:222",
+          "exportKey": "variables"
+        }
+      }
+    },
+    "制作中": {
+      "type": "color",
+      "value": "#35bbf0ff",
+      "blendMode": "normal",
+      "extensions": {
+        "org.lukasoppermann.figmaDesignTokens": {
+          "collection": "Variable collection",
+          "scopes": [
+            "ALL_SCOPES"
+          ],
+          "variableId": "VariableID:846:223",
+          "exportKey": "variables"
+        }
+      }
+    },
+    "错误": {
+      "type": "color",
+      "value": "#ff6668ff",
+      "blendMode": "normal",
+      "extensions": {
+        "org.lukasoppermann.figmaDesignTokens": {
+          "collection": "Variable collection",
+          "scopes": [
+            "ALL_SCOPES"
+          ],
+          "variableId": "VariableID:846:224",
+          "exportKey": "variables"
+        }
+      }
+    },
+    "弹窗黑层": {
+      "type": "color",
+      "value": "#4a4f5433",
+      "blendMode": "normal",
+      "extensions": {
+        "org.lukasoppermann.figmaDesignTokens": {
+          "collection": "Variable collection",
+          "scopes": [
+            "ALL_SCOPES"
+          ],
+          "variableId": "VariableID:846:2466",
+          "exportKey": "variables"
+        }
+      }
+    },
+    "按钮不可选": {
+      "type": "color",
+      "value": "#ddddddff",
+      "blendMode": "normal",
+      "extensions": {
+        "org.lukasoppermann.figmaDesignTokens": {
+          "collection": "Variable collection",
+          "scopes": [
+            "ALL_SCOPES"
+          ],
+          "variableId": "VariableID:846:6828",
+          "exportKey": "variables"
+        }
+      }
+    },
+    "文字框按钮": {
+      "type": "color",
+      "value": "#ffffffcc",
+      "blendMode": "normal",
+      "extensions": {
+        "org.lukasoppermann.figmaDesignTokens": {
+          "collection": "Variable collection",
+          "scopes": [
+            "ALL_SCOPES"
+          ],
+          "variableId": "VariableID:1044:69",
+          "exportKey": "variables"
+        }
+      }
+    },
+    "待审核": {
+      "type": "color",
+      "value": "#ff9000ff",
+      "blendMode": "normal",
+      "extensions": {
+        "org.lukasoppermann.figmaDesignTokens": {
+          "collection": "Variable collection",
+          "scopes": [
+            "ALL_SCOPES"
+          ],
+          "variableId": "VariableID:1611:2883",
+          "exportKey": "variables"
+        }
+      }
+    },
+    "道具": {
+      "type": "color",
+      "value": "#ad9900ff",
+      "blendMode": "normal",
+      "extensions": {
+        "org.lukasoppermann.figmaDesignTokens": {
+          "collection": "Variable collection",
+          "scopes": [
+            "ALL_SCOPES"
+          ],
+          "variableId": "VariableID:3595:4774",
+          "exportKey": "variables"
+        }
+      }
+    },
+    "场景": {
+      "type": "color",
+      "value": "#009cadff",
+      "blendMode": "normal",
+      "extensions": {
+        "org.lukasoppermann.figmaDesignTokens": {
+          "collection": "Variable collection",
+          "scopes": [
+            "ALL_SCOPES"
+          ],
+          "variableId": "VariableID:3595:4775",
+          "exportKey": "variables"
+        }
+      }
+    },
+    "人物": {
+      "type": "color",
+      "value": "#00ad6bff",
+      "blendMode": "normal",
+      "extensions": {
+        "org.lukasoppermann.figmaDesignTokens": {
+          "collection": "Variable collection",
+          "scopes": [
+            "ALL_SCOPES"
+          ],
+          "variableId": "VariableID:3595:4776",
+          "exportKey": "variables"
+        }
+      }
+    }
+  }
+}
