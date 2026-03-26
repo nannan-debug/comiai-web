@@ -7,15 +7,18 @@ import ScriptUpload from './ScriptUpload';
 import EpisodeManagement from './EpisodeManagement';
 import ScriptSplitView from './ScriptSplitView';
 import ProjectManagement from './ProjectManagement';
+import UIDemoPage from './UIDemoPage';
+import CreativeCenter from './CreativeCenter';
 import { ArrowLeft, X } from 'lucide-react';
 
-type ViewState = 'projects' | 'management' | 'upload' | 'split' | 'production';
+type ViewState = 'projects' | 'management' | 'upload' | 'split' | 'production' | 'creative';
 type StoryboardMode = 'image-video' | 'direct-video';
 type SplitEntrySource = 'upload' | 'management';
 type ProductionPanelMode = 'image' | 'video';
 type PreviewDraftState = 'clean' | 'draft';
 
 export default function App() {
+  const isUiDemoMode = new URLSearchParams(window.location.search).get('demo') === 'ui';
   const [currentView, setCurrentView] = useState<ViewState>('projects');
   const [productionStep, setProductionStep] = useState(1);
   const [selectedStoryboardMode, setSelectedStoryboardMode] = useState<StoryboardMode>('image-video');
@@ -24,6 +27,10 @@ export default function App() {
   const [previewDraftState, setPreviewDraftState] = useState<PreviewDraftState>('clean');
   const [previewNotice, setPreviewNotice] = useState('');
   const [showBatchOperations, setShowBatchOperations] = useState(false);
+
+  if (isUiDemoMode) {
+    return <UIDemoPage />;
+  }
 
   const handleProductionStepChange = (nextStep: number) => {
     if (productionStep === 3 && nextStep !== 3 && previewDraftState === 'draft') {
@@ -35,7 +42,7 @@ export default function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#F0F2F5] text-slate-800 font-sans overflow-hidden text-sm relative">
+    <div className="flex flex-col h-screen bg-[#F0F2F5] text-slate-800 font-sans overflow-hidden text-sm relative ui-site">
       
       {/* Production Header (Only visible during actual production steps) */}
       {currentView === 'production' && (
@@ -80,7 +87,12 @@ export default function App() {
         <ProjectManagement 
           onCreateProject={() => setCurrentView('upload')} 
           onEnterProject={() => setCurrentView('management')} 
+          onOpenCreativeCenter={() => setCurrentView('creative')}
         />
+      )}
+
+      {currentView === 'creative' && (
+        <CreativeCenter onBack={() => setCurrentView('projects')} />
       )}
 
       {currentView === 'management' && (

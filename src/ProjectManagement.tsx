@@ -1,9 +1,18 @@
 import React, { useState } from 'react';
-import { Search, Clock, Edit, Trash2, User, Home, PlaySquare, Link2, Users, Bell, FileText, FolderPlus, X, Image as ImageIcon, ChevronDown, PenTool, BarChart2, ClipboardCheck } from 'lucide-react';
+import { Search, Clock, User, Home, PlaySquare, Link2, Users, Bell, FileText, FolderPlus, X, Image as ImageIcon, ChevronDown, PenTool, BarChart2, ClipboardCheck } from 'lucide-react';
 
-export default function ProjectManagement({ onCreateProject, onEnterProject }: { onCreateProject: () => void, onEnterProject: () => void }) {
+export default function ProjectManagement({
+  onCreateProject,
+  onEnterProject,
+  onOpenCreativeCenter,
+}: {
+  onCreateProject: () => void,
+  onEnterProject: () => void,
+  onOpenCreativeCenter: () => void
+}) {
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
+  const [newProjectName, setNewProjectName] = useState('');
   const [selectedOrientation, setSelectedOrientation] = useState<'16:9' | '9:16'>('16:9');
   const [selectedStyle, setSelectedStyle] = useState<string>('默认');
 
@@ -117,7 +126,10 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
             </div>
           </div>
           <div className="relative group">
-            <button className="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
+            <button
+              onClick={onOpenCreativeCenter}
+              className="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+            >
               <PenTool size={18} />
             </button>
             <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
@@ -158,11 +170,12 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
       </header>
 
       {/* Toolbar */}
-      <div className="px-6 py-6 flex items-center gap-4 shrink-0">
+      <div className="px-4 py-4 flex items-center gap-3 shrink-0">
         <div className="relative">
           <button 
             onClick={() => setIsCreateMenuOpen(!isCreateMenuOpen)}
-            className="px-6 py-2.5 bg-[#333A3F] hover:bg-slate-800 text-white rounded-full text-sm font-bold transition-colors shadow-sm flex items-center gap-2"
+            className="h-10 px-5 rounded-full text-sm font-semibold transition-colors shadow-sm ui-btn-dark"
+            style={{ backgroundColor: '#1c2329', color: '#fff' }}
           >
             项目创作
           </button>
@@ -180,11 +193,12 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
                   className="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 hover:text-emerald-600 flex items-center gap-3 transition-colors"
                 >
                   <FileText size={16} className="text-slate-400" />
-                  <span>从剧本出发</span>
+                  <span>从剧本开始</span>
                 </button>
                 <button 
                   onClick={() => {
                     setIsCreateMenuOpen(false);
+                    setNewProjectName('');
                     setIsNewProjectModalOpen(true);
                   }}
                   className="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 hover:text-emerald-600 flex items-center gap-3 transition-colors"
@@ -197,99 +211,92 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
           )}
         </div>
 
-        <div className="relative">
+        <div className="relative flex items-center">
           <input 
             type="text" 
             placeholder="请输入剧本名称" 
-            className="pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-full text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 w-64 transition-shadow shadow-sm" 
+            className="h-10 pl-4 pr-12 bg-white border border-slate-200 rounded-full text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 w-64 transition-shadow shadow-sm" 
           />
-          <Search size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
+          <button
+            type="button"
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full border border-slate-300 bg-white text-slate-500 hover:text-slate-700 hover:bg-slate-50 flex items-center justify-center"
+          >
+            <Search size={16} />
+          </button>
         </div>
       </div>
 
       {/* Grid */}
-      <div className="flex-1 overflow-y-auto p-6 pt-0 custom-scrollbar">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-6">
+      <div className="flex-1 overflow-y-auto px-4 pb-4 custom-scrollbar">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
           {projects.map((ep) => (
             <div 
               key={ep.id} 
               onClick={onEnterProject}
-              className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer group flex flex-col h-[420px]"
+              className="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer group flex flex-col h-[338px]"
             >
               {/* Cover Image Area */}
-              <div className="relative h-[240px] shrink-0 overflow-hidden bg-slate-900">
+              <div className="relative h-[218px] shrink-0 overflow-hidden bg-slate-900">
                 <div 
                   className="absolute inset-0 bg-cover bg-center opacity-80 group-hover:scale-105 transition-transform duration-500"
                   style={{ backgroundImage: `url(${ep.cover})` }}
                 />
                 {/* Gradient Overlay for text readability */}
                 <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-black/80" />
-                
-                {/* Top Right Actions */}
-                <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="p-1.5 bg-black/40 hover:bg-black/60 rounded text-white backdrop-blur-sm transition-colors" onClick={(e) => e.stopPropagation()}>
-                    <Edit size={14} />
-                  </button>
-                  <button className="p-1.5 bg-black/40 hover:bg-red-500/80 rounded text-white backdrop-blur-sm transition-colors" onClick={(e) => e.stopPropagation()}>
-                    <Trash2 size={14} />
-                  </button>
-                </div>
 
                 {/* Stats */}
-                <div className="absolute top-4 left-4 flex flex-col gap-2 text-white">
+                <div className="absolute top-2.5 left-2.5 w-[56px] rounded-lg bg-black/55 backdrop-blur-[1px] px-2 py-2 flex flex-col gap-1.5 text-white">
                   <div className="flex flex-col">
-                    <span className="text-lg font-bold leading-none">{ep.stats.img}</span>
-                    <span className="text-[10px] text-white/70">总生图</span>
+                    <span className="text-[10px] font-semibold leading-none">{ep.stats.img}</span>
+                    <span className="text-[9px] text-white/80">总生图</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm font-bold leading-none">{ep.stats.vid}</span>
-                    <span className="text-[10px] text-white/70">总视频</span>
+                    <span className="text-[10px] font-semibold leading-none">{ep.stats.vid}</span>
+                    <span className="text-[9px] text-white/80">总视频</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm font-bold leading-none">{ep.stats.del}</span>
-                    <span className="text-[10px] text-white/70">总删除</span>
+                    <span className="text-[10px] font-semibold leading-none">{ep.stats.del}</span>
+                    <span className="text-[9px] text-white/80">总删除</span>
                   </div>
-                  <div className="flex flex-col mt-2">
-                    <span className="text-sm font-bold leading-none">{ep.stats.token}</span>
-                    <span className="text-[10px] text-white/70">总消耗</span>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-semibold leading-none">{ep.stats.token}</span>
+                    <span className="text-[9px] text-white/80">总消耗</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-semibold leading-none">{ep.stats.time}</span>
+                    <span className="text-[9px] text-white/80">总耗时</span>
                   </div>
                 </div>
-
-                {/* Time & Clock Icon */}
-                <div className="absolute bottom-3 left-4 flex flex-col text-white">
-                  <span className="text-sm font-bold leading-none">{ep.stats.time}</span>
-                  <span className="text-[10px] text-white/70">总耗时</span>
-                </div>
-                <div className="absolute bottom-3 right-3 text-emerald-400">
-                  <Clock size={20} />
+                <div className="absolute bottom-2.5 right-2.5 w-5 h-5 rounded-full bg-black/55 border border-emerald-400 text-emerald-400 flex items-center justify-center">
+                  <Clock size={12} />
                 </div>
               </div>
 
               {/* Info Area */}
-              <div className="p-4 flex flex-col flex-1">
-                <div className="flex justify-between items-start mb-3 gap-2">
-                  <h3 className="font-bold text-slate-800 text-sm line-clamp-2 leading-tight">{ep.title}</h3>
+              <div className="px-2.5 py-2 flex flex-col flex-1">
+                <div className="flex justify-between items-start mb-1.5 gap-2">
+                  <h3 className="font-semibold text-slate-800 text-[14px] line-clamp-1 leading-tight">{ep.title}</h3>
                   <span className="text-xs text-slate-500 font-medium whitespace-nowrap">{ep.epCount}</span>
                 </div>
                 
                 {/* Tags */}
-                <div className="flex flex-wrap gap-1.5 mb-auto overflow-hidden max-h-[60px]">
+                <div className="flex flex-wrap gap-1 mb-auto overflow-hidden max-h-[42px]">
                   {ep.tags.length > 0 ? (
-                    ep.tags.map((tag, idx) => (
-                      <span key={idx} className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[11px] rounded-full border border-slate-200 whitespace-nowrap">
+                    ep.tags.slice(0, 8).map((tag, idx) => (
+                      <span key={idx} className="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[10px] rounded-full border border-slate-200 whitespace-nowrap leading-none">
                         {tag}
                       </span>
                     ))
                   ) : (
-                    <span className="text-xs text-slate-400 italic">暂无角色标签</span>
+                    <span className="text-[10px] text-slate-400 italic">暂无角色标签</span>
                   )}
                 </div>
 
                 {/* Footer */}
-                <div className="flex justify-between items-center mt-4 pt-3 border-t border-slate-100 text-[11px]">
+                <div className="flex justify-between items-center mt-2 pt-1.5 border-t border-slate-200 text-[10px]">
                   <span className="text-slate-400">{ep.date}</span>
-                  <span className="text-red-500 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> {ep.status}
+                  <span className="text-red-500 flex items-center gap-1 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>{ep.status}
                   </span>
                 </div>
               </div>
@@ -301,13 +308,22 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
       {/* New Project Modal */}
       {isNewProjectModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsNewProjectModalOpen(false)}></div>
+          <div
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            onClick={() => {
+              setIsNewProjectModalOpen(false);
+              setNewProjectName('');
+            }}
+          ></div>
           <div className="bg-white rounded-2xl shadow-xl w-[900px] max-w-[95vw] max-h-[90vh] flex flex-col z-10 overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
             <div className="flex items-center justify-between px-8 py-5 border-b border-slate-100 shrink-0">
               <h2 className="text-xl font-bold text-slate-800">新增剧本</h2>
               <button 
-                onClick={() => setIsNewProjectModalOpen(false)}
+                onClick={() => {
+                  setIsNewProjectModalOpen(false);
+                  setNewProjectName('');
+                }}
                 className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-full hover:bg-slate-100"
               >
                 <X size={24} />
@@ -326,6 +342,8 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
                     <input 
                       type="text" 
                       placeholder="请输入剧本名称" 
+                      value={newProjectName}
+                      onChange={(e) => setNewProjectName(e.target.value)}
                       className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-shadow"
                     />
                   </div>
@@ -410,17 +428,27 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
             {/* Modal Footer */}
             <div className="px-8 py-5 border-t border-slate-100 flex items-center justify-start gap-4 bg-white shrink-0">
               <button 
-                onClick={() => setIsNewProjectModalOpen(false)}
+                onClick={() => {
+                  setIsNewProjectModalOpen(false);
+                  setNewProjectName('');
+                }}
                 className="px-8 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-full text-sm font-medium transition-colors"
               >
                 取消
               </button>
               <button 
                 onClick={() => {
+                  if (!newProjectName.trim()) return;
                   setIsNewProjectModalOpen(false);
+                  setNewProjectName('');
                   onEnterProject(); // Go to episode management for the new project
                 }}
-                className="px-8 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-full text-sm font-medium transition-colors shadow-sm"
+                disabled={!newProjectName.trim()}
+                className={`px-8 py-2.5 rounded-full text-sm font-medium transition-colors shadow-sm ${
+                  newProjectName.trim()
+                    ? 'bg-[#1c2329] hover:bg-[#111827] text-white'
+                    : 'bg-[#dddddd] text-[#8e9194] cursor-not-allowed'
+                }`}
               >
                 新增
               </button>

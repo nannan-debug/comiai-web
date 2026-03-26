@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, Plus, Clock, Edit, Trash2, ChevronDown, User, ArrowLeft, FileText, FolderPlus, X, Image as ImageIcon } from 'lucide-react';
+import { Search, Filter, Plus, Clock, ChevronDown, User, Link2, Bell, FileText, FolderPlus, X, Image as ImageIcon } from 'lucide-react';
 
 export default function EpisodeManagement({ onUpload, onEnterEpisode, onBack }: { onUpload: () => void, onEnterEpisode: () => void, onBack: () => void }) {
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
@@ -62,38 +62,52 @@ export default function EpisodeManagement({ onUpload, onEnterEpisode, onBack }: 
   return (
     <div className="flex flex-col h-full bg-[#F4F5F7] overflow-hidden relative">
       {/* Header */}
-      <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
+      <header className="h-16 bg-[#EBECEF] border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
         <div className="flex items-center gap-4">
-          <button 
+          <button
+            type="button"
             onClick={onBack}
-            className="text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-2 text-sm font-medium"
+            className="flex items-center gap-2 text-emerald-600 font-black text-xl italic tracking-tighter hover:opacity-85 transition-opacity"
+            title="返回剧本项目页"
           >
-            <ArrowLeft size={16} /> 返回项目列表
+            <div className="w-6 h-6 bg-emerald-500 rounded flex items-center justify-center text-white text-sm">N</div>
+            NGSHOW
           </button>
-          <div className="h-4 w-px bg-slate-300"></div>
-          <div className="flex items-center gap-2 text-sm text-slate-600 font-medium">
-            我的作品 <span className="text-slate-400">/</span> 开局小兵 <span className="text-slate-400">/</span> <span className="text-slate-900 font-bold">分集管理</span>
-          </div>
+          <div className="text-sm text-slate-500">我的作品 › 末日直播：只有我知道结局</div>
         </div>
+        
+        {/* Center Nav */}
+        <div className="flex items-center bg-[#333A3F] rounded-full p-1.5 gap-1">
+          <button className="h-8 px-3 rounded-full text-xs font-semibold bg-[#01cd74] text-white">分集管理</button>
+          <button className="h-8 px-3 rounded-full text-xs font-medium text-slate-300 hover:text-white transition-colors">角色管理</button>
+          <button className="h-8 px-3 rounded-full text-xs font-medium text-slate-300 hover:text-white transition-colors">场景管理</button>
+          <button className="h-8 px-3 rounded-full text-xs font-medium text-slate-300 hover:text-white transition-colors">道具管理</button>
+        </div>
+
+        {/* Right Nav */}
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full text-xs text-emerald-600 font-mono border border-emerald-100">
-            🪙 5092
-          </div>
-          <div className="w-8 h-8 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-slate-500">
+          <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-white">
             <User size={16} />
+          </div>
+          <div className="flex items-center gap-2 bg-[#23292E] px-3 py-1.5 rounded-full text-xs text-emerald-400 font-mono">
+            <Link2 size={12} className="text-emerald-500" /> 24310
+          </div>
+          <div className="relative w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-white">
+            <Bell size={16} />
           </div>
         </div>
       </header>
 
       {/* Toolbar */}
-      <div className="px-6 py-4 flex items-center justify-between shrink-0">
+      <div className="px-4 py-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="relative">
             <button 
               onClick={() => setIsCreateMenuOpen(!isCreateMenuOpen)}
-              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-sm font-bold transition-colors flex items-center gap-2 shadow-sm"
+              className="h-10 px-5 rounded-full text-sm font-semibold transition-colors ui-btn-dark opacity-100"
+              style={{ backgroundColor: '#1c2329', color: '#fff' }}
             >
-              <Plus size={16} /> 创建分集
+              创建分集
             </button>
             
             {/* Create Menu Dropdown */}
@@ -125,111 +139,103 @@ export default function EpisodeManagement({ onUpload, onEnterEpisode, onBack }: 
               </>
             )}
           </div>
-
-          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 cursor-pointer hover:bg-slate-50 transition-colors">
-            <Filter size={16} className="text-slate-400" /> 集号正序 <ChevronDown size={14} className="text-slate-400" />
-          </div>
-          <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <div className="relative flex items-center">
             <input 
               type="text" 
-              placeholder="参与者名称搜索" 
-              className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 w-64 transition-shadow" 
+              placeholder="请输入参与者名字" 
+              className="h-10 pl-4 pr-12 bg-white border border-slate-200 rounded-full text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 w-64 transition-shadow shadow-sm" 
             />
+            <button
+              type="button"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full border border-slate-300 bg-white text-slate-500 hover:text-slate-700 hover:bg-slate-50 flex items-center justify-center"
+            >
+              <Search size={16} />
+            </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-8 text-sm font-medium">
-          <button className="text-emerald-600 border-b-2 border-emerald-500 pb-1">分集管理</button>
-          <button className="text-slate-500 hover:text-slate-800 pb-1 transition-colors">角色管理</button>
-          <button className="text-slate-500 hover:text-slate-800 pb-1 transition-colors">场景管理</button>
-          <button className="text-slate-500 hover:text-slate-800 pb-1 transition-colors">道具管理</button>
-        </div>
+        <button className="h-10 px-4 rounded-full border border-slate-500 text-sm text-slate-700 bg-white hover:bg-slate-50 inline-flex items-center gap-2">
+          <Filter size={16} />
+          集号正序
+          <ChevronDown size={14} className="text-slate-400" />
+        </button>
       </div>
 
       {/* Grid */}
-      <div className="flex-1 overflow-y-auto p-6 pt-0 custom-scrollbar">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+      <div className="flex-1 overflow-y-auto px-4 pb-4 custom-scrollbar">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
           {episodes.map((ep) => (
             <div 
               key={ep.id} 
               onClick={onEnterEpisode}
-              className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer group flex flex-col h-[380px]"
+              className="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer group flex flex-col h-[338px]"
             >
               {/* Cover Image Area */}
-              <div className="relative h-[220px] shrink-0 overflow-hidden bg-slate-900">
+              <div className="relative h-[218px] shrink-0 overflow-hidden bg-slate-900">
                 <div 
                   className="absolute inset-0 bg-cover bg-center opacity-80 group-hover:scale-105 transition-transform duration-500"
                   style={{ backgroundImage: `url(${ep.cover})` }}
                 />
                 {/* Gradient Overlay for text readability */}
                 <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-black/80" />
-                
-                {/* Top Right Actions */}
-                <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="p-1.5 bg-black/40 hover:bg-black/60 rounded text-white backdrop-blur-sm transition-colors" onClick={(e) => e.stopPropagation()}>
-                    <Edit size={14} />
-                  </button>
-                  <button className="p-1.5 bg-black/40 hover:bg-red-500/80 rounded text-white backdrop-blur-sm transition-colors" onClick={(e) => e.stopPropagation()}>
-                    <Trash2 size={14} />
-                  </button>
-                </div>
 
                 {/* Stats */}
-                <div className="absolute top-4 left-4 flex flex-col gap-2 text-white">
+                <div className="absolute top-2.5 left-2.5 w-[56px] rounded-lg bg-black/55 backdrop-blur-[1px] px-2 py-2 flex flex-col gap-1.5 text-white">
                   <div className="flex flex-col">
-                    <span className="text-lg font-bold leading-none">{ep.stats.img}</span>
-                    <span className="text-[10px] text-white/70">总生图</span>
+                    <span className="text-[10px] font-semibold leading-none">{ep.stats.img}</span>
+                    <span className="text-[9px] text-white/80">总生图</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm font-bold leading-none">{ep.stats.vid}</span>
-                    <span className="text-[10px] text-white/70">总视频</span>
+                    <span className="text-[10px] font-semibold leading-none">{ep.stats.vid}</span>
+                    <span className="text-[9px] text-white/80">总视频</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm font-bold leading-none">{ep.stats.del}</span>
-                    <span className="text-[10px] text-white/70">总删除</span>
+                    <span className="text-[10px] font-semibold leading-none">{ep.stats.del}</span>
+                    <span className="text-[9px] text-white/80">总删除</span>
                   </div>
-                  <div className="flex flex-col mt-2">
-                    <span className="text-sm font-bold leading-none">{ep.stats.token}</span>
-                    <span className="text-[10px] text-white/70">总消耗</span>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-semibold leading-none">{ep.stats.token}</span>
+                    <span className="text-[9px] text-white/80">总消耗</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-semibold leading-none">{ep.stats.time}</span>
+                    <span className="text-[9px] text-white/80">总耗时</span>
                   </div>
                 </div>
-
-                {/* Time & Clock Icon */}
-                <div className="absolute bottom-3 left-4 flex flex-col text-white">
-                  <span className="text-sm font-bold leading-none">{ep.stats.time}</span>
-                  <span className="text-[10px] text-white/70">总耗时</span>
-                </div>
-                <div className="absolute bottom-3 right-3 text-emerald-400">
-                  <Clock size={20} />
+                <div className="absolute bottom-2.5 right-2.5 w-5 h-5 rounded-full bg-black/55 border border-emerald-400 text-emerald-400 flex items-center justify-center">
+                  <Clock size={12} />
                 </div>
               </div>
 
               {/* Info Area */}
-              <div className="p-4 flex flex-col flex-1">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="font-bold text-slate-800 text-base">{ep.title}</h3>
-                  <span className="text-xs text-slate-500 font-medium">{ep.epNumber}</span>
+              <div className="px-2.5 py-2 flex flex-col flex-1">
+                <div className="flex justify-between items-center mb-1.5 gap-2">
+                  <h3 className="font-semibold text-slate-800 text-lg leading-none tracking-normal">{ep.title}</h3>
+                  <span className="text-[11px] text-slate-500 font-medium whitespace-nowrap">末日直播：只有我知道结局　30集</span>
                 </div>
                 
                 {/* Tags */}
-                <div className="flex flex-wrap gap-1.5 mb-auto">
+                <div className="flex flex-wrap gap-1 mb-auto max-h-[42px] overflow-hidden">
                   {ep.tags.length > 0 ? (
-                    ep.tags.map((tag, idx) => (
-                      <span key={idx} className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[11px] rounded-full border border-slate-200">
+                    ep.tags.slice(0, 8).map((tag, idx) => (
+                      <span key={idx} className={`px-1.5 py-0.5 text-[10px] rounded-full border whitespace-nowrap ${
+                        idx === 0
+                          ? 'bg-[#333A3F] text-white border-[#333A3F]'
+                          : 'bg-slate-100 text-slate-500 border-slate-200'
+                      }`}>
                         {tag}
                       </span>
                     ))
                   ) : (
-                    <span className="text-xs text-slate-400 italic">暂无角色标签</span>
+                    <span className="text-[10px] text-slate-400 italic">暂无角色标签</span>
                   )}
                 </div>
 
                 {/* Footer */}
-                <div className="flex justify-between items-center mt-4 pt-3 border-t border-slate-100 text-[11px]">
+                <div className="flex justify-between items-center mt-2 pt-1.5 border-t border-slate-200 text-[10px]">
                   <span className="text-slate-400">{ep.date}</span>
-                  <span className="text-red-500 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> {ep.status}
+                  <span className="text-red-500 flex items-center gap-1 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>{ep.status}
                   </span>
                 </div>
               </div>
@@ -303,7 +309,8 @@ export default function EpisodeManagement({ onUpload, onEnterEpisode, onBack }: 
                   setIsNewProjectModalOpen(false);
                   onEnterEpisode(); // Go straight to production for new empty project
                 }}
-                className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-full text-sm font-medium transition-colors shadow-sm"
+                className="px-6 py-2.5 rounded-full text-sm font-medium transition-colors shadow-sm ui-btn-dark"
+                style={{ backgroundColor: '#1c2329', color: '#fff' }}
               >
                 新增
               </button>

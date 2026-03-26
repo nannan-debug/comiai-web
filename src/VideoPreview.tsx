@@ -490,7 +490,7 @@ export default function VideoPreview({
             </p>
             <div className="mt-4 flex justify-end gap-2">
               <button onClick={() => setShowOverwriteConfirm(false)} className="h-9 px-3 rounded-lg bg-slate-100 text-slate-700 text-sm">取消</button>
-              <button onClick={handleOverwriteTimeline} className="h-9 px-3 rounded-lg bg-[#01cd74] text-white text-sm">确认覆盖</button>
+              <button onClick={handleOverwriteTimeline} className="h-9 px-3 rounded-lg bg-[#1c2329] text-white text-sm font-semibold hover:opacity-95">确认覆盖</button>
             </div>
           </div>
         </div>
@@ -513,9 +513,9 @@ export default function VideoPreview({
 
       {showExportModal && (
         <div className="fixed inset-0 z-[150] bg-black/45 backdrop-blur-sm p-6 flex items-center justify-center">
-          <div className="w-full max-w-[920px] rounded-[22px] bg-[#f8f8f9] border border-[#d2d3d4] shadow-2xl p-6">
+          <div className="ui-modal w-full max-w-[920px] p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-[28px] font-bold leading-none text-slate-900">导出任务列表</h3>
+              <h3 className="ui-modal-title">导出任务列表</h3>
               <button
                 onClick={() => setShowExportModal(false)}
                 className="w-10 h-10 rounded-full border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 flex items-center justify-center"
@@ -530,7 +530,7 @@ export default function VideoPreview({
                   setDraftExportPath('');
                   setShowCreateExportTaskModal(true);
                 }}
-                className="h-10 px-5 rounded-lg bg-[#01cd74] text-white text-sm font-semibold leading-none hover:opacity-95"
+                className="h-10 px-5 rounded-lg text-sm font-semibold leading-none ui-btn-dark"
               >
                 +新建导出任务
               </button>
@@ -635,9 +635,9 @@ export default function VideoPreview({
 
       {showCreateExportTaskModal && (
         <div className="fixed inset-0 z-[160] bg-black/45 backdrop-blur-sm p-6 flex items-center justify-center">
-          <div className="w-full max-w-[760px] rounded-[20px] bg-[#f8f8f9] border border-[#d2d3d4] shadow-2xl p-6">
+          <div className="ui-modal w-full max-w-[760px] p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-slate-900">新建导出任务</h3>
+              <h3 className="ui-modal-title">新建导出任务</h3>
               <button
                 onClick={() => setShowCreateExportTaskModal(false)}
                 className="w-9 h-9 rounded-full border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 flex items-center justify-center"
@@ -653,7 +653,7 @@ export default function VideoPreview({
                 value={draftExportPath}
                 onChange={(e) => setDraftExportPath(e.target.value)}
                 placeholder="请输入剪映草稿地址"
-                className="w-full h-10 px-4 rounded-xl border border-slate-300 bg-white text-sm text-slate-700 outline-none focus:border-emerald-400"
+                className="ui-input w-full"
               />
             </div>
 
@@ -675,7 +675,8 @@ export default function VideoPreview({
               </button>
               <button
                 onClick={handleConfirmCreateExportTask}
-                className="h-9 px-4 rounded-lg bg-[#1c2329] text-white text-sm font-semibold hover:opacity-95"
+                className="h-9 px-4 rounded-lg text-sm font-semibold ui-btn-dark"
+                style={{ backgroundColor: '#1c2329', color: '#ffffff' }}
               >
                 确认
               </button>
@@ -686,9 +687,9 @@ export default function VideoPreview({
 
       {showDownloadConfirm && (
         <div className="fixed inset-0 z-[165] bg-black/45 backdrop-blur-sm p-6 flex items-center justify-center">
-          <div className="w-full max-w-[760px] rounded-[20px] bg-[#f8f8f9] border border-[#d2d3d4] shadow-2xl p-6">
+          <div className="ui-modal w-full max-w-[760px] p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-slate-900">导出剪映草稿</h3>
+              <h3 className="ui-modal-title">导出剪映草稿</h3>
               <button
                 onClick={() => setShowDownloadConfirm(false)}
                 className="w-9 h-9 rounded-full border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 flex items-center justify-center"
@@ -714,7 +715,8 @@ export default function VideoPreview({
               </button>
               <button
                 onClick={handleConfirmDownload}
-                className="h-9 px-4 rounded-lg bg-[#1c2329] text-white text-sm font-semibold hover:opacity-95"
+                className="h-9 px-4 rounded-lg text-sm font-semibold ui-btn-dark"
+                style={{ backgroundColor: '#1c2329', color: '#ffffff' }}
               >
                 确认
               </button>
