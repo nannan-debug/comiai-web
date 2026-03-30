@@ -13,7 +13,7 @@ export default function EpisodeManagement({ onUpload, onEnterEpisode, onBack }: 
       epNumber: '1 集',
       cover: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?w=500&q=80', 
       stats: { img: 1016, vid: 274, del: 443, token: 122675, time: '0d00h00m' }, 
-      tags: ['尹子文', '黄心宜', '何进鹏'], 
+      tags: ['若曦', '婉清', '知夏'], 
       date: '2026-03-11 17:23', 
       status: '未完成' 
     },
@@ -23,7 +23,7 @@ export default function EpisodeManagement({ onUpload, onEnterEpisode, onBack }: 
       epNumber: '2 集',
       cover: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80', 
       stats: { img: 892, vid: 429, del: 73, token: 183773, time: '47d02h59m' }, 
-      tags: ['尹子文', '黄心宜', '超级管理员'], 
+      tags: ['语桐', '星冉', '初禾'], 
       date: '2026-01-23 14:24', 
       status: '未完成' 
     },
@@ -43,7 +43,7 @@ export default function EpisodeManagement({ onUpload, onEnterEpisode, onBack }: 
       epNumber: '4 集',
       cover: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=500&q=80', 
       stats: { img: 420, vid: 332, del: 154, token: 83720, time: '0d00h00m' }, 
-      tags: ['尹子文', '冯禧乐', '徐舒如', '刘璇', '黄心宜'], 
+      tags: ['慕晚', '书瑶', '南栀', '以宁', '昭月'], 
       date: '2026-03-11 17:23', 
       status: '未完成' 
     },
@@ -53,7 +53,7 @@ export default function EpisodeManagement({ onUpload, onEnterEpisode, onBack }: 
       epNumber: '5 集',
       cover: 'https://images.unsplash.com/photo-1504333638930-c8787321efa0?w=500&q=80', 
       stats: { img: 552, vid: 398, del: 67, token: 133770, time: '0d00h00m' }, 
-      tags: ['何进鹏', '尹子文', '鲜轩', '黄心宜', '彭伊琳'], 
+      tags: ['婧妍', '清欢', '知意', '允棠', '若初'], 
       date: '2026-03-11 17:23', 
       status: '未完成' 
     },
@@ -72,7 +72,7 @@ export default function EpisodeManagement({ onUpload, onEnterEpisode, onBack }: 
           </button>
           <div className="h-4 w-px bg-slate-300"></div>
           <div className="flex items-center gap-2 text-sm text-slate-600 font-medium">
-            我的作品 <span className="text-slate-400">/</span> 开局小兵 <span className="text-slate-400">/</span> <span className="text-slate-900 font-bold">分集管理</span>
+            我的作品 <span className="text-slate-400">/</span> 离婚后我成了顶流白月光 <span className="text-slate-400">/</span> <span className="text-slate-900 font-bold">分集管理</span>
           </div>
         </div>
         <div className="flex items-center gap-4">
