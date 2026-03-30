@@ -30,7 +30,7 @@ export default function ScriptUpload({ onNext, onBack }: { onNext: () => void, o
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#F4F5F7] overflow-hidden">
+    <div className="flex flex-col h-full bg-[#F8F3E8] overflow-hidden">
       {/* Top Navigation Bar */}
       <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 shadow-sm z-10 relative">
         <div className="flex items-center gap-4 w-1/3">
@@ -44,8 +44,8 @@ export default function ScriptUpload({ onNext, onBack }: { onNext: () => void, o
 
         {/* Progress Steps */}
         <div className="flex-1 flex justify-center">
-          <div className="flex items-center bg-[#333A3F] rounded-full p-1 shadow-inner">
-            <div className="flex items-center px-6 py-1.5 bg-emerald-500 text-white rounded-full text-sm font-bold shadow-sm">
+          <div className="flex items-center bg-[#2E2638] rounded-full p-1 shadow-inner">
+            <div className="flex items-center px-6 py-1.5 bg-violet-500 text-white rounded-full text-sm font-bold shadow-sm">
               1.上传剧本
             </div>
             <div className="flex items-center px-6 py-1.5 text-slate-400 text-sm font-medium">
@@ -55,7 +55,7 @@ export default function ScriptUpload({ onNext, onBack }: { onNext: () => void, o
         </div>
 
         <div className="flex items-center justify-end gap-4 w-1/3">
-          <div className="flex items-center gap-2 bg-[#23292E] px-3 py-1.5 rounded-full text-xs text-emerald-400 font-mono">
+          <div className="flex items-center gap-2 bg-[#3A3147] px-3 py-1.5 rounded-full text-xs text-violet-400 font-mono">
             🪙 24310
           </div>
         </div>
@@ -69,7 +69,7 @@ export default function ScriptUpload({ onNext, onBack }: { onNext: () => void, o
           <button 
             onClick={onNext}
             disabled={!uploadSuccess}
-            className="px-8 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-all shadow-md flex items-center gap-2 active:scale-95"
+            className="px-8 py-3 bg-violet-500 hover:bg-violet-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-all shadow-md flex items-center gap-2 active:scale-95"
           >
             解析剧本 <ArrowRight className="w-4 h-4" />
           </button>
@@ -92,10 +92,10 @@ export default function ScriptUpload({ onNext, onBack }: { onNext: () => void, o
             <div 
               className={`relative h-[520px] rounded-2xl border-2 border-dashed flex flex-col items-center justify-center transition-all duration-300 ${
                 isDragging 
-                  ? 'border-emerald-500 bg-emerald-50/50 scale-[1.02]' 
+                  ? 'border-violet-500 bg-violet-50/50 scale-[1.02]' 
                   : uploadSuccess
-                    ? 'border-emerald-300 bg-white shadow-sm'
-                    : 'border-slate-300 bg-white hover:border-emerald-400 hover:bg-slate-50 cursor-pointer shadow-sm'
+                    ? 'border-violet-300 bg-white shadow-sm'
+                    : 'border-slate-300 bg-white hover:border-violet-400 hover:bg-slate-50 cursor-pointer shadow-sm'
               }`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
@@ -104,16 +104,16 @@ export default function ScriptUpload({ onNext, onBack }: { onNext: () => void, o
             >
               {isUploading ? (
                 <div className="flex flex-col items-center gap-4 animate-in fade-in duration-300">
-                  <div className="w-16 h-16 border-4 border-emerald-100 border-t-emerald-500 rounded-full animate-spin" />
-                  <div className="text-emerald-600 font-bold tracking-widest animate-pulse">正在上传并校验格式...</div>
+                  <div className="w-16 h-16 border-4 border-violet-100 border-t-violet-500 rounded-full animate-spin" />
+                  <div className="text-violet-600 font-bold tracking-widest animate-pulse">正在上传并校验格式...</div>
                 </div>
               ) : uploadSuccess ? (
                 <div className="flex flex-col items-center gap-4 animate-in zoom-in-95 duration-500">
-                  <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center">
-                    <CheckCircle2 size={40} className="text-emerald-500" />
+                  <div className="w-20 h-20 bg-violet-100 rounded-full flex items-center justify-center">
+                    <CheckCircle2 size={40} className="text-violet-500" />
                   </div>
                   <div className="text-center">
-                    <div className="text-lg font-bold text-slate-800 mb-1">《末日直播》全集剧本.txt</div>
+                    <div className="text-lg font-bold text-slate-800 mb-1">《ComiAI》全集剧本.txt</div>
                     <div className="text-sm text-slate-500">上传成功，共识别到 12 集内容</div>
                   </div>
                   <button 
@@ -128,11 +128,11 @@ export default function ScriptUpload({ onNext, onBack }: { onNext: () => void, o
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-4 text-slate-400 group">
-                  <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-colors">
+                  <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center group-hover:bg-violet-50 group-hover:text-violet-500 transition-colors">
                     <UploadCloud size={40} />
                   </div>
                   <div className="text-center space-y-2">
-                    <div className="text-base font-bold text-slate-700 group-hover:text-emerald-600 transition-colors">
+                    <div className="text-base font-bold text-slate-700 group-hover:text-violet-600 transition-colors">
                       点击或拖拽剧本至此开始上传
                     </div>
                     <div className="text-xs font-medium">
@@ -146,7 +146,7 @@ export default function ScriptUpload({ onNext, onBack }: { onNext: () => void, o
             {/* Right: Instructions */}
             <div className="h-[520px] bg-white rounded-2xl border border-slate-200 shadow-sm p-8 flex flex-col overflow-y-auto custom-scrollbar">
               <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-emerald-500" /> 剧本格式说明
+                <FileText className="w-5 h-5 text-violet-500" /> 剧本格式说明
               </h2>
               <p className="text-sm text-slate-600 mb-8 leading-relaxed">
                 若上传剧本的格式与规定格式不符，可能会影响剧本解析结果。系统将根据以下规则自动将剧本拆分为单集和场次。
@@ -156,12 +156,12 @@ export default function ScriptUpload({ onNext, onBack }: { onNext: () => void, o
                 {/* Section 1 */}
                 <div>
                   <h3 className="text-base font-bold text-slate-800 mb-3">拆分单集格式示意</h3>
-                  <ul className="text-sm text-slate-600 space-y-2 mb-4 list-disc list-inside marker:text-emerald-500">
+                  <ul className="text-sm text-slate-600 space-y-2 mb-4 list-disc list-inside marker:text-violet-500">
                     <li>"第"字开头,"集"字结尾</li>
                     <li>"第xx集"独立成行</li>
                   </ul>
                   <div className="bg-[#1E293B] rounded-xl p-5 font-mono text-sm text-slate-300 shadow-inner border border-slate-700">
-                    <div className="text-emerald-400 font-bold border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 rounded-md inline-block mb-3">
+                    <div className="text-violet-400 font-bold border border-violet-500/30 bg-violet-500/10 px-3 py-1 rounded-md inline-block mb-3">
                       第三集
                     </div>
                     <div className="leading-relaxed space-y-2">
@@ -176,13 +176,13 @@ export default function ScriptUpload({ onNext, onBack }: { onNext: () => void, o
                 {/* Section 2 */}
                 <div>
                   <h3 className="text-base font-bold text-slate-800 mb-3">拆分场次格式示意</h3>
-                  <ul className="text-sm text-slate-600 space-y-2 mb-4 list-disc list-inside marker:text-emerald-500">
+                  <ul className="text-sm text-slate-600 space-y-2 mb-4 list-disc list-inside marker:text-violet-500">
                     <li>符合"X-X"格式</li>
                     <li>X为阿拉伯数字</li>
                     <li>X-X位于该行文字开头</li>
                   </ul>
                   <div className="bg-[#1E293B] rounded-xl p-5 font-mono text-sm text-slate-300 shadow-inner border border-slate-700">
-                    <div className="text-emerald-400 font-bold border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 rounded-md inline-block mb-3">
+                    <div className="text-violet-400 font-bold border border-violet-500/30 bg-violet-500/10 px-3 py-1 rounded-md inline-block mb-3">
                       1-8场 斩妖司-刑房点卯处日内
                     </div>
                     <div className="leading-relaxed space-y-2">

@@ -60,7 +60,7 @@ export default function EpisodeManagement({ onUpload, onEnterEpisode, onBack }: 
   ];
 
   return (
-    <div className="flex flex-col h-full bg-[#F4F5F7] overflow-hidden relative">
+    <div className="flex flex-col h-full bg-[#F8F3E8] overflow-hidden relative">
       {/* Header */}
       <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
         <div className="flex items-center gap-4">
@@ -76,7 +76,7 @@ export default function EpisodeManagement({ onUpload, onEnterEpisode, onBack }: 
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full text-xs text-emerald-600 font-mono border border-emerald-100">
+          <div className="flex items-center gap-2 bg-violet-50 px-3 py-1.5 rounded-full text-xs text-violet-600 font-mono border border-violet-100">
             🪙 5092
           </div>
           <div className="w-8 h-8 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-slate-500">
@@ -106,7 +106,7 @@ export default function EpisodeManagement({ onUpload, onEnterEpisode, onBack }: 
                       setIsCreateMenuOpen(false);
                       onUpload();
                     }}
-                    className="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 hover:text-emerald-600 flex items-center gap-3 transition-colors"
+                    className="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 hover:text-violet-600 flex items-center gap-3 transition-colors"
                   >
                     <FileText size={16} className="text-slate-400" />
                     <span>选择已有剧本</span>
@@ -116,7 +116,7 @@ export default function EpisodeManagement({ onUpload, onEnterEpisode, onBack }: 
                       setIsCreateMenuOpen(false);
                       setIsNewProjectModalOpen(true);
                     }}
-                    className="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 hover:text-emerald-600 flex items-center gap-3 transition-colors"
+                    className="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 hover:text-violet-600 flex items-center gap-3 transition-colors"
                   >
                     <FolderPlus size={16} className="text-slate-400" />
                     <span>新建空项目</span>
@@ -134,13 +134,13 @@ export default function EpisodeManagement({ onUpload, onEnterEpisode, onBack }: 
             <input 
               type="text" 
               placeholder="参与者名称搜索" 
-              className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 w-64 transition-shadow" 
+              className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 w-64 transition-shadow" 
             />
           </div>
         </div>
 
         <div className="flex items-center gap-8 text-sm font-medium">
-          <button className="text-emerald-600 border-b-2 border-emerald-500 pb-1">分集管理</button>
+          <button className="text-violet-600 border-b-2 border-violet-500 pb-1">分集管理</button>
           <button className="text-slate-500 hover:text-slate-800 pb-1 transition-colors">角色管理</button>
           <button className="text-slate-500 hover:text-slate-800 pb-1 transition-colors">场景管理</button>
           <button className="text-slate-500 hover:text-slate-800 pb-1 transition-colors">道具管理</button>
@@ -154,7 +154,7 @@ export default function EpisodeManagement({ onUpload, onEnterEpisode, onBack }: 
             <div 
               key={ep.id} 
               onClick={onEnterEpisode}
-              className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer group flex flex-col h-[380px]"
+              className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md hover:border-violet-300 transition-all cursor-pointer group flex flex-col h-[380px]"
             >
               {/* Cover Image Area */}
               <div className="relative h-[220px] shrink-0 overflow-hidden bg-slate-900">
@@ -200,7 +200,7 @@ export default function EpisodeManagement({ onUpload, onEnterEpisode, onBack }: 
                   <span className="text-sm font-bold leading-none">{ep.stats.time}</span>
                   <span className="text-[10px] text-white/70">总耗时</span>
                 </div>
-                <div className="absolute bottom-3 right-3 text-emerald-400">
+                <div className="absolute bottom-3 right-3 text-violet-400">
                   <Clock size={20} />
                 </div>
               </div>
@@ -261,7 +261,7 @@ export default function EpisodeManagement({ onUpload, onEnterEpisode, onBack }: 
                 <input 
                   type="text" 
                   placeholder="请输入分集名称" 
-                  className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-shadow"
+                  className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-shadow"
                 />
               </div>
 
@@ -270,7 +270,7 @@ export default function EpisodeManagement({ onUpload, onEnterEpisode, onBack }: 
                   <span className="text-red-500 mr-1">*</span>集号
                 </label>
                 <div className="relative">
-                  <select className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-shadow appearance-none text-slate-500">
+                  <select className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-shadow appearance-none text-slate-500">
                     <option value="">请选择或输入集号(1-100)</option>
                     {[...Array(100)].map((_, i) => (
                       <option key={i+1} value={i+1}>第{i+1}集</option>
@@ -284,7 +284,7 @@ export default function EpisodeManagement({ onUpload, onEnterEpisode, onBack }: 
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">
                   封面图
                 </label>
-                <div className="border-2 border-dashed border-slate-200 rounded-xl h-48 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-50 hover:border-emerald-300 hover:text-emerald-500 transition-colors cursor-pointer group">
+                <div className="border-2 border-dashed border-slate-200 rounded-xl h-48 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-50 hover:border-violet-300 hover:text-violet-500 transition-colors cursor-pointer group">
                   <ImageIcon size={48} className="mb-3 opacity-50 group-hover:opacity-100 transition-opacity" strokeWidth={1.5} />
                   <span className="text-sm font-medium">点击上传封面图</span>
                 </div>

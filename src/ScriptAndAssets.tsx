@@ -53,9 +53,9 @@ export default function ScriptAndAssets({ onNext }: { onNext: () => void }) {
       <aside className="w-[400px] bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden shrink-0">
         <div className="px-4 py-3 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
           <h2 className="font-bold text-sm flex items-center gap-2 text-slate-700">
-            <FileText className="w-4 h-4 text-emerald-500" /> 输入本集剧本
+            <FileText className="w-4 h-4 text-violet-500" /> 输入本集剧本
           </h2>
-          <button className="text-xs text-slate-500 hover:text-emerald-600 flex items-center gap-1 transition-colors">
+          <button className="text-xs text-slate-500 hover:text-violet-600 flex items-center gap-1 transition-colors">
             <Upload className="w-3 h-3" /> 导入文件
           </button>
         </div>
@@ -79,7 +79,7 @@ export default function ScriptAndAssets({ onNext }: { onNext: () => void }) {
                   setAutoOptimize(e.target.checked);
                   if (!e.target.checked) setShowPromptSettings(false);
                 }}
-                className="mt-1 w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" 
+                className="mt-1 w-4 h-4 text-violet-600 rounded border-slate-300 focus:ring-violet-500" 
               />
               <div>
                 <div className="font-bold text-slate-800 text-sm flex items-center gap-1">
@@ -97,8 +97,8 @@ export default function ScriptAndAssets({ onNext }: { onNext: () => void }) {
               }}
               className={`text-xs flex items-center gap-1 px-2 py-1 rounded-lg border transition-colors ${
                 showPromptSettings 
-                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
-                  : 'bg-slate-50 border-slate-200 text-slate-600 hover:text-emerald-600'
+                  ? 'bg-violet-50 border-violet-200 text-violet-700' 
+                  : 'bg-slate-50 border-slate-200 text-slate-600 hover:text-violet-600'
               }`}
             >
               <Settings2 className="w-3.5 h-3.5" /> 设定规则
@@ -114,12 +114,12 @@ export default function ScriptAndAssets({ onNext }: { onNext: () => void }) {
                   <span className="text-xs font-bold text-slate-700">选择分镜制作默认模式</span>
                 </div>
                 <div className="flex gap-3 mb-2">
-                  <label className="flex items-center gap-2 cursor-pointer group bg-white px-3 py-2 rounded-lg border border-slate-200 hover:border-emerald-300 transition-colors flex-1">
-                    <input type="checkbox" defaultChecked className="w-3.5 h-3.5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" />
+                  <label className="flex items-center gap-2 cursor-pointer group bg-white px-3 py-2 rounded-lg border border-slate-200 hover:border-violet-300 transition-colors flex-1">
+                    <input type="checkbox" defaultChecked className="w-3.5 h-3.5 text-violet-600 rounded border-slate-300 focus:ring-violet-500" />
                     <span className="text-xs font-medium text-slate-700">多参生视频</span>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer group bg-white px-3 py-2 rounded-lg border border-slate-200 hover:border-emerald-300 transition-colors flex-1">
-                    <input type="checkbox" defaultChecked className="w-3.5 h-3.5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" />
+                  <label className="flex items-center gap-2 cursor-pointer group bg-white px-3 py-2 rounded-lg border border-slate-200 hover:border-violet-300 transition-colors flex-1">
+                    <input type="checkbox" defaultChecked className="w-3.5 h-3.5 text-violet-600 rounded border-slate-300 focus:ring-violet-500" />
                     <span className="text-xs font-medium text-slate-700">图生视频</span>
                   </label>
                 </div>
@@ -132,7 +132,7 @@ export default function ScriptAndAssets({ onNext }: { onNext: () => void }) {
                 <span className="text-xs font-bold text-slate-700">自定义系统提示词 (System Prompt)</span>
                 <button 
                   onClick={() => setSystemPrompt(`你是一个专业的漫剧分镜师。请根据用户提供的剧本片段，提取关键信息并生成结构化分镜。\n规则：\n1. 提取出场【角色】和【场景】。\n2. 重点优化【画面描述】：不要只复制原文，请根据剧情脑补出适合AI绘画的Prompt，必须包含：时间、环境、镜头景别(如全景/特写)、光影氛围(如赛博朋克/暖色调)。`)}
-                  className="text-[10px] text-slate-500 hover:text-emerald-600 underline decoration-slate-300 hover:decoration-emerald-600 underline-offset-2"
+                  className="text-[10px] text-slate-500 hover:text-violet-600 underline decoration-slate-300 hover:decoration-violet-600 underline-offset-2"
                 >
                   恢复默认
                 </button>
@@ -140,7 +140,7 @@ export default function ScriptAndAssets({ onNext }: { onNext: () => void }) {
               <textarea 
                 value={systemPrompt}
                 onChange={(e) => setSystemPrompt(e.target.value)}
-                className="w-full text-xs text-slate-600 p-2.5 bg-white border border-slate-200 rounded-lg resize-y h-32 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none leading-relaxed transition-all shadow-inner" 
+                className="w-full text-xs text-slate-600 p-2.5 bg-white border border-slate-200 rounded-lg resize-y h-32 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 outline-none leading-relaxed transition-all shadow-inner" 
                 spellCheck="false"
               />
             </div>
@@ -154,7 +154,7 @@ export default function ScriptAndAssets({ onNext }: { onNext: () => void }) {
             {isParsing ? (
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
-              <Wand2 className="w-4 h-4 text-emerald-400" />
+              <Wand2 className="w-4 h-4 text-violet-400" />
             )}
             {isParsing ? '解析中...' : hasParsed ? '重新提取角色与场景' : '智能提取角色与场景'}
           </button>
@@ -192,7 +192,7 @@ export default function ScriptAndAssets({ onNext }: { onNext: () => void }) {
                         <button 
                           key={style.id}
                           onClick={() => { setSelectedStyle(style.id); setIsStyleDropdownOpen(false); }}
-                          className={`w-full text-left px-3 py-2 text-xs transition-colors flex items-center gap-3 ${selectedStyle === style.id ? 'bg-emerald-50 text-emerald-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
+                          className={`w-full text-left px-3 py-2 text-xs transition-colors flex items-center gap-3 ${selectedStyle === style.id ? 'bg-violet-50 text-violet-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
                         >
                           <img src={style.image} alt={style.name} className="w-5 h-5 rounded object-cover shadow-sm" />
                           <span className="truncate">{style.name}</span>
@@ -227,16 +227,16 @@ export default function ScriptAndAssets({ onNext }: { onNext: () => void }) {
                     <div className="absolute top-full right-0 mt-1 w-36 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-40 animate-in fade-in slide-in-from-top-2 duration-200">
                       <button 
                         onClick={() => { setSelectedOrientation('16:9'); setIsOrientationDropdownOpen(false); }}
-                        className={`w-full text-left px-3 py-2 text-xs transition-colors flex items-center gap-3 ${selectedOrientation === '16:9' ? 'bg-emerald-50 text-emerald-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
+                        className={`w-full text-left px-3 py-2 text-xs transition-colors flex items-center gap-3 ${selectedOrientation === '16:9' ? 'bg-violet-50 text-violet-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
                       >
-                        <div className={`w-3.5 h-2 border-2 rounded-[2px] ${selectedOrientation === '16:9' ? 'border-emerald-500' : 'border-slate-400'}`}></div>
+                        <div className={`w-3.5 h-2 border-2 rounded-[2px] ${selectedOrientation === '16:9' ? 'border-violet-500' : 'border-slate-400'}`}></div>
                         <span>16:9 (横屏)</span>
                       </button>
                       <button 
                         onClick={() => { setSelectedOrientation('9:16'); setIsOrientationDropdownOpen(false); }}
-                        className={`w-full text-left px-3 py-2 text-xs transition-colors flex items-center gap-3 ${selectedOrientation === '9:16' ? 'bg-emerald-50 text-emerald-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
+                        className={`w-full text-left px-3 py-2 text-xs transition-colors flex items-center gap-3 ${selectedOrientation === '9:16' ? 'bg-violet-50 text-violet-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
                       >
-                        <div className={`w-2 h-3.5 border-2 rounded-[2px] ${selectedOrientation === '9:16' ? 'border-emerald-500' : 'border-slate-400'}`}></div>
+                        <div className={`w-2 h-3.5 border-2 rounded-[2px] ${selectedOrientation === '9:16' ? 'border-violet-500' : 'border-slate-400'}`}></div>
                         <span>9:16 (竖屏)</span>
                       </button>
                     </div>
@@ -247,7 +247,7 @@ export default function ScriptAndAssets({ onNext }: { onNext: () => void }) {
 
             <button
               onClick={onNext}
-              className="px-5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold transition-colors shadow-md flex items-center gap-2 active:scale-95"
+              className="px-5 py-2 bg-violet-500 hover:bg-violet-600 text-white rounded-xl text-sm font-bold transition-colors shadow-md flex items-center gap-2 active:scale-95"
             >
               下一步：制作分镜表 <ArrowRight className="w-4 h-4" />
             </button>
@@ -263,8 +263,8 @@ export default function ScriptAndAssets({ onNext }: { onNext: () => void }) {
           )}
 
           {isParsing && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-emerald-600 z-20 bg-slate-50/80 backdrop-blur-sm">
-              <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin mb-4" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-violet-600 z-20 bg-slate-50/80 backdrop-blur-sm">
+              <div className="w-10 h-10 border-4 border-violet-200 border-t-violet-500 rounded-full animate-spin mb-4" />
               <p className="text-sm font-bold animate-pulse">正在深度理解剧本，提取实体资产...</p>
             </div>
           )}
@@ -274,35 +274,35 @@ export default function ScriptAndAssets({ onNext }: { onNext: () => void }) {
               {/* 角色区 */}
               <div className="mb-8">
                 <h4 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
-                  <User className="w-4 h-4 text-emerald-500" /> 核心角色 (2)
+                  <User className="w-4 h-4 text-violet-500" /> 核心角色 (2)
                 </h4>
                 <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {/* 角色1 */}
-                  <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:border-emerald-300 transition-colors group">
+                  <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:border-violet-300 transition-colors group">
                     <div className="h-40 relative flex items-center justify-center overflow-hidden bg-slate-100">
                       <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=60')] bg-cover bg-center transition-transform duration-500 group-hover:scale-105"></div>
-                      <span className="absolute top-2 left-2 text-white text-[10px] px-2 py-0.5 bg-emerald-500/90 rounded font-bold shadow-sm backdrop-blur-sm">
+                      <span className="absolute top-2 left-2 text-white text-[10px] px-2 py-0.5 bg-violet-500/90 rounded font-bold shadow-sm backdrop-blur-sm">
                         已绑定参考图
                       </span>
                     </div>
                     <div className="p-3">
                       <div className="font-bold text-sm text-slate-800 mb-1">老兵甲</div>
                       <div className="text-xs text-slate-500 truncate mb-3">皮肤质感粗糙油亮</div>
-                      <button className="w-full py-1.5 text-xs font-bold border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
+                      <button className="w-full py-1.5 text-xs font-bold border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-violet-600 transition-colors">
                         编辑
                       </button>
                     </div>
                   </div>
 
                   {/* 角色2 */}
-                  <div className="bg-white rounded-xl border-2 border-dashed border-slate-200 overflow-hidden shadow-sm hover:border-emerald-300 transition-colors group">
-                    <div className="h-40 bg-slate-50 flex flex-col items-center justify-center group-hover:bg-emerald-50/30 transition-colors">
-                      <Users className="w-8 h-8 text-slate-300 mb-2 group-hover:text-emerald-400 transition-colors" />
+                  <div className="bg-white rounded-xl border-2 border-dashed border-slate-200 overflow-hidden shadow-sm hover:border-violet-300 transition-colors group">
+                    <div className="h-40 bg-slate-50 flex flex-col items-center justify-center group-hover:bg-violet-50/30 transition-colors">
+                      <Users className="w-8 h-8 text-slate-300 mb-2 group-hover:text-violet-400 transition-colors" />
                     </div>
                     <div className="p-3">
                       <div className="font-bold text-sm text-slate-800 mb-1">士兵群演</div>
                       <div className="text-xs text-slate-400 mb-3 truncate">陷阵营士兵黑色铁甲背影</div>
-                      <button className="w-full py-1.5 text-xs font-bold border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
+                      <button className="w-full py-1.5 text-xs font-bold border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-violet-600 transition-colors">
                         上传参考
                       </button>
                     </div>

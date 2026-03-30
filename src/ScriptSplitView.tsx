@@ -42,7 +42,7 @@ VO：这款现象级全息网游在上线前就火爆全球，可没人知道，
 李泰（平静）：我把房子卖了。`;
 
   return (
-    <div className="flex flex-col h-full bg-[#F4F5F7] overflow-hidden">
+    <div className="flex flex-col h-full bg-[#F8F3E8] overflow-hidden">
       {/* Top Navigation Bar */}
       <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 shadow-sm z-10 relative">
         <div className="flex items-center gap-4 w-1/3">
@@ -56,21 +56,21 @@ VO：这款现象级全息网游在上线前就火爆全球，可没人知道，
 
         {/* Progress Steps */}
         <div className="flex-1 flex justify-center">
-          <div className="flex items-center bg-[#333A3F] rounded-full p-1 shadow-inner">
+          <div className="flex items-center bg-[#2E2638] rounded-full p-1 shadow-inner">
             <div 
               onClick={onBack}
               className="flex items-center px-6 py-1.5 text-slate-400 text-sm font-medium cursor-pointer hover:text-slate-300 transition-colors"
             >
               1.上传剧本
             </div>
-            <div className="flex items-center px-6 py-1.5 bg-emerald-500 text-white rounded-full text-sm font-bold shadow-sm">
+            <div className="flex items-center px-6 py-1.5 bg-violet-500 text-white rounded-full text-sm font-bold shadow-sm">
               2.剧本分集
             </div>
           </div>
         </div>
 
         <div className="flex items-center justify-end gap-4 w-1/3">
-          <div className="flex items-center gap-2 bg-[#23292E] px-3 py-1.5 rounded-full text-xs text-emerald-400 font-mono">
+          <div className="flex items-center gap-2 bg-[#3A3147] px-3 py-1.5 rounded-full text-xs text-violet-400 font-mono">
             🪙 24310
           </div>
         </div>
@@ -87,7 +87,7 @@ VO：这款现象级全息网游在上线前就火爆全球，可没人知道，
 
           {/* Action Buttons */}
           <div className="flex items-center gap-4 ml-auto">
-            <button className="text-sm text-slate-600 hover:text-emerald-600 flex items-center gap-1.5 transition-colors">
+            <button className="text-sm text-slate-600 hover:text-violet-600 flex items-center gap-1.5 transition-colors">
               <Edit3 size={16} /> 手动编辑
             </button>
             <div className="relative">
@@ -103,7 +103,7 @@ VO：这款现象级全息网游在上线前就火爆全球，可没人知道，
                     <button 
                       key={ep}
                       onClick={() => { setSelectedEpisode(ep); setIsDropdownOpen(false); }}
-                      className={`w-full text-left px-4 py-2 text-sm transition-colors ${selectedEpisode === ep ? 'bg-emerald-50 text-emerald-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
+                      className={`w-full text-left px-4 py-2 text-sm transition-colors ${selectedEpisode === ep ? 'bg-violet-50 text-violet-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
                     >
                       第{ep}集
                     </button>
@@ -113,7 +113,7 @@ VO：这款现象级全息网游在上线前就火爆全球，可没人知道，
             </div>
             <button 
               onClick={onCreateProject}
-              className="px-5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-bold transition-all shadow-md flex items-center gap-2 active:scale-95"
+              className="px-5 py-2 bg-violet-500 hover:bg-violet-600 text-white rounded-lg text-sm font-bold transition-all shadow-md flex items-center gap-2 active:scale-95"
             >
               创建漫剧项目 <ArrowRight size={16} />
             </button>
@@ -121,7 +121,7 @@ VO：这款现象级全息网游在上线前就火爆全球，可没人知道，
         </div>
 
         <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm p-8 overflow-y-auto custom-scrollbar relative">
-          <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500 rounded-l-2xl"></div>
+          <div className="absolute top-0 left-0 w-1 h-full bg-violet-500 rounded-l-2xl"></div>
           
           <div className="max-w-3xl mx-auto whitespace-pre-wrap text-slate-700 leading-relaxed text-[15px] font-medium">
             {scriptContent}

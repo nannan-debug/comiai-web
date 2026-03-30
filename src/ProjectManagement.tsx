@@ -79,7 +79,7 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
     },
     { 
       id: 6, 
-      title: '末日直播：只有我知道结局', 
+      title: 'ComiAI：只有我知道结局', 
       epCount: '24 集',
       cover: 'https://images.unsplash.com/photo-1618331835717-801e976710b2?w=500&q=80', 
       stats: { img: 5841, vid: 2190, del: 353, token: 1086716, time: '134d07h06m' }, 
@@ -90,16 +90,16 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-[#F4F5F7] overflow-hidden relative">
+    <div className="flex flex-col h-full bg-[#F8F3E8] overflow-hidden relative">
       {/* Header */}
-      <header className="h-16 bg-[#EBECEF] border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
-        <div className="flex items-center gap-2 text-emerald-600 font-black text-xl italic tracking-tighter">
-          <div className="w-6 h-6 bg-emerald-500 rounded flex items-center justify-center text-white text-sm">N</div>
-          NGSHOW
+      <header className="h-16 bg-[#F3EBDD] border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
+        <div className="flex items-center gap-2 text-violet-600 font-black text-xl italic tracking-tighter">
+          <div className="w-6 h-6 bg-violet-500 rounded flex items-center justify-center text-white text-sm">C</div>
+          COMIAI
         </div>
         
         {/* Center Nav */}
-        <div className="flex items-center bg-[#333A3F] rounded-full p-1.5 gap-1">
+        <div className="flex items-center bg-[#2E2638] rounded-full p-1.5 gap-1">
           <div className="relative group">
             <button className="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
               <Home size={18} />
@@ -109,7 +109,7 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
             </div>
           </div>
           <div className="relative group">
-            <button className="w-10 h-10 rounded-full flex items-center justify-center bg-emerald-600 text-white shadow-sm">
+            <button className="w-10 h-10 rounded-full flex items-center justify-center bg-violet-600 text-white shadow-sm">
               <PlaySquare size={18} />
             </button>
             <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
@@ -147,8 +147,8 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
           <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-white">
             <User size={16} />
           </div>
-          <div className="flex items-center gap-2 bg-[#23292E] px-3 py-1.5 rounded-full text-xs text-emerald-400 font-mono">
-            <Link2 size={12} className="text-emerald-500" /> 5092
+          <div className="flex items-center gap-2 bg-[#3A3147] px-3 py-1.5 rounded-full text-xs text-violet-400 font-mono">
+            <Link2 size={12} className="text-violet-500" /> 5092
           </div>
           <div className="relative w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-white">
             <Bell size={16} />
@@ -162,7 +162,7 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
         <div className="relative">
           <button 
             onClick={() => setIsCreateMenuOpen(!isCreateMenuOpen)}
-            className="px-6 py-2.5 bg-[#333A3F] hover:bg-slate-800 text-white rounded-full text-sm font-bold transition-colors shadow-sm flex items-center gap-2"
+            className="px-6 py-2.5 bg-[#2E2638] hover:bg-slate-800 text-white rounded-full text-sm font-bold transition-colors shadow-sm flex items-center gap-2"
           >
             项目创作
           </button>
@@ -177,7 +177,7 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
                     setIsCreateMenuOpen(false);
                     onCreateProject();
                   }}
-                  className="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 hover:text-emerald-600 flex items-center gap-3 transition-colors"
+                  className="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 hover:text-violet-600 flex items-center gap-3 transition-colors"
                 >
                   <FileText size={16} className="text-slate-400" />
                   <span>从剧本出发</span>
@@ -187,7 +187,7 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
                     setIsCreateMenuOpen(false);
                     setIsNewProjectModalOpen(true);
                   }}
-                  className="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 hover:text-emerald-600 flex items-center gap-3 transition-colors"
+                  className="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 hover:text-violet-600 flex items-center gap-3 transition-colors"
                 >
                   <FolderPlus size={16} className="text-slate-400" />
                   <span>新建空项目</span>
@@ -201,7 +201,7 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
           <input 
             type="text" 
             placeholder="请输入剧本名称" 
-            className="pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-full text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 w-64 transition-shadow shadow-sm" 
+            className="pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-full text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 w-64 transition-shadow shadow-sm" 
           />
           <Search size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
         </div>
@@ -214,7 +214,7 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
             <div 
               key={ep.id} 
               onClick={onEnterProject}
-              className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer group flex flex-col h-[420px]"
+              className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md hover:border-violet-300 transition-all cursor-pointer group flex flex-col h-[420px]"
             >
               {/* Cover Image Area */}
               <div className="relative h-[240px] shrink-0 overflow-hidden bg-slate-900">
@@ -260,7 +260,7 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
                   <span className="text-sm font-bold leading-none">{ep.stats.time}</span>
                   <span className="text-[10px] text-white/70">总耗时</span>
                 </div>
-                <div className="absolute bottom-3 right-3 text-emerald-400">
+                <div className="absolute bottom-3 right-3 text-violet-400">
                   <Clock size={20} />
                 </div>
               </div>
@@ -326,7 +326,7 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
                     <input 
                       type="text" 
                       placeholder="请输入剧本名称" 
-                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-shadow"
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-shadow"
                     />
                   </div>
 
@@ -337,7 +337,7 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
                     <input 
                       type="text" 
                       placeholder="请输入制作人" 
-                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-shadow"
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-shadow"
                     />
                   </div>
 
@@ -345,7 +345,7 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
                     <label className="block text-sm font-medium text-slate-700 mb-2">
                       剧本封面
                     </label>
-                    <div className="border-2 border-dashed border-slate-200 rounded-2xl h-48 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-50 hover:border-emerald-300 hover:text-emerald-500 transition-colors cursor-pointer group bg-slate-50/50">
+                    <div className="border-2 border-dashed border-slate-200 rounded-2xl h-48 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-50 hover:border-violet-300 hover:text-violet-500 transition-colors cursor-pointer group bg-slate-50/50">
                       <ImageIcon size={48} className="mb-3 opacity-40 group-hover:opacity-80 transition-opacity" strokeWidth={1.5} />
                     </div>
                   </div>
@@ -357,16 +357,16 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
                     <div className="flex gap-4">
                       <button 
                         onClick={() => setSelectedOrientation('16:9')}
-                        className={`flex-1 h-24 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${selectedOrientation === '16:9' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'}`}
+                        className={`flex-1 h-24 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${selectedOrientation === '16:9' ? 'border-violet-500 bg-violet-50 text-violet-700' : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'}`}
                       >
-                        <div className={`w-8 h-5 border-2 rounded-sm ${selectedOrientation === '16:9' ? 'border-emerald-500' : 'border-slate-400'}`}></div>
+                        <div className={`w-8 h-5 border-2 rounded-sm ${selectedOrientation === '16:9' ? 'border-violet-500' : 'border-slate-400'}`}></div>
                         <span className="text-sm font-medium">16:9</span>
                       </button>
                       <button 
                         onClick={() => setSelectedOrientation('9:16')}
-                        className={`flex-1 h-24 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${selectedOrientation === '9:16' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-slate-50/50 text-slate-500 hover:border-slate-300'}`}
+                        className={`flex-1 h-24 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${selectedOrientation === '9:16' ? 'border-violet-500 bg-violet-50 text-violet-700' : 'border-slate-200 bg-slate-50/50 text-slate-500 hover:border-slate-300'}`}
                       >
-                        <div className={`w-5 h-8 border-2 rounded-sm ${selectedOrientation === '9:16' ? 'border-emerald-500' : 'border-slate-400'}`}></div>
+                        <div className={`w-5 h-8 border-2 rounded-sm ${selectedOrientation === '9:16' ? 'border-violet-500' : 'border-slate-400'}`}></div>
                         <span className="text-sm font-medium">9:16</span>
                       </button>
                     </div>
@@ -383,7 +383,7 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
                       <div 
                         key={style.id}
                         onClick={() => setSelectedStyle(style.id)}
-                        className={`relative rounded-xl overflow-hidden cursor-pointer group aspect-square ${selectedStyle === style.id ? 'ring-2 ring-emerald-500 ring-offset-2' : ''}`}
+                        className={`relative rounded-xl overflow-hidden cursor-pointer group aspect-square ${selectedStyle === style.id ? 'ring-2 ring-violet-500 ring-offset-2' : ''}`}
                       >
                         <div 
                           className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
@@ -394,7 +394,7 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
                           <span className="text-white text-sm font-medium">{style.name}</span>
                         </div>
                         {selectedStyle === style.id && (
-                          <div className="absolute top-2 right-2 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-white">
+                          <div className="absolute top-2 right-2 w-5 h-5 bg-violet-500 rounded-full flex items-center justify-center border-2 border-white">
                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                               <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>

@@ -25,7 +25,7 @@ export default function StoryboardProduction() {
         {/* 1. 最左侧全局任务切换栏 */}
         <div className="w-14 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center py-4 gap-4 shrink-0 z-10">
           <div 
-            className={`p-2.5 rounded-xl cursor-pointer group relative ${globalMode === 'video' ? 'bg-emerald-50 text-emerald-600' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
+            className={`p-2.5 rounded-xl cursor-pointer group relative ${globalMode === 'video' ? 'bg-violet-50 text-violet-600' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
             onClick={() => setGlobalMode('video')}
           >
             <Film size={20} />
@@ -34,7 +34,7 @@ export default function StoryboardProduction() {
             </div>
           </div>
           <div 
-            className={`p-2.5 rounded-xl cursor-pointer group relative ${globalMode === 'image' ? 'bg-emerald-50 text-emerald-600' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
+            className={`p-2.5 rounded-xl cursor-pointer group relative ${globalMode === 'image' ? 'bg-violet-50 text-violet-600' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
             onClick={() => setGlobalMode('image')}
           >
             <ImageIcon size={20} />
@@ -79,7 +79,7 @@ export default function StoryboardProduction() {
                   </div>
                   
                   {/* Upload button */}
-                  <div className="aspect-square bg-gray-50 border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:bg-gray-100 hover:border-emerald-400 cursor-pointer transition-colors">
+                  <div className="aspect-square bg-gray-50 border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:bg-gray-100 hover:border-violet-400 cursor-pointer transition-colors">
                     <ImageIcon size={16} className="mb-1" />
                     <span className="text-[10px]">上传或选择</span>
                     <span className="text-[10px] text-gray-400">分镜图 /</span>
@@ -92,7 +92,7 @@ export default function StoryboardProduction() {
               <div className="mb-6">
                 <div className="text-xs font-medium text-gray-700 mb-2">画面提示词</div>
                 <textarea 
-                  className="w-full h-32 p-3 bg-white border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full h-32 p-3 bg-white border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500"
                   placeholder="请输入提示词"
                   defaultValue="镜头从林战的视角开始，缓慢平移，展现他身处的环境。林战坐在泥泞的壕沟中，湿透的衣物紧贴身体，惊恐地扫视四周。手中紧握长矛，特写其破旧的质感。"
                 ></textarea>
@@ -102,7 +102,7 @@ export default function StoryboardProduction() {
               <div className="mb-6">
                 <div className="text-xs font-medium text-gray-700 mb-2">补充提示词</div>
                 <textarea 
-                  className="w-full h-24 p-3 bg-white border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full h-24 p-3 bg-white border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500"
                   placeholder="请输入提示词"
                   defaultValue="艺术风格：3D高模渲染，Atmospheric Period Drama，影视级CGI风格，PBR材质，半写实风格化，图形设计融合感&#10;色调与光影：(Deep Jade Green + Charcoal Black)..."
                 ></textarea>
@@ -114,7 +114,7 @@ export default function StoryboardProduction() {
                 <div className="flex gap-2">
                   <div className="flex-1 relative">
                     <select 
-                      className="w-full appearance-none bg-white border border-gray-200 rounded-lg py-2 pl-3 pr-8 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      className="w-full appearance-none bg-white border border-gray-200 rounded-lg py-2 pl-3 pr-8 text-xs focus:outline-none focus:ring-1 focus:ring-violet-500"
                     >
                       <option value="Nano Banana Pro">Nano Banana Pro</option>
                       <option value="Seedance2.0">Seedance2.0</option>
@@ -122,7 +122,7 @@ export default function StoryboardProduction() {
                     <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                   </div>
                   <div className="w-24 relative">
-                    <select className="w-full appearance-none bg-white border border-gray-200 rounded-lg py-2 pl-3 pr-8 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                    <select className="w-full appearance-none bg-white border border-gray-200 rounded-lg py-2 pl-3 pr-8 text-xs focus:outline-none focus:ring-1 focus:ring-violet-500">
                       <option>生成1张</option>
                       <option>生成2张</option>
                       <option>生成4张</option>
@@ -134,7 +134,7 @@ export default function StoryboardProduction() {
 
               {/* 底部生成按钮 */}
               <button className="w-full mt-6 bg-[#1A202C] hover:bg-gray-800 text-white rounded-xl py-3 flex items-center justify-center gap-2 font-medium transition-colors">
-                <div className="flex items-center gap-1 text-emerald-400">
+                <div className="flex items-center gap-1 text-violet-400">
                   <Coins size={14} />
                   <span>10</span>
                 </div>
@@ -168,7 +168,7 @@ export default function StoryboardProduction() {
               <div className="text-xs font-medium text-gray-700 mb-2">参考图</div>
               {taskMode === 'first-last' ? (
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 aspect-square bg-gray-50 border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:bg-gray-100 hover:border-emerald-400 cursor-pointer transition-colors">
+                  <div className="flex-1 aspect-square bg-gray-50 border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:bg-gray-100 hover:border-violet-400 cursor-pointer transition-colors">
                     <Upload size={20} className="mb-2" />
                     <span className="text-xs">上传首帧图</span>
                     <span className="text-[10px] text-gray-400 mt-1">分镜图 / 设定库</span>
@@ -176,14 +176,14 @@ export default function StoryboardProduction() {
                   <button className="p-1.5 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors">
                     <ArrowRightLeft size={14} />
                   </button>
-                  <div className="flex-1 aspect-square bg-gray-50 border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:bg-gray-100 hover:border-emerald-400 cursor-pointer transition-colors">
+                  <div className="flex-1 aspect-square bg-gray-50 border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:bg-gray-100 hover:border-violet-400 cursor-pointer transition-colors">
                     <Upload size={20} className="mb-2" />
                     <span className="text-xs">上传尾帧图</span>
                     <span className="text-[10px] text-gray-400 mt-1">分镜图 / 设定库</span>
                   </div>
                 </div>
               ) : (
-                <div className="w-full h-32 bg-gray-50 border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:bg-gray-100 hover:border-emerald-400 cursor-pointer transition-colors">
+                <div className="w-full h-32 bg-gray-50 border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:bg-gray-100 hover:border-violet-400 cursor-pointer transition-colors">
                   <Upload size={20} className="mb-2" />
                   <span className="text-xs">上传参考{taskMode === 'all' ? '视频/图片' : '图片'}</span>
                   <span className="text-[10px] text-gray-400 mt-1">支持拖拽 / 分镜图库 / 设定库</span>
@@ -195,7 +195,7 @@ export default function StoryboardProduction() {
             <div className="mb-6">
               <div className="text-xs font-medium text-gray-700 mb-2">视频提示词</div>
               <textarea 
-                className="w-full h-28 p-3 bg-white border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full h-28 p-3 bg-white border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500"
                 placeholder="请输入提示词"
               ></textarea>
             </div>
@@ -203,7 +203,7 @@ export default function StoryboardProduction() {
             <div className="mb-6">
               <div className="text-xs font-medium text-gray-700 mb-2">补充提示词</div>
               <textarea 
-                className="w-full h-20 p-3 bg-white border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full h-20 p-3 bg-white border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500"
                 placeholder="请输入提示词"
               ></textarea>
             </div>
@@ -214,7 +214,7 @@ export default function StoryboardProduction() {
               <div className="flex gap-2">
                 <div className="flex-1 relative">
                   <select 
-                    className="w-full appearance-none bg-white border border-gray-200 rounded-lg py-2 pl-3 pr-8 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="w-full appearance-none bg-white border border-gray-200 rounded-lg py-2 pl-3 pr-8 text-xs focus:outline-none focus:ring-1 focus:ring-violet-500"
                     value={selectedModel}
                     onChange={(e) => setSelectedModel(e.target.value)}
                   >
@@ -225,7 +225,7 @@ export default function StoryboardProduction() {
                   <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                 </div>
                 <div className="w-20 relative">
-                  <select className="w-full appearance-none bg-white border border-gray-200 rounded-lg py-2 pl-3 pr-8 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                  <select className="w-full appearance-none bg-white border border-gray-200 rounded-lg py-2 pl-3 pr-8 text-xs focus:outline-none focus:ring-1 focus:ring-violet-500">
                     <option>15s</option>
                     <option>5s</option>
                     <option>10s</option>
@@ -233,7 +233,7 @@ export default function StoryboardProduction() {
                   <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                 </div>
                 <div className="w-24 relative">
-                  <select className="w-full appearance-none bg-white border border-gray-200 rounded-lg py-2 pl-3 pr-8 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                  <select className="w-full appearance-none bg-white border border-gray-200 rounded-lg py-2 pl-3 pr-8 text-xs focus:outline-none focus:ring-1 focus:ring-violet-500">
                     <option>1080p</option>
                     <option>720p</option>
                     <option>4K</option>
@@ -245,8 +245,8 @@ export default function StoryboardProduction() {
 
               {/* 底部生成按钮 */}
               <button className="w-full mt-6 bg-[#1A202C] hover:bg-gray-800 text-white rounded-xl py-3 flex items-center justify-center gap-2 font-medium transition-colors">
-                <Zap size={16} className="text-emerald-400" />
-                <span className="text-emerald-400">10</span>
+                <Zap size={16} className="text-violet-400" />
+                <span className="text-violet-400">10</span>
                 生成视频
               </button>
             </div>
@@ -276,10 +276,10 @@ export default function StoryboardProduction() {
               
               {/* 悬浮操作栏 */}
               <div className="absolute right-[-48px] top-1/2 -translate-y-1/2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button className="w-10 h-10 bg-white shadow-md rounded-full flex items-center justify-center text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
+                <button className="w-10 h-10 bg-white shadow-md rounded-full flex items-center justify-center text-gray-600 hover:text-violet-600 hover:bg-violet-50 transition-colors">
                   <Share size={16} />
                 </button>
-                <button className="w-10 h-10 bg-white shadow-md rounded-full flex items-center justify-center text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
+                <button className="w-10 h-10 bg-white shadow-md rounded-full flex items-center justify-center text-gray-600 hover:text-violet-600 hover:bg-violet-50 transition-colors">
                   <Download size={16} />
                 </button>
               </div>
@@ -324,8 +324,8 @@ export default function StoryboardProduction() {
                         历史-2
                       </div>
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="p-1 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded"><CheckCircle2 size={14} /></button>
-                        <button className="p-1 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded"><Download size={14} /></button>
+                        <button className="p-1 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded"><CheckCircle2 size={14} /></button>
+                        <button className="p-1 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded"><Download size={14} /></button>
                         <button className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"><ChevronDown size={14} /></button>
                       </div>
                     </div>
@@ -354,19 +354,19 @@ export default function StoryboardProduction() {
                       <span>Nano Banana Pro 2</span>
                     </div>
                   </div>
-                  <div className="bg-emerald-50 rounded-xl p-3 border-2 border-emerald-400 shadow-sm relative group">
+                  <div className="bg-violet-50 rounded-xl p-3 border-2 border-violet-400 shadow-sm relative group">
                     <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-700">
+                      <div className="flex items-center gap-1.5 text-xs font-medium text-violet-700">
                         <ImageIcon size={14} />
                         历史-3
                       </div>
                       <div className="flex items-center gap-1">
-                        <button className="p-1 text-emerald-600 hover:bg-emerald-100 rounded" title="应用"><CheckCircle2 size={14} /></button>
-                        <button className="p-1 text-emerald-600 hover:bg-emerald-100 rounded"><Download size={14} /></button>
-                        <button className="p-1 text-emerald-600 hover:bg-emerald-100 rounded"><ChevronDown size={14} /></button>
+                        <button className="p-1 text-violet-600 hover:bg-violet-100 rounded" title="应用"><CheckCircle2 size={14} /></button>
+                        <button className="p-1 text-violet-600 hover:bg-violet-100 rounded"><Download size={14} /></button>
+                        <button className="p-1 text-violet-600 hover:bg-violet-100 rounded"><ChevronDown size={14} /></button>
                       </div>
                     </div>
-                    <p className="text-[10px] text-emerald-600/80 line-clamp-3">
+                    <p className="text-[10px] text-violet-600/80 line-clamp-3">
                       画风：超写实风格。景别：全景。视角：平视视角。机位：正面机位。内容：广阔而宁静的湖面，湖水呈现出蓝、绿、黄、青等多层次的色彩，清澈见底，能清晰看到水底的枯树和钙华沉积。湖面平静，反射着...
                     </p>
                     
@@ -395,8 +395,8 @@ export default function StoryboardProduction() {
                     图生视频-2
                   </div>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="p-1 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded"><CheckCircle2 size={14} /></button>
-                    <button className="p-1 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded"><Download size={14} /></button>
+                    <button className="p-1 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded"><CheckCircle2 size={14} /></button>
+                    <button className="p-1 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded"><Download size={14} /></button>
                     <button className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"><ChevronDown size={14} /></button>
                   </div>
                 </div>
@@ -426,24 +426,24 @@ export default function StoryboardProduction() {
                   <span>Sora 2 | 1080p | 6s</span>
                 </div>
               </div>
-              <div className="bg-emerald-50 rounded-xl p-3 border-2 border-emerald-400 shadow-sm relative group">
+              <div className="bg-violet-50 rounded-xl p-3 border-2 border-violet-400 shadow-sm relative group">
                 <div className="flex justify-between items-start mb-2">
-                  <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-700">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-violet-700">
                     <LayoutGrid size={14} />
                     多图参考-3
                   </div>
                   <div className="flex items-center gap-1">
-                    <button className="p-1 text-emerald-600 hover:bg-emerald-100 rounded" title="应用"><CheckCircle2 size={14} /></button>
-                    <button className="p-1 text-emerald-600 hover:bg-emerald-100 rounded"><Download size={14} /></button>
-                    <button className="p-1 text-emerald-600 hover:bg-emerald-100 rounded"><ChevronDown size={14} /></button>
+                    <button className="p-1 text-violet-600 hover:bg-violet-100 rounded" title="应用"><CheckCircle2 size={14} /></button>
+                    <button className="p-1 text-violet-600 hover:bg-violet-100 rounded"><Download size={14} /></button>
+                    <button className="p-1 text-violet-600 hover:bg-violet-100 rounded"><ChevronDown size={14} /></button>
                   </div>
                 </div>
                 <div className="flex gap-1.5 mb-2 overflow-x-auto pb-1">
                   {[1,2,3,4,5].map(i => (
-                    <img key={i} src={`https://picsum.photos/seed/ref${i}/60/60`} className="w-8 h-8 rounded object-cover border border-emerald-200 shrink-0" referrerPolicy="no-referrer" />
+                    <img key={i} src={`https://picsum.photos/seed/ref${i}/60/60`} className="w-8 h-8 rounded object-cover border border-violet-200 shrink-0" referrerPolicy="no-referrer" />
                   ))}
                 </div>
-                <p className="text-[10px] text-emerald-600/80 line-clamp-2">
+                <p className="text-[10px] text-violet-600/80 line-clamp-2">
                   画风：超写实风格。景别：全景。视角：平视视角。机位：正面机位。内容：广阔而宁静的湖面...
                 </p>
                 
@@ -471,7 +471,7 @@ export default function StoryboardProduction() {
         <div className="flex items-center justify-between px-2 pb-2 border-b border-gray-100">
           <div className="flex items-center gap-4 text-xs">
             <span className="text-gray-500">总共分镜数: <span className="text-gray-900 font-medium">39</span></span>
-            <span className="text-gray-500">已验收完成: <span className="text-emerald-600 font-medium">6</span></span>
+            <span className="text-gray-500">已验收完成: <span className="text-violet-600 font-medium">6</span></span>
             
             <div className="flex items-center gap-2 ml-4">
               <Filter size={14} className="text-gray-400" />
@@ -510,7 +510,7 @@ export default function StoryboardProduction() {
               key={item}
               onClick={() => setActiveStoryboard(item)}
               className={`w-40 h-full rounded-lg border-2 flex flex-col overflow-hidden cursor-pointer shrink-0 transition-colors ${
-                activeStoryboard === item ? 'border-emerald-500 shadow-sm' : 'border-transparent bg-gray-100 hover:border-gray-300'
+                activeStoryboard === item ? 'border-violet-500 shadow-sm' : 'border-transparent bg-gray-100 hover:border-gray-300'
               }`}
             >
               <div className="px-2 py-1 flex justify-between items-center text-[10px] text-gray-500 bg-white/50">
