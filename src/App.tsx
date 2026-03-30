@@ -9,10 +9,44 @@ import ScriptSplitView from './ScriptSplitView';
 import ProjectManagement from './ProjectManagement';
 import { ArrowLeft } from 'lucide-react';
 
-type ViewState = 'projects' | 'management' | 'upload' | 'split' | 'production';
+type ViewState = 'home' | 'projects' | 'management' | 'upload' | 'split' | 'production';
+
+function HomeLanding({ onEnterProjects }: { onEnterProjects: () => void }) {
+  return (
+    <div className="flex-1 bg-[#F8F3E8] px-6 py-10 md:px-10 md:py-14 overflow-y-auto">
+      <div className="max-w-6xl mx-auto min-h-full flex flex-col">
+        <div className="mt-10 md:mt-16 flex-1 flex flex-col items-center justify-center text-center">
+          <button
+            type="button"
+            onClick={onEnterProjects}
+            className="w-44 h-44 md:w-52 md:h-52 rounded-full bg-[#f7f1e6] text-[#27272a] border-4 border-[#2f2936] shadow-xl flex flex-col items-center justify-center transition-transform duration-200 hover:scale-105 active:scale-95"
+            title="进入项目创作"
+          >
+            <div className="text-[11px] font-semibold tracking-[0.15em] uppercase">ComiAI</div>
+            <div className="text-5xl leading-none mt-1">🐱</div>
+            <div className="text-[11px] mt-1 tracking-[0.2em]">CREATIVE</div>
+          </button>
+          <p className="mt-4 text-sm text-slate-500">点击猫头进入可创建项目的页面</p>
+        </div>
+
+        <div className="mt-10 md:mt-14 rounded-[28px] border border-violet-200/60 bg-gradient-to-br from-[#b59dff] via-[#a98fff] to-[#9a7dff] text-white overflow-hidden">
+          <div className="relative p-8 md:p-10 min-h-[220px]">
+            <div className="relative z-10 mt-16 md:mt-20 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+              <div>
+                <div className="text-3xl md:text-4xl font-black tracking-tight">COMIAI</div>
+                <div className="text-white/90 text-sm mt-1">为创作而生 · 猫系灵感工作台</div>
+              </div>
+              <div className="text-xs uppercase tracking-[0.2em] text-white/80">Developed by cats</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<ViewState>('projects');
+  const [currentView, setCurrentView] = useState<ViewState>('home');
   const [productionStep, setProductionStep] = useState(1);
 
   return (
@@ -52,10 +86,15 @@ export default function App() {
       )}
 
       {/* Page Content based on ViewState */}
+      {currentView === 'home' && (
+        <HomeLanding onEnterProjects={() => setCurrentView('projects')} />
+      )}
+
       {currentView === 'projects' && (
         <ProjectManagement 
           onCreateProject={() => setCurrentView('upload')} 
-          onEnterProject={() => setCurrentView('management')} 
+          onEnterProject={() => setCurrentView('management')}
+          onGoHome={() => setCurrentView('home')}
         />
       )}
 

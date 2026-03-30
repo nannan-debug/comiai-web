@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Clock, Edit, Trash2, User, Home, PlaySquare, Link2, Users, Bell, FileText, FolderPlus, X, Image as ImageIcon, ChevronDown, PenTool, BarChart2, ClipboardCheck } from 'lucide-react';
 
-export default function ProjectManagement({ onCreateProject, onEnterProject }: { onCreateProject: () => void, onEnterProject: () => void }) {
+export default function ProjectManagement({ onCreateProject, onEnterProject, onGoHome }: { onCreateProject: () => void, onEnterProject: () => void, onGoHome: () => void }) {
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [selectedOrientation, setSelectedOrientation] = useState<'16:9' | '9:16'>('16:9');
@@ -101,7 +101,7 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
         {/* Center Nav */}
         <div className="flex items-center bg-[#2E2638] rounded-full p-1.5 gap-1">
           <div className="relative group">
-            <button className="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
+            <button onClick={onGoHome} className="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
               <Home size={18} />
             </button>
             <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
@@ -204,28 +204,6 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
             className="pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-full text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 w-64 transition-shadow shadow-sm" 
           />
           <Search size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
-        </div>
-      </div>
-
-      {/* Home Hero - ComiAI */}
-      <div className="px-6 pb-6">
-        <div className="rounded-[28px] border border-violet-200/60 bg-gradient-to-br from-[#b59dff] via-[#a98fff] to-[#9a7dff] text-white shadow-[0_20px_50px_-25px_rgba(76,29,149,0.65)] overflow-hidden">
-          <div className="relative p-8 md:p-10 min-h-[240px]">
-            <div className="absolute -left-10 -top-14 text-[140px] leading-none font-black tracking-tight text-white/20 select-none">CO</div>
-            <div className="absolute left-8 top-20 text-[140px] leading-none font-black tracking-tight text-white/20 select-none">MI</div>
-            <div className="absolute left-1/2 top-6 -translate-x-1/2 w-36 h-36 rounded-full bg-[#f7f1e6] text-[#27272a] border-4 border-[#2f2936] shadow-xl flex flex-col items-center justify-center">
-              <div className="text-[10px] font-semibold tracking-[0.15em] uppercase">ComiAI</div>
-              <div className="text-4xl leading-none mt-1">🐱</div>
-              <div className="text-[10px] mt-1 tracking-[0.2em]">CREATIVE</div>
-            </div>
-            <div className="relative z-10 mt-40 md:mt-24 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-              <div>
-                <div className="text-3xl md:text-4xl font-black tracking-tight">COMIAI</div>
-                <div className="text-white/90 text-sm mt-1">为创作而生 · 猫系灵感工作台</div>
-              </div>
-              <div className="text-xs uppercase tracking-[0.2em] text-white/80">Developed by cats</div>
-            </div>
-          </div>
         </div>
       </div>
 
