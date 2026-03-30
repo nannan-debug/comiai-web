@@ -207,6 +207,28 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
         </div>
       </div>
 
+      {/* Home Hero - ComiAI */}
+      <div className="px-6 pb-6">
+        <div className="rounded-[28px] border border-violet-200/60 bg-gradient-to-br from-[#b59dff] via-[#a98fff] to-[#9a7dff] text-white shadow-[0_20px_50px_-25px_rgba(76,29,149,0.65)] overflow-hidden">
+          <div className="relative p-8 md:p-10 min-h-[240px]">
+            <div className="absolute -left-10 -top-14 text-[140px] leading-none font-black tracking-tight text-white/20 select-none">CO</div>
+            <div className="absolute left-8 top-20 text-[140px] leading-none font-black tracking-tight text-white/20 select-none">MI</div>
+            <div className="absolute left-1/2 top-6 -translate-x-1/2 w-36 h-36 rounded-full bg-[#f7f1e6] text-[#27272a] border-4 border-[#2f2936] shadow-xl flex flex-col items-center justify-center">
+              <div className="text-[10px] font-semibold tracking-[0.15em] uppercase">ComiAI</div>
+              <div className="text-4xl leading-none mt-1">🐱</div>
+              <div className="text-[10px] mt-1 tracking-[0.2em]">CREATIVE</div>
+            </div>
+            <div className="relative z-10 mt-40 md:mt-24 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+              <div>
+                <div className="text-3xl md:text-4xl font-black tracking-tight">COMIAI</div>
+                <div className="text-white/90 text-sm mt-1">为创作而生 · 猫系灵感工作台</div>
+              </div>
+              <div className="text-xs uppercase tracking-[0.2em] text-white/80">Developed by cats</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Grid */}
       <div className="flex-1 overflow-y-auto p-6 pt-0 custom-scrollbar">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-6">
