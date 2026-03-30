@@ -213,15 +213,11 @@ export default function ProjectManagement({ onCreateProject, onEnterProject }: {
           <div className="relative p-8 md:p-10 min-h-[240px]">
             <div className="absolute -left-10 -top-14 text-[140px] leading-none font-black tracking-tight text-white/20 select-none">CO</div>
             <div className="absolute left-8 top-20 text-[140px] leading-none font-black tracking-tight text-white/20 select-none">MI</div>
-            <button
-              onClick={onCreateProject}
-              title="点击进入创建项目"
-              className="absolute left-1/2 top-6 -translate-x-1/2 w-36 h-36 rounded-full bg-[#f7f1e6] text-[#27272a] border-4 border-[#2f2936] shadow-xl flex flex-col items-center justify-center cursor-pointer hover:scale-[1.03] active:scale-[0.98] transition-transform"
-            >
+            <div className="absolute left-1/2 top-6 -translate-x-1/2 w-36 h-36 rounded-full bg-[#f7f1e6] text-[#27272a] border-4 border-[#2f2936] shadow-xl flex flex-col items-center justify-center">
               <div className="text-[10px] font-semibold tracking-[0.15em] uppercase">ComiAI</div>
               <div className="text-4xl leading-none mt-1">🐱</div>
               <div className="text-[10px] mt-1 tracking-[0.2em]">CREATIVE</div>
-            </button>
+            </div>
             <div className="relative z-10 mt-40 md:mt-24 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
               <div>
                 <div className="text-3xl md:text-4xl font-black tracking-tight">COMIAI</div>
