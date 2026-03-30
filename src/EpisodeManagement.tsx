@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, Plus, Clock, Edit, Trash2, ChevronDown, User, ArrowLeft, FileText, FolderPlus, X, Image as ImageIcon } from 'lucide-react';
+import { Search, Filter, Plus, Edit, Trash2, ChevronDown, User, ArrowLeft, FileText, FolderPlus, X, Image as ImageIcon } from 'lucide-react';
 
 export default function EpisodeManagement({ onUpload, onEnterEpisode, onBack }: { onUpload: () => void, onEnterEpisode: () => void, onBack: () => void }) {
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
@@ -175,34 +175,7 @@ export default function EpisodeManagement({ onUpload, onEnterEpisode, onBack }: 
                   </button>
                 </div>
 
-                {/* Stats */}
-                <div className="absolute top-4 left-4 flex flex-col gap-2 text-white">
-                  <div className="flex flex-col">
-                    <span className="text-lg font-bold leading-none">{ep.stats.img}</span>
-                    <span className="text-[10px] text-white/70">总生图</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-bold leading-none">{ep.stats.vid}</span>
-                    <span className="text-[10px] text-white/70">总视频</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-bold leading-none">{ep.stats.del}</span>
-                    <span className="text-[10px] text-white/70">总删除</span>
-                  </div>
-                  <div className="flex flex-col mt-2">
-                    <span className="text-sm font-bold leading-none">{ep.stats.token}</span>
-                    <span className="text-[10px] text-white/70">总消耗</span>
-                  </div>
-                </div>
 
-                {/* Time & Clock Icon */}
-                <div className="absolute bottom-3 left-4 flex flex-col text-white">
-                  <span className="text-sm font-bold leading-none">{ep.stats.time}</span>
-                  <span className="text-[10px] text-white/70">总耗时</span>
-                </div>
-                <div className="absolute bottom-3 right-3 text-violet-400">
-                  <Clock size={20} />
-                </div>
               </div>
 
               {/* Info Area */}
