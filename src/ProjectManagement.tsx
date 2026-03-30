@@ -38,7 +38,7 @@ export default function ProjectManagement({
   const projects = [
     { 
       id: 1, 
-      title: '开局小兵', 
+      title: '离婚后我成了顶流白月光', 
       epCount: '55 集',
       cover: 'https://images.unsplash.com/photo-1618331835717-801e976710b2?w=500&q=80', 
       stats: { img: 2599, vid: 0, del: 0, token: 3281163, time: '56d05h59m' }, 
