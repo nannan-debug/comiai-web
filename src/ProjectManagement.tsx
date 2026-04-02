@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Edit, Trash2, User, Home, PlaySquare, Link2, Users, Bell, FileText, FolderPlus, X, Image as ImageIcon, ChevronDown, PenTool, BarChart2, ClipboardCheck } from 'lucide-react';
+import { Search, Edit, Trash2, User, Home, PlaySquare, Users, FileText, FolderPlus, X, Image as ImageIcon, ChevronDown, PenTool, BarChart2, ClipboardCheck } from 'lucide-react';
 
 export default function ProjectManagement({ onCreateProject, onEnterProject, onGoHome }: { onCreateProject: () => void, onEnterProject: () => void, onGoHome: () => void }) {
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
@@ -91,95 +91,76 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
 
   return (
     <div className="flex flex-col h-full bg-[#F8F3E8] overflow-hidden relative">
+      <div className="pointer-events-none absolute -left-10 top-24 h-44 w-44 rounded-[42%_58%_51%_49%/62%_38%_62%_38%] bg-[#9fc79b]/40" />
+      <div className="pointer-events-none absolute right-8 bottom-10 h-28 w-28 rounded-[56%_44%_62%_38%/28%_68%_32%_72%] bg-[#d8ec6a]/50" />
       {/* Header */}
-      <header className="h-16 bg-[#F3EBDD] border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
-        <div className="flex items-center gap-2 text-violet-600 font-black text-xl italic tracking-tighter">
-          <div className="w-6 h-6 bg-violet-500 rounded flex items-center justify-center text-white text-sm">C</div>
+      <header className="h-16 bg-[#f0ebdd] border-b border-[#6da768]/30 flex items-center justify-between px-6 shrink-0">
+        <div className="flex items-center gap-2 text-[#2b5f43] font-black text-xl tracking-tight menu-title">
+          <div className="w-6 h-6 bg-[#6da768] rounded flex items-center justify-center text-[#193d2c] text-sm">C</div>
           COMIAI
         </div>
         
         {/* Center Nav */}
-        <div className="flex items-center bg-[#2E2638] rounded-full p-1.5 gap-1">
-          <div className="relative group">
-            <button onClick={onGoHome} className="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
-              <Home size={18} />
-            </button>
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-              首页
-            </div>
-          </div>
-          <div className="relative group">
-            <button className="w-10 h-10 rounded-full flex items-center justify-center bg-violet-600 text-white shadow-sm">
-              <PlaySquare size={18} />
-            </button>
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-              我的作品
-            </div>
-          </div>
-          <div className="relative group">
-            <button className="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
-              <PenTool size={18} />
-            </button>
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-              艺术创作
-            </div>
-          </div>
-          <div className="relative group">
-            <button className="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
-              <BarChart2 size={18} />
-            </button>
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-              数据面板
-            </div>
-          </div>
-          <div className="relative group">
-            <button className="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
-              <ClipboardCheck size={18} />
-            </button>
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-              审阅中心
-            </div>
-          </div>
+        <div className="flex items-center bg-[#193d2c] rounded-full p-1.5 gap-1 border border-[#6da768]/50">
+          <button
+            onClick={onGoHome}
+            className="h-10 px-3 rounded-full flex items-center justify-center gap-1.5 text-[#d5e8d2] hover:text-white hover:bg-[#2b5f43] transition-colors text-xs font-bold"
+          >
+            <Home size={15} />
+            首页
+          </button>
+          <button className="h-10 px-3 rounded-full flex items-center justify-center gap-1.5 bg-[#d8ec6a] text-[#193d2c] shadow-sm text-xs font-bold">
+            <PlaySquare size={15} />
+            我的项目
+          </button>
+          <button className="h-10 px-3 rounded-full flex items-center justify-center gap-1.5 text-[#d5e8d2] hover:text-white hover:bg-[#2b5f43] transition-colors text-xs font-bold">
+            <PenTool size={15} />
+            艺术创作
+          </button>
+          <button className="h-10 px-3 rounded-full flex items-center justify-center gap-1.5 text-[#d5e8d2] hover:text-white hover:bg-[#2b5f43] transition-colors text-xs font-bold">
+            <BarChart2 size={15} />
+            数据面板
+          </button>
+          <button className="h-10 px-3 rounded-full flex items-center justify-center gap-1.5 text-[#d5e8d2] hover:text-white hover:bg-[#2b5f43] transition-colors text-xs font-bold">
+            <ClipboardCheck size={15} />
+            审阅中心
+          </button>
         </div>
 
         {/* Right Nav */}
-        <div className="flex items-center gap-4">
-          <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-white">
-            <User size={16} />
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 bg-[#e9f2df] px-4 py-1.5 rounded-full text-xs text-[#2b5f43] font-mono border border-[#6da768]/45">
+            5092
           </div>
-          <div className="flex items-center gap-2 bg-[#3A3147] px-3 py-1.5 rounded-full text-xs text-violet-400 font-mono">
-            <Link2 size={12} className="text-violet-500" /> 5092
-          </div>
-          <div className="relative w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-white">
-            <Bell size={16} />
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full border-2 border-[#EBECEF]">10</span>
+          <div className="w-10 h-10 rounded-full bg-[#f3f8f3] flex items-center justify-center text-[#2b5f43] border-2 border-[#6da768]/45">
+            <User size={18} />
           </div>
         </div>
       </header>
 
       {/* Toolbar */}
-      <div className="px-6 py-6 flex items-center gap-4 shrink-0">
+      <div className="px-6 py-6 flex items-center gap-4 shrink-0 relative z-40">
         <div className="relative">
           <button 
             onClick={() => setIsCreateMenuOpen(!isCreateMenuOpen)}
-            className="px-6 py-2.5 bg-[#2E2638] hover:bg-slate-800 text-white rounded-full text-sm font-bold transition-colors shadow-sm flex items-center gap-2"
+            className="menu-title px-6 py-2.5 bg-[#193d2c] hover:bg-[#2b5f43] text-[#f5f1e4] rounded-full text-sm transition-colors shadow-sm flex items-center gap-2"
           >
-            项目创作
+            新建项目
           </button>
 
           {/* Create Menu Dropdown */}
           {isCreateMenuOpen && (
             <>
-              <div className="fixed inset-0 z-10" onClick={() => setIsCreateMenuOpen(false)}></div>
-              <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="fixed inset-0 z-40" onClick={() => setIsCreateMenuOpen(false)}></div>
+              <div className="absolute top-full left-0 mt-2 w-56 bg-[#fffdf6] rounded-2xl border border-[#6da768]/35 shadow-[0_10px_24px_rgba(25,61,44,0.12)] divide-y divide-[#6da768]/20 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                 <button 
                   onClick={() => {
                     setIsCreateMenuOpen(false);
                     onCreateProject();
                   }}
-                  className="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 hover:text-violet-600 flex items-center gap-3 transition-colors"
+                  className="w-full px-4 py-3 text-left text-sm text-[#2b5f43] hover:bg-[#f5faee] flex items-center gap-3 transition-colors"
                 >
-                  <FileText size={16} className="text-slate-400" />
+                  <FileText size={16} className="text-[#2b5f43]/70" />
                   <span>从剧本出发</span>
                 </button>
                 <button 
@@ -187,9 +168,9 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
                     setIsCreateMenuOpen(false);
                     setIsNewProjectModalOpen(true);
                   }}
-                  className="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 hover:text-violet-600 flex items-center gap-3 transition-colors"
+                  className="w-full px-4 py-3 text-left text-sm text-[#2b5f43] hover:bg-[#f5faee] flex items-center gap-3 transition-colors"
                 >
-                  <FolderPlus size={16} className="text-slate-400" />
+                  <FolderPlus size={16} className="text-[#2b5f43]/70" />
                   <span>新建空项目</span>
                 </button>
               </div>
@@ -200,26 +181,26 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
         <div className="relative">
           <input 
             type="text" 
-            placeholder="请输入剧本名称" 
-            className="pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-full text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 w-64 transition-shadow shadow-sm" 
+            placeholder="请输入项目名称" 
+            className="pl-4 pr-10 py-2.5 bg-[#fbf8ef] border border-[#6da768]/40 rounded-full text-sm focus:outline-none focus:border-[#6da768] focus:ring-1 focus:ring-[#6da768] w-64 transition-shadow shadow-sm" 
           />
           <Search size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
         </div>
       </div>
 
       {/* Grid */}
-      <div className="flex-1 overflow-y-auto p-6 pt-0 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-6 pt-0 custom-scrollbar relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-6">
           {projects.map((ep) => (
             <div 
               key={ep.id} 
               onClick={onEnterProject}
-              className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md hover:border-violet-300 transition-all cursor-pointer group flex flex-col h-[420px]"
+              className="bg-[#fbf8ef] rounded-2xl border-2 border-[#193d2c]/15 overflow-hidden shadow-[6px_6px_0_rgba(25,61,44,0.17)] hover:shadow-[8px_8px_0_rgba(25,61,44,0.2)] hover:border-[#6da768]/70 transition-all cursor-pointer group flex flex-col h-[420px]"
             >
               {/* Cover Image Area */}
               <div className="relative h-[240px] shrink-0 overflow-hidden bg-slate-900">
                 <div 
-                  className="absolute inset-0 bg-cover bg-center opacity-80 group-hover:scale-105 transition-transform duration-500"
+                  className="absolute inset-0 bg-cover bg-center lifely-bg-photo opacity-80 group-hover:scale-105 transition-transform duration-500"
                   style={{ backgroundImage: `url(${ep.cover})` }}
                 />
                 {/* Gradient Overlay for text readability */}
@@ -227,10 +208,10 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
                 
                 {/* Top Right Actions */}
                 <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="p-1.5 bg-black/40 hover:bg-black/60 rounded text-white backdrop-blur-sm transition-colors" onClick={(e) => e.stopPropagation()}>
+                  <button className="p-1.5 bg-[#193d2c]/75 hover:bg-[#193d2c] rounded text-white backdrop-blur-sm transition-colors" onClick={(e) => e.stopPropagation()}>
                     <Edit size={14} />
                   </button>
-                  <button className="p-1.5 bg-black/40 hover:bg-red-500/80 rounded text-white backdrop-blur-sm transition-colors" onClick={(e) => e.stopPropagation()}>
+                  <button className="p-1.5 bg-[#193d2c]/75 hover:bg-red-600/80 rounded text-white backdrop-blur-sm transition-colors" onClick={(e) => e.stopPropagation()}>
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -241,15 +222,15 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
               {/* Info Area */}
               <div className="p-4 flex flex-col flex-1">
                 <div className="flex justify-between items-start mb-3 gap-2">
-                  <h3 className="font-bold text-slate-800 text-sm line-clamp-2 leading-tight">{ep.title}</h3>
-                  <span className="text-xs text-slate-500 font-medium whitespace-nowrap">{ep.epCount}</span>
+                  <h3 className="font-bold text-[#193d2c] text-sm line-clamp-2 leading-tight">{ep.title}</h3>
+                  <span className="text-xs text-[#2b5f43]/80 font-medium whitespace-nowrap">{ep.epCount}</span>
                 </div>
                 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-1.5 mb-auto overflow-hidden max-h-[60px]">
                   {ep.tags.length > 0 ? (
                     ep.tags.map((tag, idx) => (
-                      <span key={idx} className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[11px] rounded-full border border-slate-200 whitespace-nowrap">
+                      <span key={idx} className="px-2 py-0.5 bg-[#e9f2df] text-[#2b5f43] text-[11px] rounded-full border border-[#6da768]/30 whitespace-nowrap">
                         {tag}
                       </span>
                     ))
@@ -259,10 +240,10 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
                 </div>
 
                 {/* Footer */}
-                <div className="flex justify-between items-center mt-4 pt-3 border-t border-slate-100 text-[11px]">
-                  <span className="text-slate-400">{ep.date}</span>
-                  <span className="text-red-500 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> {ep.status}
+                <div className="flex justify-between items-center mt-4 pt-3 border-t border-[#193d2c]/10 text-[11px]">
+                  <span className="text-[#2b5f43]/65">{ep.date}</span>
+                  <span className="text-[#2b5f43] flex items-center gap-1 font-semibold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#6da768]"></span> {ep.status}
                   </span>
                 </div>
               </div>
@@ -275,10 +256,10 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
       {isNewProjectModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsNewProjectModalOpen(false)}></div>
-          <div className="bg-white rounded-2xl shadow-xl w-[900px] max-w-[95vw] max-h-[90vh] flex flex-col z-10 overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="bg-[#fbf8ef] rounded-2xl shadow-xl w-[900px] max-w-[95vw] max-h-[90vh] flex flex-col z-10 overflow-hidden animate-in zoom-in-95 duration-200 border-2 border-[#193d2c]/15">
             {/* Modal Header */}
             <div className="flex items-center justify-between px-8 py-5 border-b border-slate-100 shrink-0">
-              <h2 className="text-xl font-bold text-slate-800">新增剧本</h2>
+              <h2 className="text-xl font-bold text-[#193d2c] menu-title">新增剧本</h2>
               <button 
                 onClick={() => setIsNewProjectModalOpen(false)}
                 className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-full hover:bg-slate-100"
@@ -299,7 +280,7 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
                     <input 
                       type="text" 
                       placeholder="请输入剧本名称" 
-                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-shadow"
+                      className="w-full px-4 py-3 bg-[#fbf8ef] border border-[#6da768]/40 rounded-xl text-sm focus:outline-none focus:border-[#6da768] focus:ring-1 focus:ring-[#6da768] transition-shadow"
                     />
                   </div>
 
@@ -310,7 +291,7 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
                     <input 
                       type="text" 
                       placeholder="请输入制作人" 
-                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-shadow"
+                      className="w-full px-4 py-3 bg-[#fbf8ef] border border-[#6da768]/40 rounded-xl text-sm focus:outline-none focus:border-[#6da768] focus:ring-1 focus:ring-[#6da768] transition-shadow"
                     />
                   </div>
 
@@ -318,7 +299,7 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
                     <label className="block text-sm font-medium text-slate-700 mb-2">
                       剧本封面
                     </label>
-                    <div className="border-2 border-dashed border-slate-200 rounded-2xl h-48 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-50 hover:border-violet-300 hover:text-violet-500 transition-colors cursor-pointer group bg-slate-50/50">
+                    <div className="border-2 border-dashed border-[#6da768]/40 rounded-2xl h-48 flex flex-col items-center justify-center text-[#2b5f43]/60 hover:bg-[#e9f2df] hover:border-[#6da768] hover:text-[#2b5f43] transition-colors cursor-pointer group bg-[#f5f1e4]">
                       <ImageIcon size={48} className="mb-3 opacity-40 group-hover:opacity-80 transition-opacity" strokeWidth={1.5} />
                     </div>
                   </div>
@@ -330,16 +311,16 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
                     <div className="flex gap-4">
                       <button 
                         onClick={() => setSelectedOrientation('16:9')}
-                        className={`flex-1 h-24 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${selectedOrientation === '16:9' ? 'border-violet-500 bg-violet-50 text-violet-700' : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'}`}
+                        className={`flex-1 h-24 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${selectedOrientation === '16:9' ? 'border-[#6da768] bg-[#e9f2df] text-[#2b5f43]' : 'border-[#193d2c]/15 bg-[#fbf8ef] text-[#2b5f43]/75 hover:border-[#193d2c]/30'}`}
                       >
-                        <div className={`w-8 h-5 border-2 rounded-sm ${selectedOrientation === '16:9' ? 'border-violet-500' : 'border-slate-400'}`}></div>
+                        <div className={`w-8 h-5 border-2 rounded-sm ${selectedOrientation === '16:9' ? 'border-[#6da768]' : 'border-[#2b5f43]/60'}`}></div>
                         <span className="text-sm font-medium">16:9</span>
                       </button>
                       <button 
                         onClick={() => setSelectedOrientation('9:16')}
-                        className={`flex-1 h-24 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${selectedOrientation === '9:16' ? 'border-violet-500 bg-violet-50 text-violet-700' : 'border-slate-200 bg-slate-50/50 text-slate-500 hover:border-slate-300'}`}
+                        className={`flex-1 h-24 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${selectedOrientation === '9:16' ? 'border-[#6da768] bg-[#e9f2df] text-[#2b5f43]' : 'border-[#193d2c]/15 bg-[#f5f1e4] text-[#2b5f43]/75 hover:border-[#193d2c]/30'}`}
                       >
-                        <div className={`w-5 h-8 border-2 rounded-sm ${selectedOrientation === '9:16' ? 'border-violet-500' : 'border-slate-400'}`}></div>
+                        <div className={`w-5 h-8 border-2 rounded-sm ${selectedOrientation === '9:16' ? 'border-[#6da768]' : 'border-[#2b5f43]/60'}`}></div>
                         <span className="text-sm font-medium">9:16</span>
                       </button>
                     </div>
@@ -356,10 +337,10 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
                       <div 
                         key={style.id}
                         onClick={() => setSelectedStyle(style.id)}
-                        className={`relative rounded-xl overflow-hidden cursor-pointer group aspect-square ${selectedStyle === style.id ? 'ring-2 ring-violet-500 ring-offset-2' : ''}`}
+                        className={`relative rounded-xl overflow-hidden cursor-pointer group aspect-square ${selectedStyle === style.id ? 'ring-2 ring-[#6da768] ring-offset-2 ring-offset-[#fbf8ef]' : ''}`}
                       >
                         <div 
-                          className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
+                          className="absolute inset-0 bg-cover bg-center lifely-bg-photo transition-transform duration-500 group-hover:scale-110"
                           style={{ backgroundImage: `url(${style.image})` }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -367,7 +348,7 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
                           <span className="text-white text-sm font-medium">{style.name}</span>
                         </div>
                         {selectedStyle === style.id && (
-                          <div className="absolute top-2 right-2 w-5 h-5 bg-violet-500 rounded-full flex items-center justify-center border-2 border-white">
+                          <div className="absolute top-2 right-2 w-5 h-5 bg-[#6da768] rounded-full flex items-center justify-center border-2 border-white">
                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                               <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
@@ -381,10 +362,10 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
             </div>
 
             {/* Modal Footer */}
-            <div className="px-8 py-5 border-t border-slate-100 flex items-center justify-start gap-4 bg-white shrink-0">
+            <div className="px-8 py-5 border-t border-slate-100 flex items-center justify-start gap-4 bg-[#fbf8ef] shrink-0">
               <button 
                 onClick={() => setIsNewProjectModalOpen(false)}
-                className="px-8 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-full text-sm font-medium transition-colors"
+                className="px-8 py-2.5 bg-[#fbf8ef] border border-[#193d2c]/20 hover:bg-[#f5f1e4] text-[#2b5f43] rounded-full text-sm font-medium transition-colors"
               >
                 取消
               </button>
@@ -393,7 +374,7 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
                   setIsNewProjectModalOpen(false);
                   onEnterProject(); // Go to episode management for the new project
                 }}
-                className="px-8 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-full text-sm font-medium transition-colors shadow-sm"
+                className="px-8 py-2.5 bg-[#193d2c] hover:bg-[#2b5f43] text-[#f5f1e4] rounded-full text-sm font-medium transition-colors shadow-sm"
               >
                 新增
               </button>

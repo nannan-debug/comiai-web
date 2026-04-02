@@ -1,552 +1,574 @@
-import React, { useState } from 'react';
-import { 
-  Film, Image as ImageIcon, LayoutTemplate, User, Coins, 
-  Upload, ArrowRightLeft, Download, CheckCircle2, 
-  Maximize2, ChevronDown, Filter, Zap, LayoutGrid,
-  Scissors, Share, ArrowUpFromLine, PlayCircle
+import React, { useMemo, useState } from 'react';
+import {
+  Film,
+  Image as ImageIcon,
+  Upload,
+  ChevronDown,
+  Clock3,
+  SlidersHorizontal,
+  Sparkles,
+  History,
+  FileText,
+  PlayCircle,
+  Plus,
+  Pencil,
+  RefreshCw,
 } from 'lucide-react';
 
+type TaskType = 'image' | 'video';
+type VideoMode = 'all-ref' | 'multi-image' | 'first-last' | 'single-image';
+
+type ShotItem = {
+  id: number;
+  title: string;
+  thumb?: string;
+  draft?: boolean;
+  mediaType?: 'video' | 'image';
+};
+
+type HistoryItem = {
+  id: number;
+  shotId: number;
+  type: TaskType;
+  createdAt: string;
+  model: string;
+  preview: string;
+  prompt: string;
+  params: string[];
+};
+
+type ShotFormState = {
+  taskType: TaskType;
+  videoMode: VideoMode;
+  prompt: string;
+  model: string;
+  duration: string;
+  resolution: string;
+  ratio: string;
+};
+
+type ReferenceSlot = {
+  label: string;
+  type: 'asset' | 'upload' | 'frame';
+  required?: boolean;
+};
+
+const SAMPLE_REFERENCE_IMAGES = [
+  'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=480&auto=format&fit=crop&q=70',
+  'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=480&auto=format&fit=crop&q=70',
+  'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?w=480&auto=format&fit=crop&q=70',
+  'https://images.unsplash.com/photo-1511497584788-876760111969?w=480&auto=format&fit=crop&q=70',
+  'https://images.unsplash.com/photo-1521119989659-a83eee488004?w=480&auto=format&fit=crop&q=70',
+  'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=480&auto=format&fit=crop&q=70',
+];
+
+const SHOTS: ShotItem[] = [
+  {
+    id: 1,
+    title: '分镜1',
+    mediaType: 'video',
+    thumb:
+      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=480&auto=format&fit=crop&q=70',
+  },
+  {
+    id: 2,
+    title: '分镜2',
+    mediaType: 'image',
+    thumb:
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=480&auto=format&fit=crop&q=70',
+  },
+  {
+    id: 3,
+    title: '分镜3',
+    mediaType: 'image',
+    thumb:
+      'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?w=480&auto=format&fit=crop&q=70',
+  },
+  {
+    id: 4,
+    title: '分镜4',
+    mediaType: 'image',
+    thumb:
+      'https://images.unsplash.com/photo-1521119989659-a83eee488004?w=480&auto=format&fit=crop&q=70',
+  },
+  {
+    id: 5,
+    title: '分镜5',
+    draft: true,
+  },
+];
+
+const HISTORY: HistoryItem[] = [
+  {
+    id: 101,
+    shotId: 1,
+    type: 'video',
+    createdAt: '2026-04-01 15:09',
+    model: 'Seedance2.0',
+    preview:
+      'https://images.unsplash.com/photo-1511497584788-876760111969?w=960&auto=format&fit=crop&q=70',
+    prompt: '夜色森林营地，圆形火焰在中心，俯拍缓慢推进，士兵围坐。',
+    params: ['5s', '720p', '9:16', '多图生视频'],
+  },
+  {
+    id: 102,
+    shotId: 2,
+    type: 'image',
+    createdAt: '2026-04-01 14:36',
+    model: 'Nano Banana Pro',
+    preview:
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=960&auto=format&fit=crop&q=70',
+    prompt: '角色正面特写，冷暖对比光，背景虚化。',
+    params: ['4张', '4:5', '电影质感'],
+  },
+  {
+    id: 103,
+    shotId: 3,
+    type: 'video',
+    createdAt: '2026-04-01 13:52',
+    model: 'Vidu Q2Pro',
+    preview:
+      'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=960&auto=format&fit=crop&q=70',
+    prompt: '大远景，火堆周围人群轻微动作，镜头轻摇。',
+    params: ['10s', '1080p', '16:9', '首尾帧'],
+  },
+];
+
+function getReferenceTemplate(taskType: TaskType, videoMode: VideoMode): { title: string; cols: string; slots: ReferenceSlot[] } {
+  if (taskType === 'image') {
+    return {
+      title: '参考内容（图生图）',
+      cols: 'grid-cols-2',
+      slots: [
+        { label: '主参考图', type: 'frame', required: true },
+        { label: '风格参考', type: 'asset' },
+        { label: '角色参考', type: 'asset' },
+        { label: '本地上传', type: 'upload' },
+      ],
+    };
+  }
+
+  if (videoMode === 'first-last') {
+    return {
+      title: '参考内容（首尾帧）',
+      cols: 'grid-cols-2',
+      slots: [
+        { label: '首帧', type: 'frame', required: true },
+        { label: '尾帧', type: 'frame', required: true },
+        { label: '角色参考', type: 'asset' },
+        { label: '本地上传', type: 'upload' },
+      ],
+    };
+  }
+
+  if (videoMode === 'single-image') {
+    return {
+      title: '参考内容（单图）',
+      cols: 'grid-cols-2',
+      slots: [
+        { label: '单图输入', type: 'frame', required: true },
+        { label: '角色参考', type: 'asset' },
+        { label: '场景参考', type: 'asset' },
+        { label: '本地上传', type: 'upload' },
+      ],
+    };
+  }
+
+  if (videoMode === 'all-ref') {
+    return {
+      title: '参考内容（上限9个）',
+      cols: 'grid-cols-3',
+      slots: [
+        { label: '角色A', type: 'asset' },
+        { label: '角色B', type: 'asset' },
+        { label: '场景夜景', type: 'asset' },
+        { label: '道具参考', type: 'asset' },
+        { label: '氛围图', type: 'asset' },
+        { label: '本地上传', type: 'upload' },
+      ],
+    };
+  }
+
+  return {
+    title: '参考内容（多图）',
+    cols: 'grid-cols-3',
+    slots: [
+      { label: '参考图1', type: 'frame', required: true },
+      { label: '参考图2', type: 'frame' },
+      { label: '参考图3', type: 'frame' },
+      { label: '角色A', type: 'asset' },
+      { label: '场景夜景', type: 'asset' },
+      { label: '本地上传', type: 'upload' },
+    ],
+  };
+}
+
 export default function StoryboardProduction() {
-  // 1. 全局任务切换
-  const [globalMode, setGlobalMode] = useState<'video' | 'image'>('video');
-  
-  // 2. 左侧任务面板 - 模式切换
-  const [taskMode, setTaskMode] = useState<'all' | 'first-last' | 'img2video'>('first-last');
-  
-  // 模型与参数联动
-  const [selectedModel, setSelectedModel] = useState('Seedance2.0');
-  
-  // 底部选中分镜
-  const [activeStoryboard, setActiveStoryboard] = useState(1);
+  const [shots, setShots] = useState<ShotItem[]>(SHOTS);
+  const [activeShotId, setActiveShotId] = useState(1);
+  const [shotForms, setShotForms] = useState<Record<number, ShotFormState>>({
+    1: {
+      taskType: 'video',
+      videoMode: 'all-ref',
+      prompt: '夜色营地，圆形火焰位于中心，俯拍镜头缓慢推进，角色轮廓被火光照亮。',
+      model: 'Seedance2.0',
+      duration: '5s',
+      resolution: '720p',
+      ratio: '9:16',
+    },
+    2: {
+      taskType: 'image',
+      videoMode: 'single-image',
+      prompt: '角色特写，人物面部受冷暖光交错照亮，背景轻微虚化。',
+      model: 'Nano Banana Pro',
+      duration: '5s',
+      resolution: '720p',
+      ratio: '9:16',
+    },
+    3: {
+      taskType: 'video',
+      videoMode: 'first-last',
+      prompt: '森林河道全景，士兵围火堆，镜头缓慢平移。',
+      model: 'Vidu Q2Pro',
+      duration: '10s',
+      resolution: '1080p',
+      ratio: '16:9',
+    },
+  });
+
+  const activeShot = useMemo(
+    () => shots.find((item) => item.id === activeShotId) ?? shots[0],
+    [activeShotId, shots]
+  );
+
+  const visibleHistory = useMemo(
+    () => HISTORY.filter((item) => item.shotId === activeShotId),
+    [activeShotId]
+  );
+
+  const defaultForm: ShotFormState = {
+    taskType: 'video',
+    videoMode: 'all-ref',
+    prompt: '请描述当前分镜的画面、镜头运动、角色动作和氛围光影。',
+    model: 'Seedance2.0',
+    duration: '5s',
+    resolution: '720p',
+    ratio: '9:16',
+  };
+
+  const activeForm = shotForms[activeShotId] ?? defaultForm;
+  const referenceTemplate = getReferenceTemplate(activeForm.taskType, activeForm.videoMode);
+  const imageRatioOptions = ['智能', '21:9', '16:9', '3:2', '4:3', '1:1', '3:4', '2:3', '9:16'];
+  const videoRatioOptions = ['9:16', '16:9', '1:1', '4:5'];
+  const imageResolutionOptions = ['1K', '2K', '4K'];
+  const videoResolutionOptions = ['720p', '1080p', '4K'];
+
+  const updateActiveForm = (patch: Partial<ShotFormState>) => {
+    setShotForms((prev) => ({
+      ...prev,
+      [activeShotId]: {
+        ...(prev[activeShotId] ?? defaultForm),
+        ...patch,
+      },
+    }));
+  };
+
+  const addNewShot = () => {
+    const nextIndex = shots.length + 1;
+    const nextShot: ShotItem = {
+      id: Date.now(),
+      title: `分镜${nextIndex}`,
+      draft: true,
+    };
+    setShots((prev) => [...prev, nextShot]);
+    setShotForms((prev) => ({
+      ...prev,
+      [nextShot.id]: defaultForm,
+    }));
+    setActiveShotId(nextShot.id);
+  };
 
   return (
-    <>
-      <div className="flex-1 flex overflow-hidden p-3 gap-3 pb-0">
-        {/* 1. 最左侧全局任务切换栏 */}
-        <div className="w-14 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center py-4 gap-4 shrink-0 z-10">
-          <div 
-            className={`p-2.5 rounded-xl cursor-pointer group relative ${globalMode === 'video' ? 'bg-violet-50 text-violet-600' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
-            onClick={() => setGlobalMode('video')}
-          >
-            <Film size={20} />
-            <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50">
-              生视频
-            </div>
+    <div className="stage-shell flex-1 overflow-hidden p-3 pb-0">
+      <div className="h-full flex gap-3 overflow-hidden">
+        {/* 左：分镜快速定位 */}
+        <aside className="stage-pane w-[180px] bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col shrink-0">
+          <div className="h-14 px-4 border-b border-slate-100 bg-slate-50/60 flex items-center">
+            <div className="text-sm font-bold text-slate-800">分镜({shots.length})</div>
           </div>
-          <div 
-            className={`p-2.5 rounded-xl cursor-pointer group relative ${globalMode === 'image' ? 'bg-violet-50 text-violet-600' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
-            onClick={() => setGlobalMode('image')}
-          >
-            <ImageIcon size={20} />
-            <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50">
-              生图片
-            </div>
-          </div>
-          <div className="p-2.5 rounded-xl cursor-pointer text-gray-400 hover:bg-gray-50 hover:text-gray-600 group relative">
-            <LayoutTemplate size={20} />
-            <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50">
-              排版
-            </div>
-          </div>
-        </div>
-
-        {/* 2. 左侧任务面板 */}
-        <div className="w-72 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col shrink-0 z-10 overflow-y-auto">
-          {globalMode === 'image' ? (
-            <div className="p-4 flex flex-col h-full">
-              {/* Title */}
-              <div className="flex items-center gap-2 font-medium text-gray-800 mb-4 pb-2 border-b border-gray-100">
-                <ImageIcon size={16} />
-                分镜
-              </div>
-
-              {/* 参考内容 */}
-              <div className="mb-6">
-                <div className="text-xs font-medium text-gray-700 mb-2">参考内容 <span className="text-gray-400 font-normal">(上限6个)</span></div>
-                <div className="grid grid-cols-3 gap-2">
-                  {/* Existing references */}
-                  <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative group">
-                    <img src="https://picsum.photos/seed/ref1/100/100" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                    <div className="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur text-gray-800 text-[10px] text-center py-0.5 truncate px-1">(图1) 战无涯</div>
-                  </div>
-                  <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative group">
-                    <img src="https://picsum.photos/seed/ref2/100/100" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                    <div className="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur text-gray-800 text-[10px] text-center py-0.5 truncate px-1">(图2) 叶小厨</div>
-                  </div>
-                  <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative group">
-                    <img src="https://picsum.photos/seed/ref3/100/100" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                    <div className="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur text-gray-800 text-[10px] text-center py-0.5 truncate px-1">(图3) 场景1</div>
-                  </div>
-                  
-                  {/* Upload button */}
-                  <div className="aspect-square bg-gray-50 border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:bg-gray-100 hover:border-violet-400 cursor-pointer transition-colors">
-                    <ImageIcon size={16} className="mb-1" />
-                    <span className="text-[10px]">上传或选择</span>
-                    <span className="text-[10px] text-gray-400">分镜图 /</span>
-                    <span className="text-[10px] text-gray-400">设定库</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* 画面提示词 */}
-              <div className="mb-6">
-                <div className="text-xs font-medium text-gray-700 mb-2">画面提示词</div>
-                <textarea 
-                  className="w-full h-32 p-3 bg-white border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500"
-                  placeholder="请输入提示词"
-                  defaultValue="镜头从林战的视角开始，缓慢平移，展现他身处的环境。林战坐在泥泞的壕沟中，湿透的衣物紧贴身体，惊恐地扫视四周。手中紧握长矛，特写其破旧的质感。"
-                ></textarea>
-              </div>
-
-              {/* 补充提示词 */}
-              <div className="mb-6">
-                <div className="text-xs font-medium text-gray-700 mb-2">补充提示词</div>
-                <textarea 
-                  className="w-full h-24 p-3 bg-white border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500"
-                  placeholder="请输入提示词"
-                  defaultValue="艺术风格：3D高模渲染，Atmospheric Period Drama，影视级CGI风格，PBR材质，半写实风格化，图形设计融合感&#10;色调与光影：(Deep Jade Green + Charcoal Black)..."
-                ></textarea>
-              </div>
-
-              {/* 模型选择及生成数量 */}
-              <div className="mb-auto">
-                <div className="text-xs font-medium text-gray-700 mb-2">模型选择及生成数量</div>
-                <div className="flex gap-2">
-                  <div className="flex-1 relative">
-                    <select 
-                      className="w-full appearance-none bg-white border border-gray-200 rounded-lg py-2 pl-3 pr-8 text-xs focus:outline-none focus:ring-1 focus:ring-violet-500"
-                    >
-                      <option value="Nano Banana Pro">Nano Banana Pro</option>
-                      <option value="Seedance2.0">Seedance2.0</option>
-                    </select>
-                    <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                  </div>
-                  <div className="w-24 relative">
-                    <select className="w-full appearance-none bg-white border border-gray-200 rounded-lg py-2 pl-3 pr-8 text-xs focus:outline-none focus:ring-1 focus:ring-violet-500">
-                      <option>生成1张</option>
-                      <option>生成2张</option>
-                      <option>生成4张</option>
-                    </select>
-                    <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                  </div>
-                </div>
-              </div>
-
-              {/* 底部生成按钮 */}
-              <button className="w-full mt-6 bg-[#1A202C] hover:bg-gray-800 text-white rounded-xl py-3 flex items-center justify-center gap-2 font-medium transition-colors">
-                <div className="flex items-center gap-1 text-violet-400">
-                  <Coins size={14} />
-                  <span>10</span>
-                </div>
-                生成图片
-              </button>
-            </div>
-          ) : (
-            <div className="p-4 flex flex-col h-full">
-              {/* 模式切换 Tab */}
-              <div className="flex bg-gray-100 p-1 rounded-lg mb-6">
-              {[
-                { id: 'all', label: '全能参考', icon: <LayoutGrid size={14} /> },
-                { id: 'first-last', label: '首尾帧', icon: <Film size={14} /> },
-                { id: 'img2video', label: '图生视频', icon: <ImageIcon size={14} /> }
-              ].map(tab => (
+          <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+            {shots.map((shot, index) => {
+              const active = shot.id === activeShotId;
+              return (
                 <button
-                  key={tab.id}
-                  onClick={() => setTaskMode(tab.id as any)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                    taskMode === tab.id ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
+                  key={shot.id}
+                  onClick={() => setActiveShotId(shot.id)}
+                  className={`w-full text-left rounded-2xl border-2 transition-all overflow-hidden ${
+                    active
+                      ? 'border-[#2b5f43] bg-[#f5faee] shadow-[0_0_0_2px_rgba(109,167,104,0.35)]'
+                      : 'border-slate-200 bg-white hover:border-[#9fc79b]'
                   }`}
                 >
-                  {tab.icon}
-                  {tab.label}
+                  <div className="relative h-44 rounded-[14px] overflow-hidden bg-black">
+                    <div className="absolute left-2 top-2 min-w-6 h-6 rounded-full bg-black/85 text-white text-xs font-bold flex items-center justify-center px-1.5 z-20">
+                      {index + 1}
+                    </div>
+                    {shot.draft && (
+                      <div className="absolute right-2 top-2 h-6 rounded-full bg-slate-700/95 text-white text-[10px] font-bold px-2 flex items-center z-20">
+                        未定稿
+                      </div>
+                    )}
+                    {!shot.draft && (
+                      <div className="absolute right-2 top-2 h-7 w-7 rounded-lg bg-white/95 border border-slate-200 text-[#2b5f43] flex items-center justify-center z-20">
+                        {shot.mediaType === 'video' ? <PlayCircle className="w-4 h-4" /> : <ImageIcon className="w-4 h-4" />}
+                      </div>
+                    )}
+                    {shot.thumb ? (
+                      <div
+                        className="h-full bg-cover bg-center"
+                        style={{ backgroundImage: `url(${shot.thumb})` }}
+                      />
+                    ) : (
+                      <div className="h-full bg-slate-100 flex items-center justify-center">
+                        <ImageIcon className="w-7 h-7 text-slate-400" />
+                      </div>
+                    )}
+                  </div>
                 </button>
-              ))}
-            </div>
+              );
+            })}
+            <button
+              onClick={addNewShot}
+              className="w-full h-20 rounded-xl border border-slate-200 bg-[#f1f4f2] hover:bg-[#e9f2df] text-slate-600 hover:text-[#2b5f43] transition-colors flex flex-col items-center justify-center gap-1"
+            >
+              <Plus className="w-5 h-5" />
+              <span className="text-xs font-bold">添加分镜</span>
+            </button>
+          </div>
+        </aside>
 
-            {/* 参考图区域 (首尾帧模式) */}
-            <div className="mb-6">
-              <div className="text-xs font-medium text-gray-700 mb-2">参考图</div>
-              {taskMode === 'first-last' ? (
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 aspect-square bg-gray-50 border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:bg-gray-100 hover:border-violet-400 cursor-pointer transition-colors">
-                    <Upload size={20} className="mb-2" />
-                    <span className="text-xs">上传首帧图</span>
-                    <span className="text-[10px] text-gray-400 mt-1">分镜图 / 设定库</span>
-                  </div>
-                  <button className="p-1.5 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors">
-                    <ArrowRightLeft size={14} />
-                  </button>
-                  <div className="flex-1 aspect-square bg-gray-50 border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:bg-gray-100 hover:border-violet-400 cursor-pointer transition-colors">
-                    <Upload size={20} className="mb-2" />
-                    <span className="text-xs">上传尾帧图</span>
-                    <span className="text-[10px] text-gray-400 mt-1">分镜图 / 设定库</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="w-full h-32 bg-gray-50 border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:bg-gray-100 hover:border-violet-400 cursor-pointer transition-colors">
-                  <Upload size={20} className="mb-2" />
-                  <span className="text-xs">上传参考{taskMode === 'all' ? '视频/图片' : '图片'}</span>
-                  <span className="text-[10px] text-gray-400 mt-1">支持拖拽 / 分镜图库 / 设定库</span>
-                </div>
-              )}
-            </div>
-
-            {/* 提示词输入 */}
-            <div className="mb-6">
-              <div className="text-xs font-medium text-gray-700 mb-2">视频提示词</div>
-              <textarea 
-                className="w-full h-28 p-3 bg-white border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500"
-                placeholder="请输入提示词"
-              ></textarea>
-            </div>
-
-            <div className="mb-6">
-              <div className="text-xs font-medium text-gray-700 mb-2">补充提示词</div>
-              <textarea 
-                className="w-full h-20 p-3 bg-white border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500"
-                placeholder="请输入提示词"
-              ></textarea>
-            </div>
-
-            {/* 模型与参数选择 */}
-            <div className="mb-auto">
-              <div className="text-xs font-medium text-gray-700 mb-2">模型选择及生成数量</div>
-              <div className="flex gap-2">
-                <div className="flex-1 relative">
-                  <select 
-                    className="w-full appearance-none bg-white border border-gray-200 rounded-lg py-2 pl-3 pr-8 text-xs focus:outline-none focus:ring-1 focus:ring-violet-500"
-                    value={selectedModel}
-                    onChange={(e) => setSelectedModel(e.target.value)}
-                  >
-                    <option value="Seedance2.0">Seedance2.0</option>
-                    <option value="Sora2">Sora 2</option>
-                    <option value="ViduQ2Pro">ViduQ2Pro</option>
-                  </select>
-                  <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                </div>
-                <div className="w-20 relative">
-                  <select className="w-full appearance-none bg-white border border-gray-200 rounded-lg py-2 pl-3 pr-8 text-xs focus:outline-none focus:ring-1 focus:ring-violet-500">
-                    <option>15s</option>
-                    <option>5s</option>
-                    <option>10s</option>
-                  </select>
-                  <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                </div>
-                <div className="w-24 relative">
-                  <select className="w-full appearance-none bg-white border border-gray-200 rounded-lg py-2 pl-3 pr-8 text-xs focus:outline-none focus:ring-1 focus:ring-violet-500">
-                    <option>1080p</option>
-                    <option>720p</option>
-                    <option>4K</option>
-                  </select>
-                  <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                </div>
-              </div>
-            </div>
-
-              {/* 底部生成按钮 */}
-              <button className="w-full mt-6 bg-[#1A202C] hover:bg-gray-800 text-white rounded-xl py-3 flex items-center justify-center gap-2 font-medium transition-colors">
-                <Zap size={16} className="text-violet-400" />
-                <span className="text-violet-400">10</span>
-                生成视频
+        {/* 中：提交任务面板 */}
+        <section className="stage-pane w-[360px] bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col shrink-0">
+          <div className="h-14 px-4 border-b border-slate-100 bg-slate-50/60 flex items-center">
+            <div className="w-full max-w-[220px] grid grid-cols-2 gap-2">
+              <button
+                onClick={() => updateActiveForm({ taskType: 'image' })}
+                className={`h-8 rounded-lg text-sm font-bold transition-colors ${
+                  activeForm.taskType === 'image'
+                    ? 'bg-[#2b5f43] text-white'
+                    : 'bg-transparent text-slate-500 hover:text-[#2b5f43]'
+                }`}
+              >
+                图片
+              </button>
+              <button
+                onClick={() => updateActiveForm({ taskType: 'video' })}
+                className={`h-8 rounded-lg text-sm font-bold transition-colors ${
+                  activeForm.taskType === 'video'
+                    ? 'bg-[#2b5f43] text-white'
+                    : 'bg-transparent text-slate-500 hover:text-[#2b5f43]'
+                }`}
+              >
+                视频
               </button>
             </div>
-          )}
-        </div>
-
-        {/* 中间区域：画布 + 底部卡片 */}
-        <div className="flex-1 flex flex-col gap-3 min-w-0">
-          {/* 3. 中心画布大图 */}
-          <div className="flex-1 flex flex-col relative min-w-0 bg-white rounded-2xl border border-slate-200 shadow-sm">
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
-            <button className="bg-white/90 backdrop-blur shadow-sm border border-gray-200 px-4 py-2 rounded-full text-xs font-medium text-gray-700 flex items-center gap-2 hover:bg-white transition-colors">
-              <Scissors size={14} />
-              截取关键帧
-            </button>
           </div>
-          
-          <div className="flex-1 p-6 flex items-center justify-center relative">
-            {/* 主画面 */}
-            <div className="relative h-full max-h-[70vh] aspect-[9/16] bg-black rounded-xl overflow-hidden shadow-lg group">
-              <img 
-                src="https://picsum.photos/seed/cyberpunk-tower/1080/1920" 
-                alt="Main Canvas" 
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-              
-              {/* 悬浮操作栏 */}
-              <div className="absolute right-[-48px] top-1/2 -translate-y-1/2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button className="w-10 h-10 bg-white shadow-md rounded-full flex items-center justify-center text-gray-600 hover:text-violet-600 hover:bg-violet-50 transition-colors">
-                  <Share size={16} />
-                </button>
-                <button className="w-10 h-10 bg-white shadow-md rounded-full flex items-center justify-center text-gray-600 hover:text-violet-600 hover:bg-violet-50 transition-colors">
-                  <Download size={16} />
-                </button>
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {activeForm.taskType === 'video' && (
+              <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+                {[
+                  { id: 'all-ref', label: '全能参考' },
+                  { id: 'first-last', label: '首尾帧' },
+                  { id: 'single-image', label: '单图声视频' },
+                ].map((item) => {
+                  const active = activeForm.videoMode === (item.id as VideoMode);
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => updateActiveForm({ videoMode: item.id as VideoMode })}
+                      className={`h-8 px-3 rounded-md text-sm font-bold transition-colors ${
+                        active
+                          ? 'bg-[#eef5e9] text-[#2b5f43]'
+                          : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
               </div>
-
-              {/* 底部提交审核 */}
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2">
-                <button className="bg-black/60 backdrop-blur-md text-white px-6 py-2.5 rounded-full text-sm font-medium flex items-center gap-2 hover:bg-black/80 transition-colors border border-white/10">
-                  <ArrowUpFromLine size={16} />
-                  提交审核
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        </div>
-
-        {/* 4. 右侧历史记录 */}
-        <div className="w-72 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm flex flex-col shrink-0 z-10">
-          <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-white">
-            <div className="flex items-center gap-2 font-medium text-gray-800">
-              {globalMode === 'video' ? <Film size={16} /> : <ImageIcon size={16} />}
-              {globalMode === 'video' ? '视频记录' : '生图记录'}
-            </div>
-          </div>
-          
-          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-            {globalMode === 'image' ? (
-              <>
-                {/* 生图记录卡片 1 */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex justify-between items-center text-xs text-gray-500">
-                    <span>2026-01-18 20:45</span>
-                    <div className="flex items-center gap-1">
-                      <Zap size={12} />
-                      <span>jimeng</span>
-                    </div>
-                  </div>
-                  <div className="bg-white rounded-xl p-3 border border-gray-200 shadow-sm relative group">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center gap-1.5 text-xs font-medium text-gray-700">
-                        <ImageIcon size={14} />
-                        历史-2
-                      </div>
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="p-1 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded"><CheckCircle2 size={14} /></button>
-                        <button className="p-1 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded"><Download size={14} /></button>
-                        <button className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"><ChevronDown size={14} /></button>
-                      </div>
-                    </div>
-                    <div className="flex gap-1.5 mb-2 overflow-x-auto pb-1">
-                      {[1,2,3,4,5].map(i => (
-                        <img key={i} src={`https://picsum.photos/seed/ref${i}/60/60`} className="w-8 h-8 rounded object-cover border border-gray-200 shrink-0" referrerPolicy="no-referrer" />
-                      ))}
-                    </div>
-                    <p className="text-[10px] text-gray-500 line-clamp-2">
-                      画风：超写实风格。景别：全景。视角：平视视角。机位：正面机位。内容：广阔而宁静的湖面...
-                    </p>
-                    
-                    {/* 生成的图片 */}
-                    <div className="mt-3 relative h-40 w-full bg-gray-100/80 rounded-lg overflow-hidden flex items-center justify-center">
-                      <img src="https://picsum.photos/seed/cyberpunk-tower/400/711" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* 生图记录卡片 2 (当前选中/应用状态) */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex justify-between items-center text-xs text-gray-500">
-                    <span>2026-01-18 21:08</span>
-                    <div className="flex items-center gap-1">
-                      <Zap size={12} />
-                      <span>Nano Banana Pro 2</span>
-                    </div>
-                  </div>
-                  <div className="bg-violet-50 rounded-xl p-3 border-2 border-violet-400 shadow-sm relative group">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center gap-1.5 text-xs font-medium text-violet-700">
-                        <ImageIcon size={14} />
-                        历史-3
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <button className="p-1 text-violet-600 hover:bg-violet-100 rounded" title="应用"><CheckCircle2 size={14} /></button>
-                        <button className="p-1 text-violet-600 hover:bg-violet-100 rounded"><Download size={14} /></button>
-                        <button className="p-1 text-violet-600 hover:bg-violet-100 rounded"><ChevronDown size={14} /></button>
-                      </div>
-                    </div>
-                    <p className="text-[10px] text-violet-600/80 line-clamp-3">
-                      画风：超写实风格。景别：全景。视角：平视视角。机位：正面机位。内容：广阔而宁静的湖面，湖水呈现出蓝、绿、黄、青等多层次的色彩，清澈见底，能清晰看到水底的枯树和钙华沉积。湖面平静，反射着...
-                    </p>
-                    
-                    {/* 生成的图片 */}
-                    <div className="mt-3 relative h-40 w-full bg-gray-100/80 rounded-lg overflow-hidden flex items-center justify-center">
-                      <img src="https://picsum.photos/seed/cyberpunk-tower-2/400/711" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                {/* 记录卡片 1 */}
-            <div className="flex flex-col gap-2">
-              <div className="flex justify-between items-center text-xs text-gray-500">
-                <span>2026-01-18 20:45</span>
-                <div className="flex items-center gap-1">
-                  <Zap size={12} />
-                  <span>ViduQ2Pro | 1080p | 6s</span>
-                </div>
-              </div>
-              <div className="bg-white rounded-xl p-3 border border-gray-200 shadow-sm relative group">
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex items-center gap-1.5 text-xs font-medium text-gray-700">
-                    <ImageIcon size={14} />
-                    图生视频-2
-                  </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="p-1 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded"><CheckCircle2 size={14} /></button>
-                    <button className="p-1 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded"><Download size={14} /></button>
-                    <button className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"><ChevronDown size={14} /></button>
-                  </div>
-                </div>
-                <div className="flex gap-2 mb-2">
-                  <img src="https://picsum.photos/seed/ref1/60/60" className="w-10 h-10 rounded object-cover border border-gray-100" referrerPolicy="no-referrer" />
-                </div>
-                <p className="text-[10px] text-gray-500 line-clamp-2">
-                  画风：超写实风格。景别：全景。视角：平视视角。机位：正面机位。内容：广阔而宁静的湖面...
-                </p>
-                
-                {/* 视频缩略图 */}
-                <div className="mt-3 relative h-40 w-full bg-gray-100/80 rounded-lg overflow-hidden flex items-center justify-center">
-                  <img src="https://picsum.photos/seed/vid1/400/225" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/10">
-                    <PlayCircle size={24} className="text-white/90" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 记录卡片 2 (当前选中/应用状态) */}
-            <div className="flex flex-col gap-2">
-              <div className="flex justify-between items-center text-xs text-gray-500">
-                <span>2026-01-18 21:08</span>
-                <div className="flex items-center gap-1">
-                  <Zap size={12} />
-                  <span>Sora 2 | 1080p | 6s</span>
-                </div>
-              </div>
-              <div className="bg-violet-50 rounded-xl p-3 border-2 border-violet-400 shadow-sm relative group">
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex items-center gap-1.5 text-xs font-medium text-violet-700">
-                    <LayoutGrid size={14} />
-                    多图参考-3
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button className="p-1 text-violet-600 hover:bg-violet-100 rounded" title="应用"><CheckCircle2 size={14} /></button>
-                    <button className="p-1 text-violet-600 hover:bg-violet-100 rounded"><Download size={14} /></button>
-                    <button className="p-1 text-violet-600 hover:bg-violet-100 rounded"><ChevronDown size={14} /></button>
-                  </div>
-                </div>
-                <div className="flex gap-1.5 mb-2 overflow-x-auto pb-1">
-                  {[1,2,3,4,5].map(i => (
-                    <img key={i} src={`https://picsum.photos/seed/ref${i}/60/60`} className="w-8 h-8 rounded object-cover border border-violet-200 shrink-0" referrerPolicy="no-referrer" />
-                  ))}
-                </div>
-                <p className="text-[10px] text-violet-600/80 line-clamp-2">
-                  画风：超写实风格。景别：全景。视角：平视视角。机位：正面机位。内容：广阔而宁静的湖面...
-                </p>
-                
-                {/* 视频缩略图 */}
-                <div className="mt-3 relative h-40 w-full bg-gray-100/80 rounded-lg overflow-hidden flex items-center justify-center">
-                  <img src="https://picsum.photos/seed/cyberpunk-tower/400/225" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/10">
-                    <PlayCircle size={24} className="text-white/90" />
-                  </div>
-                  <div className="absolute top-2 right-2 bg-black/50 backdrop-blur text-white text-[10px] px-1.5 py-0.5 rounded">
-                    00:06
-                  </div>
-                </div>
-              </div>
-            </div>
-              </>
             )}
 
-          </div>
-        </div>
-      </div>
+            <div>
+              <div className="text-xs font-bold text-slate-700 mb-2">{referenceTemplate.title}</div>
+              <div className={`grid ${referenceTemplate.cols} gap-2`}>
+                {referenceTemplate.slots.map((slot, index) => {
+                  if (slot.type === 'upload') {
+                    return (
+                      <button key={slot.label} className="h-16 rounded-lg border-2 border-dashed border-slate-300 bg-white text-slate-400 hover:text-[#2b5f43] hover:border-[#6da768] transition-colors flex flex-col items-center justify-center gap-1">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span className="text-[10px]">{slot.label}</span>
+                      </button>
+                    );
+                  }
 
-      {/* 5. 底部分镜项目区 (Moved to bottom) */}
-      <footer className="h-48 bg-white border-t border-slate-200 flex flex-col shrink-0 p-3 z-10 shadow-inner">
-        <div className="flex items-center justify-between px-2 pb-2 border-b border-gray-100">
-          <div className="flex items-center gap-4 text-xs">
-            <span className="text-gray-500">总共分镜数: <span className="text-gray-900 font-medium">39</span></span>
-            <span className="text-gray-500">已验收完成: <span className="text-violet-600 font-medium">6</span></span>
-            
-            <div className="flex items-center gap-2 ml-4">
-              <Filter size={14} className="text-gray-400" />
-              <span className="text-gray-500">状态:</span>
-              <select className="bg-transparent border-none focus:ring-0 text-gray-700 font-medium cursor-pointer">
-                <option>全部</option>
-                <option>待制作</option>
-                <option>已完成</option>
-              </select>
-            </div>
-            <button className="px-3 py-1 border border-gray-200 rounded-full text-gray-600 hover:bg-gray-50 transition-colors">
-              筛选
-            </button>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <button className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 flex items-center gap-1.5 hover:bg-gray-50 transition-colors">
-              <LayoutGrid size={14} />
-              一键补充
-            </button>
-            <button className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 flex items-center gap-1.5 hover:bg-gray-50 transition-colors">
-              <Zap size={14} />
-              一键生成
-            </button>
-            <button className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 flex items-center gap-1.5 hover:bg-gray-50 transition-colors">
-              <Download size={14} />
-              批量导出
-            </button>
-          </div>
-        </div>
-        
-        <div className="flex-1 overflow-x-auto pt-3 flex gap-3 items-center">
-          {/* 分镜卡片列表 */}
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((item) => (
-            <div 
-              key={item}
-              onClick={() => setActiveStoryboard(item)}
-              className={`w-40 h-full rounded-lg border-2 flex flex-col overflow-hidden cursor-pointer shrink-0 transition-colors ${
-                activeStoryboard === item ? 'border-violet-500 shadow-sm' : 'border-transparent bg-gray-100 hover:border-gray-300'
-              }`}
-            >
-              <div className="px-2 py-1 flex justify-between items-center text-[10px] text-gray-500 bg-white/50">
-                <span className="font-medium text-gray-700">{item}. 1-1-{item}</span>
-                <div className="flex items-center gap-1">
-                  <span>20次</span>
-                  <Coins size={10} />
-                  <span>1000</span>
-                </div>
+                  if (slot.type === 'frame') {
+                    return (
+                      <div key={slot.label} className="h-16 rounded-lg border border-slate-200 bg-slate-50 relative overflow-hidden">
+                        <img
+                          src={SAMPLE_REFERENCE_IMAGES[index % SAMPLE_REFERENCE_IMAGES.length]}
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-black/60 to-transparent" />
+                        <span className="absolute left-1.5 bottom-1 text-[10px] font-bold text-white">{slot.label}</span>
+                        {slot.required && <span className="absolute right-1.5 top-1.5 text-[9px] px-1 py-0.5 rounded bg-white/85 text-[#2b5f43]">必填</span>}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div key={slot.label} className="h-16 rounded-lg border border-slate-200 bg-slate-50 relative overflow-hidden">
+                      <img
+                        src={SAMPLE_REFERENCE_IMAGES[index % SAMPLE_REFERENCE_IMAGES.length]}
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-black/60 to-transparent" />
+                      <span className="absolute left-1.5 bottom-1 text-[10px] font-bold text-white">{slot.label}</span>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="flex-1 relative bg-gray-200 flex items-center justify-center overflow-hidden">
-                {item === 1 || item === 2 || item === 4 || item === 6 ? (
-                  <img 
-                    src={`https://picsum.photos/seed/storyboard-${item}/200/300`} 
-                    alt={`Storyboard ${item}`}
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : item === 5 ? (
-                  <div className="text-gray-400">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-                  </div>
-                ) : null}
-                {globalMode === 'video' && (item === 1 || item === 4) && (
-                   <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                     <PlayCircle size={24} className="text-white/80" />
-                   </div>
+            </div>
+
+            <div>
+              <div className="text-xs font-bold text-slate-700 mb-2">{activeForm.taskType === 'video' ? '视频提示词' : '画面提示词'}</div>
+              <textarea
+                value={activeForm.prompt}
+                onChange={(e) => updateActiveForm({ prompt: e.target.value })}
+                className="w-full min-h-[140px] resize-none rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 outline-none focus:bg-white focus:border-[#6da768]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="text-xs font-bold text-slate-700">模型参数</div>
+              <div className={`grid gap-2 ${activeForm.taskType === 'image' ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                <SelectField value={activeForm.model} onChange={(next) => updateActiveForm({ model: next })} options={['Seedance2.0', 'Vidu Q2Pro', 'Sora2', 'Nano Banana Pro']} />
+                {activeForm.taskType === 'video' && (
+                  <SelectField value={activeForm.duration} onChange={(next) => updateActiveForm({ duration: next })} options={['5s', '10s', '15s']} icon={<Clock3 className="w-3.5 h-3.5 text-slate-400" />} />
                 )}
-              </div>
-              <div className="px-2 py-1 text-[10px] text-gray-500 bg-white/50">
-                耗时{item === 3 ? '0' : '2'}小时
+                <SelectField value={activeForm.ratio} onChange={(next) => updateActiveForm({ ratio: next })} options={activeForm.taskType === 'image' ? imageRatioOptions : videoRatioOptions} icon={<Film className="w-3.5 h-3.5 text-slate-400" />} />
+                <SelectField value={activeForm.resolution} onChange={(next) => updateActiveForm({ resolution: next })} options={activeForm.taskType === 'image' ? imageResolutionOptions : videoResolutionOptions} icon={<SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />} />
               </div>
             </div>
-          ))}
-        </div>
-      </footer>
-    </>
+          </div>
+
+          <div className="p-4 border-t border-slate-100 bg-white">
+            <button className="w-full rounded-xl py-2.5 bg-[#193d2c] hover:bg-[#2b5f43] text-[#f5f1e4] text-sm font-bold flex items-center justify-center gap-2 transition-colors">
+              <Sparkles className="w-4 h-4 text-[#d8ec6a]" />
+              {activeForm.taskType === 'video' ? '提交生视频任务' : '提交生图任务'}
+            </button>
+          </div>
+        </section>
+
+        {/* 右：历史记录 */}
+        <section className="stage-pane flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-w-0">
+          <div className="h-14 px-5 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
+            <div className="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <History className="w-4 h-4 text-[#6da768]" /> 历史记录
+            </div>
+            <div className="text-xs text-slate-500">{activeShot.title}</div>
+          </div>
+
+          <div className="h-full overflow-y-auto p-5 space-y-4">
+            {visibleHistory.length === 0 && (
+              <div className="h-[320px] rounded-xl border border-dashed border-slate-300 bg-slate-50 flex flex-col items-center justify-center text-slate-400">
+                <PlayCircle className="w-8 h-8 mb-2" />
+                <div className="text-sm font-bold">暂无历史记录</div>
+                <div className="text-xs mt-1">提交任务后会在这里展示生成内容和参数</div>
+              </div>
+            )}
+
+            {visibleHistory.map((item) => (
+              <article key={item.id} className="rounded-2xl border border-slate-200 bg-white p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex items-center gap-1 shrink-0 mt-0.5">
+                    {shots
+                      .filter((s) => !!s.thumb)
+                      .slice(0, 4)
+                      .map((s) => (
+                        <img
+                          key={`${item.id}-${s.id}`}
+                          src={s.thumb}
+                          className="w-8 h-8 rounded-md object-cover border border-slate-200"
+                          referrerPolicy="no-referrer"
+                        />
+                      ))}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm text-slate-700 leading-relaxed line-clamp-2">
+                      {item.prompt}
+                    </div>
+                    <div className="mt-1 text-xs text-slate-500 flex items-center gap-2 flex-wrap">
+                      <span>{item.model}</span>
+                      <span>|</span>
+                      <span>{item.params[0] ?? '--'}</span>
+                      <span>|</span>
+                      <span>{item.createdAt}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-3 rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
+                  <img src={item.preview} className="w-full h-[320px] object-cover" referrerPolicy="no-referrer" />
+                </div>
+
+                <div className="mt-3 flex items-center gap-2 flex-wrap">
+                  <button className="h-8 px-3 rounded-lg border border-slate-200 bg-white text-slate-700 font-semibold text-[13px] hover:bg-slate-50 inline-flex items-center gap-1.5">
+                    <Pencil className="w-3.5 h-3.5" /> 重新编辑
+                  </button>
+                  <button className="h-8 px-3 rounded-lg border border-slate-200 bg-white text-slate-700 font-semibold text-[13px] hover:bg-slate-50 inline-flex items-center gap-1.5">
+                    <RefreshCw className="w-3.5 h-3.5" /> 再次生成
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function SelectField({
+  value,
+  onChange,
+  options,
+  icon,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+  options: string[];
+  icon?: React.ReactNode;
+}) {
+  return (
+    <div className="relative">
+      {icon && <span className="absolute left-2.5 top-1/2 -translate-y-1/2">{icon}</span>}
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`w-full appearance-none rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-700 py-2 pr-8 outline-none focus:border-[#6da768] ${
+          icon ? 'pl-8' : 'pl-3'
+        }`}
+      >
+        {options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+    </div>
   );
 }

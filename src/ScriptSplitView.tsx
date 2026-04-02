@@ -42,13 +42,14 @@ VO：这款现象级全息网游在上线前就火爆全球，可没人知道，
 李泰（平静）：我把房子卖了。`;
 
   return (
-    <div className="flex flex-col h-full bg-[#F8F3E8] overflow-hidden">
+    <div className="flex flex-col h-full bg-[#F8F3E8] overflow-hidden relative">
+      <div className="pointer-events-none absolute right-8 top-24 h-28 w-28 rounded-[42%_58%_51%_49%/62%_38%_62%_38%] bg-[#d8ec6a]/45" />
       {/* Top Navigation Bar */}
-      <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 shadow-sm z-10 relative">
+      <header className="h-16 bg-[#f0ebdd] border-b border-[#6da768]/30 flex items-center justify-between px-6 shrink-0 shadow-sm z-10 relative">
         <div className="flex items-center gap-4 w-1/3">
           <button 
             onClick={onBack}
-            className="text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-2 text-sm font-medium"
+            className="text-[#2b5f43] hover:text-[#193d2c] transition-colors flex items-center gap-2 text-sm font-medium"
           >
             <ArrowLeft size={16} /> 返回项目列表
           </button>
@@ -56,54 +57,54 @@ VO：这款现象级全息网游在上线前就火爆全球，可没人知道，
 
         {/* Progress Steps */}
         <div className="flex-1 flex justify-center">
-          <div className="flex items-center bg-[#2E2638] rounded-full p-1 shadow-inner">
+          <div className="flex items-center bg-[#193d2c] rounded-full p-1 shadow-inner border border-[#6da768]/60">
             <div 
               onClick={onBack}
-              className="flex items-center px-6 py-1.5 text-slate-400 text-sm font-medium cursor-pointer hover:text-slate-300 transition-colors"
+              className="flex items-center px-6 py-1.5 text-[#d7ead6] text-sm font-medium cursor-pointer hover:text-white transition-colors"
             >
               1.上传剧本
             </div>
-            <div className="flex items-center px-6 py-1.5 bg-violet-500 text-white rounded-full text-sm font-bold shadow-sm">
+            <div className="flex items-center px-6 py-1.5 bg-[#d8ec6a] text-[#193d2c] rounded-full text-sm font-bold shadow-sm menu-title">
               2.剧本分集
             </div>
           </div>
         </div>
 
         <div className="flex items-center justify-end gap-4 w-1/3">
-          <div className="flex items-center gap-2 bg-[#3A3147] px-3 py-1.5 rounded-full text-xs text-violet-400 font-mono">
+          <div className="flex items-center gap-2 bg-[#193d2c] px-3 py-1.5 rounded-full text-xs text-[#d8ec6a] font-mono border border-[#6da768]/60">
             🪙 24310
           </div>
         </div>
       </header>
 
       {/* Main Area */}
-      <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full p-6 overflow-hidden">
+      <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full p-6 overflow-hidden relative z-10">
         
         <div className="flex items-center justify-between mb-4 shrink-0">
           <div>
-            <h1 className="text-xl font-bold text-slate-800">分集剧本</h1>
-            <p className="text-sm text-slate-500 mt-1">确认您的剧本，并选择单集剧本进行视频创作</p>
+            <h1 className="text-xl font-bold text-[#193d2c] menu-title">分集剧本</h1>
+            <p className="text-sm text-[#2b5f43]/80 mt-1">确认您的剧本，并选择单集剧本进行视频创作</p>
           </div>
 
           {/* Action Buttons */}
           <div className="flex items-center gap-4 ml-auto">
-            <button className="text-sm text-slate-600 hover:text-violet-600 flex items-center gap-1.5 transition-colors">
+            <button className="text-sm text-[#2b5f43] hover:text-[#193d2c] flex items-center gap-1.5 transition-colors">
               <Edit3 size={16} /> 手动编辑
             </button>
             <div className="relative">
               <button 
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center justify-between w-32 bg-white border border-slate-300 rounded-lg px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+                className="flex items-center justify-between w-32 bg-[#fbf8ef] border border-[#6da768]/40 rounded-lg px-4 py-2 text-sm font-medium text-[#2b5f43] hover:bg-[#f5f1e4] transition-colors shadow-sm"
               >
-                第{selectedEpisode}集 <ChevronDown size={16} className="text-slate-400" />
+                第{selectedEpisode}集 <ChevronDown size={16} className="text-[#2b5f43]/70" />
               </button>
               {isDropdownOpen && (
-                <div className="absolute top-full right-0 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-10 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute top-full right-0 mt-1 w-full bg-[#fbf8ef] border border-[#6da768]/40 rounded-lg shadow-lg py-1 z-10 animate-in fade-in slide-in-from-top-2 duration-200">
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(ep => (
                     <button 
                       key={ep}
                       onClick={() => { setSelectedEpisode(ep); setIsDropdownOpen(false); }}
-                      className={`w-full text-left px-4 py-2 text-sm transition-colors ${selectedEpisode === ep ? 'bg-violet-50 text-violet-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
+                      className={`w-full text-left px-4 py-2 text-sm transition-colors ${selectedEpisode === ep ? 'bg-[#e9f2df] text-[#2b5f43] font-bold' : 'text-[#2b5f43] hover:bg-[#f5f1e4]'}`}
                     >
                       第{ep}集
                     </button>
@@ -113,17 +114,17 @@ VO：这款现象级全息网游在上线前就火爆全球，可没人知道，
             </div>
             <button 
               onClick={onCreateProject}
-              className="px-5 py-2 bg-violet-500 hover:bg-violet-600 text-white rounded-lg text-sm font-bold transition-all shadow-md flex items-center gap-2 active:scale-95"
+              className="px-5 py-2 bg-[#193d2c] hover:bg-[#2b5f43] text-[#f5f1e4] rounded-lg text-sm font-bold transition-all shadow-md flex items-center gap-2 active:scale-95 menu-title"
             >
               创建漫剧项目 <ArrowRight size={16} />
             </button>
           </div>
         </div>
 
-        <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm p-8 overflow-y-auto custom-scrollbar relative">
-          <div className="absolute top-0 left-0 w-1 h-full bg-violet-500 rounded-l-2xl"></div>
+        <div className="flex-1 bg-[#fbf8ef] rounded-2xl border-2 border-[#193d2c]/15 shadow-sm p-8 overflow-y-auto custom-scrollbar relative">
+          <div className="absolute top-0 left-0 w-1.5 h-full bg-[#6da768] rounded-l-2xl"></div>
           
-          <div className="max-w-3xl mx-auto whitespace-pre-wrap text-slate-700 leading-relaxed text-[15px] font-medium">
+          <div className="max-w-3xl mx-auto whitespace-pre-wrap text-[#2b5f43] leading-relaxed text-[15px] font-medium">
             {scriptContent}
           </div>
         </div>

@@ -1,1 +1,263 @@
+@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=ZCOOL+KuaiLe&display=swap");
 @import "tailwindcss";
+
+:root {
+  --paper: #f5f1e4;
+  --paper-warm: #ece6d6;
+  --ink: #193d2c;
+  --ink-soft: #2b5f43;
+  --leaf: #6da768;
+  --leaf-soft: #9fc79b;
+  --lime: #d8ec6a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: "Baloo 2", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 8% 12%, rgba(159, 199, 155, 0.24), transparent 30%),
+    radial-gradient(circle at 90% 84%, rgba(109, 167, 104, 0.24), transparent 30%),
+    var(--paper);
+}
+
+.lifely-theme {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(109, 167, 104, 0.2), transparent 26%),
+    radial-gradient(circle at 95% 10%, rgba(159, 199, 155, 0.26), transparent 30%),
+    radial-gradient(circle at 80% 100%, rgba(109, 167, 104, 0.2), transparent 26%),
+    var(--paper);
+}
+
+.lifely-theme::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(25, 61, 44, 0.06) 0.6px, transparent 0.6px);
+  background-size: 10px 10px;
+  opacity: 0.35;
+}
+
+.lifely-theme h1,
+.lifely-theme h2,
+.lifely-theme h3,
+.lifely-theme .font-black {
+  font-family: "ZCOOL KuaiLe", "Baloo 2", "PingFang SC", sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.lifely-theme button,
+.lifely-theme select,
+.lifely-theme input,
+.lifely-theme textarea {
+  transition: all 0.2s ease;
+}
+
+.lifely-theme button {
+  border: 2px solid rgba(25, 61, 44, 0.14);
+  box-shadow: 3px 3px 0 rgba(25, 61, 44, 0.2);
+}
+
+.lifely-theme button:hover {
+  transform: translateY(-1px);
+}
+
+.lifely-theme [class*="bg-violet-"],
+.lifely-theme [class*="text-violet-"],
+.lifely-theme [class*="border-violet-"] {
+  color: var(--ink-soft) !important;
+  border-color: rgba(109, 167, 104, 0.5) !important;
+}
+
+.lifely-theme [class*="bg-violet-"] {
+  background-color: #b7d5ab !important;
+}
+
+.lifely-theme [class*="bg-[#2E2638]"],
+.lifely-theme [class*="bg-[#3A3147]"],
+.lifely-theme [class*="bg-slate-900"],
+.lifely-theme [class*="bg-slate-800"] {
+  background-color: var(--ink) !important;
+  color: var(--paper) !important;
+}
+
+.lifely-theme [class*="bg-white"] {
+  background-color: #fbf8ef !important;
+}
+
+.lifely-theme [class*="border-slate-"] {
+  border-color: rgba(25, 61, 44, 0.12) !important;
+}
+
+.lifely-theme [class*="border-gray-"] {
+  border-color: rgba(25, 61, 44, 0.12) !important;
+}
+
+.lifely-theme [class*="text-slate-"],
+.lifely-theme [class*="text-gray-"] {
+  color: var(--ink-soft) !important;
+}
+
+.lifely-theme [class*="bg-gray-50"] {
+  background-color: #f5f1e4 !important;
+}
+
+.lifely-theme [class*="bg-gray-100"] {
+  background-color: #e9f2df !important;
+}
+
+.lifely-theme [class*="bg-gray-200"] {
+  background-color: #d7ead6 !important;
+}
+
+.lifely-theme [class*="bg-gray-800"],
+.lifely-theme [class*="bg-gray-900"] {
+  background-color: var(--ink) !important;
+  color: var(--paper) !important;
+}
+
+.lifely-theme [class*="hover:bg-gray-50"]:hover {
+  background-color: #f0ebdd !important;
+}
+
+.lifely-theme [class*="hover:bg-gray-100"]:hover,
+.lifely-theme [class*="hover:bg-gray-200"]:hover {
+  background-color: #e9f2df !important;
+}
+
+.lifely-theme [class*="focus:ring-violet-"],
+.lifely-theme [class*="focus:ring-blue-"] {
+  --tw-ring-color: rgba(109, 167, 104, 0.45) !important;
+}
+
+.lifely-theme [class*="rounded-2xl"],
+.lifely-theme [class*="rounded-xl"] {
+  border-radius: 22px !important;
+}
+
+.poster-card {
+  border: 2px solid rgba(25, 61, 44, 0.18);
+  box-shadow: 8px 8px 0 rgba(25, 61, 44, 0.2);
+}
+
+.menu-title {
+  font-family: "ZCOOL KuaiLe", "Baloo 2", "PingFang SC", sans-serif;
+  letter-spacing: 0.04em;
+  line-height: 0.95;
+}
+
+.stage-shell {
+  position: relative;
+}
+
+.stage-shell::after {
+  content: none;
+}
+
+.stage-shell::before {
+  content: none;
+}
+
+.stage-pane {
+  background: #fbf8ef !important;
+  border: 2px solid rgba(25, 61, 44, 0.14) !important;
+  box-shadow: 6px 6px 0 rgba(25, 61, 44, 0.12) !important;
+}
+
+.stage-title {
+  font-family: "ZCOOL KuaiLe", "Baloo 2", "PingFang SC", sans-serif;
+  letter-spacing: 0.04em;
+  color: #193d2c !important;
+}
+
+.stage-primary {
+  background: #193d2c !important;
+  color: #f5f1e4 !important;
+  border: 2px solid rgba(109, 167, 104, 0.5) !important;
+}
+
+.stage-primary:hover {
+  background: #2b5f43 !important;
+}
+
+.stage-secondary {
+  background: #e9f2df !important;
+  color: #2b5f43 !important;
+  border: 2px solid rgba(109, 167, 104, 0.4) !important;
+}
+
+.stage-chip {
+  background: #e9f2df !important;
+  border: 1px solid rgba(109, 167, 104, 0.4) !important;
+  color: #2b5f43 !important;
+  font-weight: 700;
+}
+
+.doodle-arrow {
+  position: relative;
+}
+
+.doodle-arrow::after {
+  content: "↗";
+  position: absolute;
+  right: -18px;
+  top: -10px;
+  font-size: 14px;
+  color: #2b5f43;
+  transform: rotate(10deg);
+  opacity: 0.8;
+}
+
+.sticky-note {
+  background: #d8ec6a;
+  color: #193d2c;
+  border: 2px solid rgba(25, 61, 44, 0.12);
+  border-radius: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 3px 3px 0 rgba(25, 61, 44, 0.18);
+}
+
+.ink-title {
+  text-shadow: 1px 1px 0 rgba(25, 61, 44, 0.12);
+}
+
+.production-sync {
+  font-size: 11px;
+  color: #2b5f43;
+}
+
+.production-sync [class*="text-xs"] {
+  font-size: 11px !important;
+  line-height: 1.4 !important;
+}
+
+.production-sync [class*="text-[10px]"] {
+  font-size: 10px !important;
+  line-height: 1.35 !important;
+  font-weight: 700 !important;
+}
+
+.production-sync [class*="font-medium"] {
+  font-weight: 700 !important;
+}
+
+.production-sync textarea,
+.production-sync input,
+.production-sync select {
+  font-size: 11px !important;
+  color: #2b5f43 !important;
+}

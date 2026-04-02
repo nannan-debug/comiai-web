@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Play, Pause, SkipBack, SkipForward, MessageSquare, 
   Share2, CheckCircle2, Clock, ChevronRight, ChevronLeft,
@@ -31,11 +31,11 @@ export default function VideoPreview() {
 
   // 1. 全局素材库
   const assetLibrary = [
-    { id: 'v1', sbId: 1, name: '电视塔_全景.mp4', type: '视频', duration: '00:09', isFixed: true, thumb: 'bg-orange-100' },
-    { id: 'v2', sbId: 1, name: '电视塔_特写.mp4', type: '视频', duration: '00:04', isFixed: false, thumb: 'bg-orange-50' },
+    { id: 'v1', sbId: 1, name: '电视塔_全景.mp4', type: '视频', duration: '00:09', isFixed: true, thumb: 'bg-[#d7ead6]' },
+    { id: 'v2', sbId: 1, name: '电视塔_特写.mp4', type: '视频', duration: '00:04', isFixed: false, thumb: 'bg-[#e9f2df]' },
     { id: 'p1', sbId: 1, name: '背景草稿.jpg', type: '图片', duration: '--', isFixed: true, thumb: 'bg-slate-200' },
-    { id: 'v3', sbId: 2, name: '主角_特写_祈祷.mp4', type: '视频', duration: '00:05', isFixed: true, thumb: 'bg-violet-100' },
-    { id: 'v4', sbId: 3, name: '废墟_全景.mp4', type: '视频', duration: '00:06', isFixed: true, thumb: 'bg-blue-100' },
+    { id: 'v3', sbId: 2, name: '主角_特写_祈祷.mp4', type: '视频', duration: '00:05', isFixed: true, thumb: 'bg-[#d7ead6]' },
+    { id: 'v4', sbId: 3, name: '废墟_全景.mp4', type: '视频', duration: '00:06', isFixed: true, thumb: 'bg-[#e9f2df]' },
     { id: 'p2', sbId: 3, name: '概念图.jpg', type: '图片', duration: '--', isFixed: false, thumb: 'bg-slate-300' },
   ];
 
@@ -43,8 +43,8 @@ export default function VideoPreview() {
   const [versionData, setVersionData] = useState({
     v1: {
       tracks: [
-        { id: 'clip_1', assetId: 'v1', label: '电视塔_全景.mp4', duration: '3.0s', thumb: 'bg-orange-100' },
-        { id: 'clip_2', assetId: 'v3', label: '主角_特写_祈祷.mp4', duration: '5.2s', thumb: 'bg-violet-100' },
+        { id: 'clip_1', assetId: 'v1', label: '电视塔_全景.mp4', duration: '3.0s', thumb: 'bg-[#d7ead6]' },
+        { id: 'clip_2', assetId: 'v3', label: '主角_特写_祈祷.mp4', duration: '5.2s', thumb: 'bg-[#d7ead6]' },
       ],
       comments: [
         { id: 101, time: 24, author: '编导-张三', text: 'V1：这里建议加个特写转场。', status: 'resolved', hasAnnotation: false },
@@ -52,9 +52,9 @@ export default function VideoPreview() {
     },
     v2: {
       tracks: [
-        { id: 'clip_3', assetId: 'v4', label: '废墟_全景.mp4', duration: '4.0s', thumb: 'bg-blue-100' },
-        { id: 'clip_4', assetId: 'v3', label: '主角_特写_祈祷.mp4', duration: '5.2s', thumb: 'bg-violet-100' },
-        { id: 'clip_5', assetId: 'v1', label: '电视塔_全景.mp4', duration: '3.5s', thumb: 'bg-orange-100' },
+        { id: 'clip_3', assetId: 'v4', label: '废墟_全景.mp4', duration: '4.0s', thumb: 'bg-[#e9f2df]' },
+        { id: 'clip_4', assetId: 'v3', label: '主角_特写_祈祷.mp4', duration: '5.2s', thumb: 'bg-[#d7ead6]' },
+        { id: 'clip_5', assetId: 'v1', label: '电视塔_全景.mp4', duration: '3.5s', thumb: 'bg-[#d7ead6]' },
       ],
       comments: [
         { id: 102, time: 45, author: '编导-张三', text: '此处表情过于夸张，建议微调。', status: 'pending', hasAnnotation: true },
@@ -99,14 +99,17 @@ export default function VideoPreview() {
   return (
     <>
       {/* 2. 主内容区 */}
-      <div className="flex-1 flex overflow-hidden p-3 gap-3 pb-0">
+      <div className="stage-shell flex-1 flex overflow-hidden p-3 gap-3 pb-0">
         
         {/* 左侧：资产池 (白色主题) */}
-        <aside className={`bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden transition-all duration-300 ${pageMode === 'edit' ? 'w-72 opacity-100' : 'w-0 opacity-0 invisible'}`}>
+        <aside className={`stage-pane bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden transition-all duration-300 ${pageMode === 'edit' ? 'w-72 opacity-100' : 'w-0 opacity-0 invisible'}`}>
           <div className="p-4 flex flex-col gap-4">
             <div className="flex items-center justify-between text-slate-700">
-              <span className="font-bold text-base">剧集资产</span>
-              <button className="text-slate-400 hover:text-violet-500"><List size={18}/></button>
+              <div className="flex items-center gap-2">
+                <span className="stage-title ink-title font-bold text-base">剧集资产</span>
+                <span className="sticky-note px-1.5 py-0.5 text-[8px]">Asset</span>
+              </div>
+              <button className="text-slate-400 hover:text-[#6da768]"><List size={18}/></button>
             </div>
 
             <div className="flex items-center gap-2">
@@ -117,13 +120,13 @@ export default function VideoPreview() {
                 {showTypeMenu && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl z-[70] overflow-hidden">
                     {['全部', '图片', '视频'].map(t => (
-                      <button key={t} onClick={() => {setAssetType(t); setShowTypeMenu(false);}} className={`w-full text-left px-4 py-2 text-xs hover:bg-slate-50 ${assetType === t ? 'text-violet-600 font-bold bg-violet-50' : 'text-slate-500'}`}>{t}</button>
+                      <button key={t} onClick={() => {setAssetType(t); setShowTypeMenu(false);}} className={`w-full text-left px-4 py-2 text-xs hover:bg-slate-50 ${assetType === t ? 'text-[#2b5f43] font-bold bg-[#e9f2df]' : 'text-slate-500'}`}>{t}</button>
                     ))}
                   </div>
                 )}
               </div>
               <label className="flex items-center gap-2 cursor-pointer bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
-                <div onClick={() => setIsFixedOnly(!isFixedOnly)} className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isFixedOnly ? 'bg-violet-500 border-violet-500' : 'border-slate-300 bg-white'}`}>
+                <div onClick={() => setIsFixedOnly(!isFixedOnly)} className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isFixedOnly ? 'bg-[#6da768] border-[#6da768]' : 'border-slate-300 bg-white'}`}>
                   {isFixedOnly && <Check size={12} className="text-white font-bold" />}
                 </div>
                 <span className="text-[11px] font-bold text-slate-500">已定稿</span>
@@ -135,7 +138,7 @@ export default function VideoPreview() {
                 <button 
                   key={id} 
                   onClick={() => setActiveSb(id)}
-                  className={`whitespace-nowrap pb-2 border-b-2 transition-all ${activeSb === id ? 'text-violet-500 border-violet-500' : 'border-transparent hover:text-slate-600'}`}
+                  className={`whitespace-nowrap pb-2 border-b-2 transition-all ${activeSb === id ? 'text-[#6da768] border-[#6da768]' : 'border-transparent hover:text-slate-600'}`}
                 >
                   分镜 {id}
                 </button>
@@ -146,12 +149,12 @@ export default function VideoPreview() {
 
           <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 gap-3 content-start bg-slate-50/30">
             {filteredAssets.map((asset) => (
-              <div key={asset.id} className="group relative bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-violet-400 hover:shadow-md transition-all cursor-pointer">
+              <div key={asset.id} className="group relative bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-[#6da768] hover:shadow-md transition-all cursor-pointer">
                 <div className={`aspect-[9/16] w-full ${asset.thumb} opacity-80 flex items-center justify-center relative`}>
-                  {asset.isFixed && <span className="absolute top-2 left-2 bg-violet-500 text-white text-[9px] px-1.5 py-0.5 rounded font-bold shadow-sm">已定稿</span>}
+                  {asset.isFixed && <span className="absolute top-2 left-2 bg-[#6da768] text-white text-[9px] px-1.5 py-0.5 rounded font-bold shadow-sm">已定稿</span>}
                   {asset.type === '视频' && <span className="absolute bottom-2 right-2 bg-black/50 text-white text-[9px] px-1.5 rounded font-mono font-bold">{asset.duration}</span>}
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/20 transition-opacity">
-                    <button className="bg-white p-2 rounded-full text-violet-500 shadow-xl hover:scale-110 active:scale-95 transition-transform"><Plus size={18}/></button>
+                    <button className="bg-white p-2 rounded-full text-[#6da768] shadow-xl hover:scale-110 active:scale-95 transition-transform"><Plus size={18}/></button>
                   </div>
                 </div>
                 <div className="p-2 text-[10px] text-slate-500 font-bold truncate">{asset.name}</div>
@@ -161,11 +164,11 @@ export default function VideoPreview() {
         </aside>
 
         {/* 中间：播放器区域 */}
-        <main className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden relative">
+        <main className="stage-pane flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden relative">
           <div className="h-10 border-b border-slate-100 flex items-center justify-between px-4 bg-slate-50/30">
             <div className="flex bg-slate-200/50 rounded-xl p-0.5 shadow-inner">
-              <button onClick={() => setPageMode('edit')} className={`px-5 py-1 rounded-lg text-[11px] font-bold transition-all ${pageMode === 'edit' ? 'bg-white shadow-sm text-violet-600' : 'text-slate-500'}`}>🚧 粗剪模式</button>
-              <button onClick={() => setPageMode('review')} className={`px-5 py-1 rounded-lg text-[11px] font-bold transition-all ${pageMode === 'review' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500'}`}>🎬 审阅模式</button>
+              <button onClick={() => setPageMode('edit')} className={`px-5 py-1 rounded-lg text-[11px] font-bold transition-all ${pageMode === 'edit' ? 'bg-white shadow-sm text-[#2b5f43]' : 'text-slate-500'}`}>🚧 粗剪模式</button>
+              <button onClick={() => setPageMode('review')} className={`px-5 py-1 rounded-lg text-[11px] font-bold transition-all ${pageMode === 'review' ? 'bg-white shadow-sm text-[#2b5f43]' : 'text-slate-500'}`}>🎬 审阅模式</button>
             </div>
             <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 bg-white px-2 py-1 rounded border border-slate-100 uppercase tracking-widest">
                {activeVersion} 版本状态：{pageMode === 'edit' ? '正在粗剪' : '审阅进行中'}
@@ -196,17 +199,17 @@ export default function VideoPreview() {
               </button>
             </div>
             <div className="flex gap-4">
-              <button className="p-1.5 text-slate-400 hover:text-violet-500 transition-colors"><Volume2 size={16}/></button>
-              <button className="p-1.5 text-slate-400 hover:text-violet-500 transition-colors"><Share2 size={16}/></button>
+              <button className="p-1.5 text-slate-400 hover:text-[#6da768] transition-colors"><Volume2 size={16}/></button>
+              <button className="p-1.5 text-slate-400 hover:text-[#6da768] transition-colors"><Share2 size={16}/></button>
             </div>
           </div>
         </main>
 
         {/* 右侧：审阅面板 */}
-        <aside className="w-72 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+        <aside className="stage-pane w-72 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
           <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center text-slate-700">
-            <h3 className="font-bold flex items-center gap-2"><MessageSquare size={16} className="text-violet-500" /> 审阅反馈</h3>
-            <span className="text-[10px] bg-violet-100 text-violet-600 px-2 py-0.5 rounded-full font-bold">{currentVersion.comments.length}</span>
+            <h3 className="stage-title ink-title font-bold flex items-center gap-2"><MessageSquare size={16} className="text-[#6da768]" /> 审阅反馈</h3>
+            <span className="text-[10px] bg-[#d7ead6] text-[#2b5f43] px-2 py-0.5 rounded-full font-bold">{currentVersion.comments.length}</span>
           </div>
 
           <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-slate-50/30">
@@ -214,14 +217,14 @@ export default function VideoPreview() {
               <div 
                 key={c.id} 
                 onClick={() => handleSeek(c.time)}
-                className={`p-3 bg-white border rounded-xl transition-all cursor-pointer shadow-sm hover:border-violet-300 ${Math.abs(currentTime - c.time) < 2 ? 'border-violet-500 bg-violet-50 ring-2 ring-violet-500/10' : 'border-slate-100'}`}
+                className={`p-3 bg-white border rounded-xl transition-all cursor-pointer shadow-sm hover:border-[#9fc79b] ${Math.abs(currentTime - c.time) < 2 ? 'border-[#6da768] bg-[#e9f2df] ring-2 ring-[#6da768]/20' : 'border-slate-100'}`}
               >
                 <div className="flex justify-between items-start mb-1.5">
                   <div className="flex items-center gap-2">
                     <span className="text-[11px] font-bold text-slate-700">{c.author}</span>
-                    <span className="text-[10px] text-violet-500 font-mono font-bold bg-violet-50 px-1.5 py-0.5 rounded flex items-center gap-1">
+                    <span className="text-[10px] text-[#6da768] font-mono font-bold bg-[#e9f2df] px-1.5 py-0.5 rounded flex items-center gap-1">
                        {formatTime(c.time)}
-                       {c.hasAnnotation && <Pencil size={10} className="text-violet-600 animate-pulse"/>}
+                       {c.hasAnnotation && <Pencil size={10} className="text-[#2b5f43] animate-pulse"/>}
                     </span>
                   </div>
                   <span className="text-[9px] text-slate-400 italic">来自 V1</span>
@@ -238,11 +241,11 @@ export default function VideoPreview() {
                <textarea 
                  placeholder="在审阅模式下输入建议..." 
                  disabled={pageMode === 'edit'}
-                 className={`w-full p-3 pr-20 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-violet-500/20 outline-none resize-none bg-white shadow-inner transition-all ${pageMode === 'edit' ? 'bg-slate-50 cursor-not-allowed opacity-60' : ''}`}
+                 className={`w-full p-3 pr-20 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#6da768]/20 outline-none resize-none bg-white shadow-inner transition-all ${pageMode === 'edit' ? 'bg-slate-50 cursor-not-allowed opacity-60' : ''}`}
                  rows="3"
                ></textarea>
                <div className="absolute right-2 bottom-2 flex items-center gap-1">
-                 <button className="p-1.5 text-slate-400 hover:text-violet-500"><ImageIcon size={16}/></button>
+                 <button className="p-1.5 text-slate-400 hover:text-[#6da768]"><ImageIcon size={16}/></button>
                  <button className="ml-1 bg-slate-800 text-white p-2 rounded-lg shadow-md hover:bg-slate-900 transition-all"><Send size={14}/></button>
                </div>
              </div>
@@ -251,7 +254,7 @@ export default function VideoPreview() {
       </div>
 
       {/* 3. 底部时间轴区 */}
-      <footer className="h-44 bg-white border-t border-slate-200 flex flex-col shrink-0 p-3 pt-0 z-10 shadow-inner">
+      <footer className="stage-pane h-44 bg-white border-t border-slate-200 flex flex-col shrink-0 p-3 pt-0 z-10 shadow-inner">
         <div className="h-12 flex items-center justify-between px-2">
            <div className="flex items-center gap-4">
              {/* 版本快照切换 */}
@@ -262,7 +265,7 @@ export default function VideoPreview() {
                {showVersionMenu && (
                  <div className="absolute bottom-full left-0 mb-3 w-52 bg-white border border-slate-200 rounded-2xl shadow-2xl p-2 z-[60]">
                    {['v2', 'v1'].map(v => (
-                     <button key={v} onClick={() => { setActiveVersion(v); setShowVersionMenu(false); }} className={`w-full text-left p-2.5 rounded-xl text-xs font-bold flex items-center justify-between ${activeVersion === v ? 'bg-violet-50 text-violet-600' : 'hover:bg-slate-50 text-slate-600'}`}>
+                     <button key={v} onClick={() => { setActiveVersion(v); setShowVersionMenu(false); }} className={`w-full text-left p-2.5 rounded-xl text-xs font-bold flex items-center justify-between ${activeVersion === v ? 'bg-[#e9f2df] text-[#2b5f43]' : 'hover:bg-slate-50 text-slate-600'}`}>
                        <span className="uppercase">{v} 分支预览</span> {activeVersion === v && <Check size={14}/>}
                      </button>
                    ))}
@@ -279,7 +282,7 @@ export default function VideoPreview() {
              <div className="h-4 w-px bg-slate-200 mx-1"></div>
              <div className="flex items-center gap-2 bg-slate-50 px-3 py-1 rounded-full border border-slate-100 shadow-inner">
                <button className="text-[10px] font-bold text-slate-300 hover:text-slate-600">－</button>
-               <div className="w-32 h-1 bg-slate-200 rounded-full"><div className="w-1/2 h-full bg-violet-500 rounded-full shadow-sm"></div></div>
+               <div className="w-32 h-1 bg-slate-200 rounded-full"><div className="w-1/2 h-full bg-[#6da768] rounded-full shadow-sm"></div></div>
                <button className="text-[10px] font-bold text-slate-300 hover:text-slate-600">＋</button>
              </div>
            </div>
@@ -288,15 +291,15 @@ export default function VideoPreview() {
              
              {/* 粗剪模式下的提交审阅按钮 */}
              {pageMode === 'edit' && (
-               <button 
+               <button
                 onClick={handleSubmitReview}
-                className="px-5 py-2 bg-blue-600 text-white rounded-xl text-[11px] font-bold flex items-center gap-2 shadow-md hover:bg-blue-700 transition-all active:scale-95"
+                className="stage-primary doodle-arrow px-5 py-2 rounded-xl text-[11px] font-bold flex items-center gap-2 shadow-md transition-all active:scale-95"
                >
                 <Send size={14}/> 提交审阅
                </button>
              )}
              
-             <button className="px-5 py-2 bg-violet-500 text-white rounded-xl text-[11px] font-bold flex items-center gap-2 shadow-md hover:bg-violet-600">导出成片</button>
+             <button className="stage-primary doodle-arrow px-5 py-2 rounded-xl text-[11px] font-bold flex items-center gap-2 shadow-md">导出成片</button>
            </div>
         </div>
 
@@ -309,27 +312,27 @@ export default function VideoPreview() {
              {/* 评论锚点 */}
              {currentVersion.comments.map(c => (
                 <div key={`marker-${c.id}`} onClick={() => handleSeek(c.time)} className="absolute top-1/2 -translate-y-1/2 z-30 cursor-pointer group flex flex-col items-center transition-all" style={{ left: `${(c.time / duration) * 100}%` }}>
-                  <div className={`w-3.5 h-3.5 rounded-full border-2 border-white shadow-lg flex items-center justify-center ${c.hasAnnotation ? 'bg-violet-400 ring-2 ring-violet-500/20' : (c.status === 'resolved' ? 'bg-slate-300' : 'bg-red-400')}`}>
+                  <div className={`w-3.5 h-3.5 rounded-full border-2 border-white shadow-lg flex items-center justify-center ${c.hasAnnotation ? 'bg-[#6da768] ring-2 ring-[#6da768]/20' : (c.status === 'resolved' ? 'bg-slate-300' : 'bg-red-400')}`}>
                     {c.hasAnnotation && <Pencil size={6} className="text-white"/>}
                   </div>
                 </div>
              ))}
 
              {currentVersion.tracks.map((clip, i) => (
-                <div key={clip.id} className={`h-[85%] min-w-[160px] rounded-xl border-2 transition-all relative group flex flex-col overflow-hidden cursor-pointer ${Math.abs(currentTime - (i * 60)) < 30 ? 'border-violet-500 bg-white shadow-lg z-10' : 'border-white bg-white shadow-sm'}`}>
+                <div key={clip.id} className={`h-[85%] min-w-[160px] rounded-xl border-2 transition-all relative group flex flex-col overflow-hidden cursor-pointer ${Math.abs(currentTime - (i * 60)) < 30 ? 'border-[#6da768] bg-white shadow-lg z-10' : 'border-white bg-white shadow-sm'}`}>
                   <div className={`absolute inset-0 opacity-15 ${clip.thumb || 'bg-slate-200'}`}></div>
                   <div className="relative z-10 p-2.5 flex flex-col h-full justify-between">
                       <span className="text-[10px] font-bold text-slate-700 truncate">{clip.label}</span>
                       <span className="text-[10px] font-mono font-bold text-slate-400 bg-white/60 px-1.5 self-end rounded shadow-sm">片段 #{i+1}</span>
                   </div>
-                  <div className="absolute inset-y-0 left-0 w-2 bg-violet-500 opacity-0 group-hover:opacity-100 cursor-col-resize"></div>
-                  <div className="absolute inset-y-0 right-0 w-2 bg-violet-500 opacity-0 group-hover:opacity-100 cursor-col-resize"></div>
+                  <div className="absolute inset-y-0 left-0 w-2 bg-[#6da768] opacity-0 group-hover:opacity-100 cursor-col-resize"></div>
+                  <div className="absolute inset-y-0 right-0 w-2 bg-[#6da768] opacity-0 group-hover:opacity-100 cursor-col-resize"></div>
                 </div>
              ))}
            </div>
            {/* 播放指针 */}
-           <div className="absolute top-0 bottom-0 w-0.5 bg-violet-500 z-40 shadow-[0_0_15px_rgba(16,185,129,0.6)] pointer-events-none transition-all duration-100" style={{ left: `${(currentTime / duration) * 100}%` }}>
-             <div className="w-4 h-4 bg-violet-500 rounded-md absolute -top-2 -left-[7px] rotate-45 border-2 border-white shadow-xl"></div>
+           <div className="absolute top-0 bottom-0 w-0.5 bg-[#6da768] z-40 shadow-[0_0_15px_rgba(16,185,129,0.6)] pointer-events-none transition-all duration-100" style={{ left: `${(currentTime / duration) * 100}%` }}>
+             <div className="w-4 h-4 bg-[#6da768] rounded-md absolute -top-2 -left-[7px] rotate-45 border-2 border-white shadow-xl"></div>
            </div>
         </div>
       </footer>
@@ -339,13 +342,13 @@ export default function VideoPreview() {
         <div className="fixed inset-0 bg-[#2E2638]/80 backdrop-blur-md z-[200] flex items-center justify-center animate-in fade-in duration-300">
            <div className="bg-white p-10 rounded-[32px] shadow-2xl flex flex-col items-center gap-6 animate-in zoom-in-95 duration-500">
              <div className="relative">
-               <div className="w-20 h-20 bg-violet-100 rounded-full flex items-center justify-center">
-                 <CheckCircle2 size={48} className="text-violet-500 animate-in zoom-in-50 duration-500"/>
+               <div className="w-20 h-20 bg-[#d7ead6] rounded-full flex items-center justify-center">
+                 <CheckCircle2 size={48} className="text-[#6da768] animate-in zoom-in-50 duration-500"/>
                </div>
                <div className="absolute -top-1 -right-1">
                  <span className="flex h-4 w-4">
-                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
-                   <span className="relative inline-flex rounded-full h-4 w-4 bg-violet-500"></span>
+                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#6da768] opacity-75"></span>
+                   <span className="relative inline-flex rounded-full h-4 w-4 bg-[#6da768]"></span>
                  </span>
                </div>
              </div>
@@ -364,7 +367,7 @@ export default function VideoPreview() {
       {isSyncing && (
         <div className="fixed inset-0 bg-white/40 backdrop-blur-sm z-[200] flex items-center justify-center">
            <div className="bg-slate-900 text-white px-8 py-5 rounded-3xl shadow-2xl flex flex-col items-center gap-4 animate-in zoom-in-95 duration-200">
-             <RefreshCcw size={32} className="animate-spin text-violet-400"/>
+             <RefreshCcw size={32} className="animate-spin text-[#d8ec6a]"/>
              <span className="text-base font-bold tracking-widest">同步 Step 3 分镜定稿...</span>
            </div>
         </div>
