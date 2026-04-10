@@ -1,7 +1,19 @@
 import React, { useState } from 'react';
 import { Search, Edit, Trash2, User, Home, PlaySquare, Users, FileText, FolderPlus, X, Image as ImageIcon, ChevronDown, PenTool, BarChart2, ClipboardCheck } from 'lucide-react';
+import AccountCenter from './AccountCenter';
 
-export default function ProjectManagement({ onCreateProject, onEnterProject, onGoHome }: { onCreateProject: () => void, onEnterProject: () => void, onGoHome: () => void }) {
+interface Props {
+  onCreateProject: () => void;
+  onEnterProject: () => void;
+  onGoHome: () => void;
+  username: string;
+  credits: number;
+  onLogout: () => void;
+  onCreditsChange: (n: number) => void;
+  onUsernameChange: (n: string) => void;
+}
+
+export default function ProjectManagement({ onCreateProject, onEnterProject, onGoHome, username, credits, onLogout, onCreditsChange, onUsernameChange }: Props) {
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [selectedOrientation, setSelectedOrientation] = useState<'16:9' | '9:16'>('16:9');
@@ -130,11 +142,15 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
         {/* Right Nav */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 bg-[#e9f2df] px-4 py-1.5 rounded-full text-xs text-[#2b5f43] font-mono border border-[#6da768]/45">
-            5092
+            🪙 {credits.toLocaleString()}
           </div>
-          <div className="w-10 h-10 rounded-full bg-[#f3f8f3] flex items-center justify-center text-[#2b5f43] border-2 border-[#6da768]/45">
-            <User size={18} />
-          </div>
+          <AccountCenter
+            username={username}
+            credits={credits}
+            onLogout={onLogout}
+            onCreditsChange={onCreditsChange}
+            onUsernameChange={onUsernameChange}
+          />
         </div>
       </header>
 
