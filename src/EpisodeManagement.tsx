@@ -20,6 +20,7 @@ import {
   MapPin,
   Package,
 } from 'lucide-react';
+import AccountCenter from './AccountCenter';
 
 export default function EpisodeManagement({
   onUpload,
@@ -29,6 +30,11 @@ export default function EpisodeManagement({
   onGoScript,
   projectName,
   onProjectNameChange,
+  username,
+  credits,
+  onLogout,
+  onCreditsChange,
+  onUsernameChange,
 }: {
   onUpload: () => void;
   onEnterEpisode: (episodeName?: string) => void;
@@ -37,6 +43,11 @@ export default function EpisodeManagement({
   onGoScript: () => void;
   projectName: string;
   onProjectNameChange: (name: string) => void;
+  username: string;
+  credits: number;
+  onLogout: () => void;
+  onCreditsChange: (n: number) => void;
+  onUsernameChange: (n: string) => void;
 }) {
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
@@ -45,156 +56,18 @@ export default function EpisodeManagement({
   const [activeTab, setActiveTab] = useState<'overview' | 'episode' | 'role' | 'scene' | 'prop'>('overview');
   const [projectMeta, setProjectMeta] = useState({
     name: projectName,
-    style: '国风写实',
-    aspectRatio: '9:16',
-    summary: '复仇题材短剧，主线围绕婚变后的身份反转与情感对抗。',
-    cover: 'https://images.unsplash.com/photo-1618331835717-801e976710b2?w=500&q=80',
+    style: '',
+    aspectRatio: '',
+    summary: '',
+    cover: '',
   });
   const [projectDraft, setProjectDraft] = useState(projectMeta);
-  
-  // Mock data based on reference image
-  const episodes = [
-    { 
-      id: 1, 
-      title: '第1集', 
-      epNumber: '1 集',
-      cover: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?w=500&q=80', 
-      stats: { img: 1016, vid: 274, del: 443, token: 122675, time: '0d00h00m' }, 
-      tags: ['若曦', '婉清', '知夏'], 
-      date: '2026-03-11 17:23', 
-      status: '未完成' 
-    },
-    { 
-      id: 2, 
-      title: '第2集', 
-      epNumber: '2 集',
-      cover: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80', 
-      stats: { img: 892, vid: 429, del: 73, token: 183773, time: '47d02h59m' }, 
-      tags: ['语桐', '星冉', '初禾'], 
-      date: '2026-01-23 14:24', 
-      status: '未完成' 
-    },
-    { 
-      id: 3, 
-      title: '第3集', 
-      epNumber: '3 集',
-      cover: 'https://images.unsplash.com/photo-1618331835717-801e976710b2?w=500&q=80', 
-      stats: { img: 0, vid: 0, del: 0, token: 0, time: '47d02h08m' }, 
-      tags: [], 
-      date: '2026-01-23 15:14', 
-      status: '未完成' 
-    },
-    { 
-      id: 4, 
-      title: '第四集', 
-      epNumber: '4 集',
-      cover: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=500&q=80', 
-      stats: { img: 420, vid: 332, del: 154, token: 83720, time: '0d00h00m' }, 
-      tags: ['慕晚', '书瑶', '南栀', '以宁', '昭月'], 
-      date: '2026-03-11 17:23', 
-      status: '未完成' 
-    },
-    { 
-      id: 5, 
-      title: '第五集', 
-      epNumber: '5 集',
-      cover: 'https://images.unsplash.com/photo-1504333638930-c8787321efa0?w=500&q=80', 
-      stats: { img: 552, vid: 398, del: 67, token: 133770, time: '0d00h00m' }, 
-      tags: ['婧妍', '清欢', '知意', '允棠', '若初'], 
-      date: '2026-03-11 17:23', 
-      status: '未完成' 
-    },
-  ];
 
-  const roleAssets = [
-    {
-      id: 1,
-      name: '若曦',
-      subtitle: '女主角，清冷克制，现代职场穿搭',
-      cover: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80',
-      tags: ['女主', '都市', '职场'],
-      usage: '已绑定 12 集',
-      updatedAt: '2026-03-12 10:21',
-    },
-    {
-      id: 2,
-      name: '婉清',
-      subtitle: '闺蜜角色，温柔亲和，浅色系服装',
-      cover: 'https://images.unsplash.com/photo-1521119989659-a83eee488004?w=500&q=80',
-      tags: ['闺蜜', '现代', '辅助角色'],
-      usage: '已绑定 8 集',
-      updatedAt: '2026-03-11 18:42',
-    },
-    {
-      id: 3,
-      name: '顾沉舟',
-      subtitle: '男主角，沉稳克制，深色正装',
-      cover: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&q=80',
-      tags: ['男主', '商业', '冷峻'],
-      usage: '已绑定 10 集',
-      updatedAt: '2026-03-10 09:35',
-    },
-  ];
-
-  const sceneAssets = [
-    {
-      id: 1,
-      name: '顶层会议室',
-      subtitle: '落地窗城市夜景，冷色照明，高对比',
-      cover: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=500&q=80',
-      tags: ['室内', '夜景', '商务'],
-      usage: '已绑定 9 集',
-      updatedAt: '2026-03-09 22:17',
-    },
-    {
-      id: 2,
-      name: '江边步道',
-      subtitle: '黄昏逆光，微风，情绪对话场景',
-      cover: 'https://images.unsplash.com/photo-1505765050516-f72dcac9c60d?w=500&q=80',
-      tags: ['室外', '黄昏', '情绪戏'],
-      usage: '已绑定 6 集',
-      updatedAt: '2026-03-11 14:03',
-    },
-    {
-      id: 3,
-      name: '公寓客厅',
-      subtitle: '暖光生活氛围，居家情节高频场景',
-      cover: 'https://images.unsplash.com/photo-1493666438817-866a91353ca9?w=500&q=80',
-      tags: ['室内', '生活流', '日常'],
-      usage: '已绑定 11 集',
-      updatedAt: '2026-03-12 08:56',
-    },
-  ];
-
-  const propAssets = [
-    {
-      id: 1,
-      name: '订婚戒指',
-      subtitle: '银色戒托 + 小钻，关键剧情道具',
-      cover: 'https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=500&q=80',
-      tags: ['饰品', '关键道具', '近景'],
-      usage: '已绑定 7 集',
-      updatedAt: '2026-03-08 20:11',
-    },
-    {
-      id: 2,
-      name: '录音笔',
-      subtitle: '黑色磨砂外壳，信息反转道具',
-      cover: 'https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?w=500&q=80',
-      tags: ['电子', '证据链', '剧情推进'],
-      usage: '已绑定 5 集',
-      updatedAt: '2026-03-07 16:27',
-    },
-    {
-      id: 3,
-      name: '项目合同',
-      subtitle: 'A4纸质合同，签署镜头高频使用',
-      cover: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=500&q=80',
-      tags: ['文档', '商务', '特写'],
-      usage: '已绑定 13 集',
-      updatedAt: '2026-03-12 11:38',
-    },
-  ];
+  // 真实数据（初始为空，后续从后端加载）
+  const episodes: any[] = [];
+  const roleAssets: any[] = [];
+  const sceneAssets: any[] = [];
+  const propAssets: any[] = [];
 
   const searchPlaceholder = activeTab === 'overview'
     ? '分集 / 角色 / 场景 / 道具搜索'
@@ -348,11 +221,15 @@ export default function EpisodeManagement({
 
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 bg-[#e9f2df] px-4 py-1.5 rounded-full text-xs text-[#2b5f43] font-mono border border-[#6da768]/45">
-            5092
+            🪙 {credits.toLocaleString()}
           </div>
-          <div className="w-10 h-10 rounded-full bg-[#f3f8f3] flex items-center justify-center text-[#2b5f43] border-2 border-[#6da768]/45">
-            <User size={18} />
-          </div>
+          <AccountCenter
+            username={username}
+            credits={credits}
+            onLogout={onLogout}
+            onCreditsChange={onCreditsChange}
+            onUsernameChange={onUsernameChange}
+          />
         </div>
       </header>
 
@@ -448,18 +325,22 @@ export default function EpisodeManagement({
 
               <div className="xl:col-span-2 bg-[#fbf8ef] rounded-2xl border border-[#6da768]/35 p-5 shadow-sm">
                 <div className="text-sm font-bold text-[#193d2c]">剧本</div>
-                <div className="h-[90px] flex flex-col items-center justify-center text-[#2b5f43]/75">
+                <div className="h-[90px] flex flex-col items-center justify-center text-[#2b5f43]/40">
                   <FileText size={24} />
-                  <div className="text-xs mt-2">{projectMeta.name}.txt</div>
+                  <div className="text-xs mt-2">暂未上传剧本</div>
+                  <button
+                    onClick={onGoScript}
+                    className="mt-2 text-[10px] text-[#6da768] underline hover:text-[#193d2c]"
+                  >上传剧本</button>
                 </div>
               </div>
 
               <div className="xl:col-span-3 bg-[#fbf8ef] rounded-2xl border border-[#6da768]/35 p-5 shadow-sm">
-                <div className="text-sm font-bold text-[#193d2c]">项目预算</div>
+                <div className="text-sm font-bold text-[#193d2c]">项目统计</div>
                 <div className="text-sm text-[#2b5f43]/80 mt-3 space-y-1.5">
-                  <div>图片资产：{roleAssets.length + sceneAssets.length + propAssets.length}</div>
-                  <div>视频资产：{episodes.length * 2}</div>
-                  <div>已消耗积分：231</div>
+                  <div>图片资产：0</div>
+                  <div>视频资产：0</div>
+                  <div>已消耗积分：0</div>
                 </div>
               </div>
             </div>
@@ -492,29 +373,63 @@ export default function EpisodeManagement({
 
             <div className="text-[32px] leading-none menu-title text-[#193d2c]">步骤2：剧集创作</div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-              {episodes.map((ep) => (
-                <button
-                  key={ep.id}
-                  onClick={() => onEnterEpisode(ep.title)}
-                  className="bg-[#fbf8ef] rounded-2xl border border-[#6da768]/35 p-3 text-left hover:border-[#6da768] transition-colors"
-                >
-                  <div className="h-36 rounded-xl overflow-hidden bg-slate-900 relative">
-                    <div
-                      className="absolute inset-0 bg-cover bg-center lifely-bg-photo"
-                      style={{ backgroundImage: `url(${ep.cover})` }}
-                    />
-                  </div>
-                  <div className="mt-3">
-                    <div className="font-bold text-[#193d2c] text-base">{ep.title}</div>
-                    <div className="text-xs text-[#2b5f43]/70 mt-1">创建于：{ep.date}</div>
-                  </div>
-                </button>
-              ))}
-            </div>
+            {episodes.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-[#f0f7ec] border-2 border-dashed border-[#6da768]/40 flex items-center justify-center mb-4">
+                  <Plus size={28} className="text-[#6da768]/60" />
+                </div>
+                <div className="text-[#193d2c] font-bold text-base mb-1">还没有分集</div>
+                <div className="text-sm text-[#2b5f43]/60 mb-4">上传剧本后 AI 自动拆分，或手动创建分集</div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={onGoScript}
+                    className="px-5 py-2.5 bg-[#193d2c] text-[#d8ec6a] rounded-xl text-sm font-bold hover:bg-[#2b5f43] transition-colors"
+                  >
+                    上传剧本
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('episode')}
+                    className="px-5 py-2.5 bg-[#f0f7ec] text-[#2b5f43] border border-[#6da768]/40 rounded-xl text-sm font-bold hover:bg-[#e0f0d8] transition-colors"
+                  >
+                    手动创建
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                {episodes.map((ep) => (
+                  <button
+                    key={ep.id}
+                    onClick={() => onEnterEpisode(ep.title)}
+                    className="bg-[#fbf8ef] rounded-2xl border border-[#6da768]/35 p-3 text-left hover:border-[#6da768] transition-colors"
+                  >
+                    <div className="h-36 rounded-xl overflow-hidden bg-[#e8f0e0] relative flex items-center justify-center">
+                      {ep.cover ? (
+                        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${ep.cover})` }} />
+                      ) : (
+                        <span className="text-[#6da768]/50 text-sm">暂无封面</span>
+                      )}
+                    </div>
+                    <div className="mt-3">
+                      <div className="font-bold text-[#193d2c] text-base">{ep.title}</div>
+                      <div className="text-xs text-[#2b5f43]/70 mt-1">创建于：{ep.date}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         ) : activeTab === 'episode' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+            {/* 新建分集卡 */}
+            <div
+              onClick={onUpload}
+              className="bg-[#fbf8ef] rounded-2xl border-2 border-dashed border-[#6da768]/40 hover:border-[#6da768] hover:bg-[#f5faee] transition-colors cursor-pointer flex flex-col items-center justify-center h-[380px] text-[#2b5f43]/60 hover:text-[#2b5f43]"
+            >
+              <Plus size={32} className="mb-3" />
+              <span className="text-sm font-bold">新建分集</span>
+              <span className="text-xs mt-1 opacity-70">上传剧本或手动创建</span>
+            </div>
             {episodes.map((ep) => (
               <div
                 key={ep.id}
@@ -575,6 +490,15 @@ export default function EpisodeManagement({
               </span>
               <span className="text-xs mt-1 opacity-70">上传图片并补充描述信息</span>
             </button>
+
+            {currentAssets.length === 0 && (
+              <div className="col-span-full flex flex-col items-center justify-center py-12 text-center text-[#2b5f43]/40">
+                <div className="text-sm">
+                  暂无{activeTab === 'role' ? '角色' : activeTab === 'scene' ? '场景' : '道具'}资产
+                </div>
+                <div className="text-xs mt-1">点击左侧卡片添加</div>
+              </div>
+            )}
 
             {currentAssets.map((asset) => (
               <div

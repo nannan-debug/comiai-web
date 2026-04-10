@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import StoryboardProduction from './StoryboardProduction';
 import VideoPreview from './VideoPreview';
 import ScriptAndAssets from './ScriptAndAssets';
@@ -7,7 +7,8 @@ import ScriptUpload from './ScriptUpload';
 import EpisodeManagement from './EpisodeManagement';
 import ScriptSplitView from './ScriptSplitView';
 import ProjectManagement from './ProjectManagement';
-import { ArrowLeft } from 'lucide-react';
+import Login from './Login';
+import { ArrowLeft, LogOut } from 'lucide-react';
 
 type ViewState = 'home' | 'projects' | 'management' | 'upload' | 'split' | 'production';
 type StoryboardMode = 'image-video' | 'direct-video';
@@ -16,36 +17,49 @@ function HomeLanding({ onEnterProjects }: { onEnterProjects: () => void }) {
   return (
     <div className="flex-1 px-6 py-10 md:px-10 md:py-14 overflow-y-auto">
       <div className="max-w-6xl mx-auto min-h-full flex flex-col">
-        <div className="mt-6 md:mt-12 flex-1 flex flex-col items-center justify-center text-center">
-          <div className="menu-title text-[#6da768] text-base tracking-[0.2em] uppercase">Cold Pressed Studio</div>
-          <h1 className="menu-title text-[#193d2c] text-[64px] md:text-[110px] mt-2">MENU</h1>
-          <p className="text-[#2b5f43]/80 font-bold tracking-[0.2em] text-xs uppercase mt-2">Nature In Every Press</p>
+        <div className="flex-1 flex flex-col items-center justify-center text-center gap-6">
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-[#193d2c] rounded-xl flex items-center justify-center text-[#d8ec6a] font-bold text-lg">C</div>
+            <span className="text-[#193d2c] font-bold text-2xl tracking-tight">Comiai</span>
+          </div>
 
+          {/* Headline */}
+          <div>
+            <h1 className="text-[#193d2c] text-4xl md:text-6xl font-bold tracking-tight leading-tight">
+              剧本变漫剧
+            </h1>
+            <p className="text-[#6da768] text-xl md:text-2xl font-semibold mt-2">AI 一键生成</p>
+          </div>
+
+          {/* Sub */}
+          <p className="text-[#2b5f43]/70 text-sm max-w-sm">
+            上传剧本，AI 自动拆分场景、生成分镜图像与视频，轻松产出高质量漫剧内容
+          </p>
+
+          {/* CTA */}
           <button
             type="button"
             onClick={onEnterProjects}
-            className="mt-8 w-44 h-44 md:w-56 md:h-56 rounded-[42%] bg-[#d8ec6a] text-[#193d2c] border-[5px] border-[#2b5f43] shadow-xl flex flex-col items-center justify-center transition-transform duration-200 hover:scale-105 active:scale-95"
-            title="进入创作菜单"
+            className="mt-2 px-10 py-4 rounded-2xl bg-[#193d2c] text-[#d8ec6a] font-bold text-base tracking-wide shadow-lg transition-transform duration-200 hover:scale-105 active:scale-95 hover:bg-[#2b5f43]"
           >
-            <div className="menu-title text-xl">ENTER</div>
-            <div className="text-5xl leading-none mt-2">🥬</div>
-            <div className="text-[12px] mt-2 tracking-[0.18em] font-extrabold">STUDIO</div>
+            开始创作
           </button>
-          <p className="mt-5 text-[#2b5f43]/80 font-semibold">点击按钮进入项目创作页面</p>
         </div>
 
-        <div className="poster-card mt-10 md:mt-14 rounded-[28px] border bg-[#f0ebdd] text-[#193d2c] overflow-hidden">
-          <div className="relative p-8 md:p-10 min-h-[220px]">
-            <div className="absolute left-8 top-8 w-28 h-28 bg-[#6da768] rounded-[42%_58%_51%_49%/62%_38%_62%_38%] opacity-90"></div>
-            <div className="absolute right-10 bottom-8 w-20 h-40 bg-[#9fc79b] rounded-[56%_44%_62%_38%/28%_68%_32%_72%]"></div>
-            <div className="relative z-10 mt-16 md:mt-20 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-              <div>
-                <div className="menu-title text-3xl md:text-4xl tracking-tight">COMIAI GREENS</div>
-                <div className="text-[#2b5f43]/85 text-sm mt-2 font-semibold">为创作而生 · 手绘绿意工作台</div>
-              </div>
-              <div className="text-xs uppercase tracking-[0.2em] text-[#6da768] font-bold">Made with Love</div>
+        {/* Feature hints */}
+        <div className="mt-12 grid grid-cols-3 gap-4 text-center">
+          {[
+            { icon: '📄', label: '上传剧本', desc: '支持 TXT / 文档格式' },
+            { icon: '✂️', label: 'AI 拆分场景', desc: '智能解析剧情结构' },
+            { icon: '🎬', label: '生成漫剧', desc: '图像 + 视频一键输出' },
+          ].map((item) => (
+            <div key={item.label} className="rounded-2xl bg-[#f0f7ec] border border-[#c5e0b4] p-4">
+              <div className="text-2xl mb-2">{item.icon}</div>
+              <div className="text-[#193d2c] font-semibold text-sm">{item.label}</div>
+              <div className="text-[#2b5f43]/60 text-xs mt-1">{item.desc}</div>
             </div>
-          </div>
+          ))}
         </div>
       </div>
     </div>
@@ -53,11 +67,35 @@ function HomeLanding({ onEnterProjects }: { onEnterProjects: () => void }) {
 }
 
 export default function App() {
+  const [user, setUser] = useState<{ username: string; credits: number } | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('comiai_user');
+    const token = localStorage.getItem('comiai_token');
+    if (stored && token) {
+      try { setUser(JSON.parse(stored)); } catch { /* ignore */ }
+    }
+  }, []);
+
+  const handleLogin = (username: string, credits: number) => {
+    setUser({ username, credits });
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('comiai_token');
+    localStorage.removeItem('comiai_user');
+    setUser(null);
+  };
+
   const [currentView, setCurrentView] = useState<ViewState>('home');
   const [productionStep, setProductionStep] = useState(1);
   const [storyboardEntryMode, setStoryboardEntryMode] = useState<StoryboardMode>('image-video');
   const [currentProjectName, setCurrentProjectName] = useState('离婚后我成了顶流白月光');
   const [currentEpisodeName, setCurrentEpisodeName] = useState('第一集');
+
+  if (!user) {
+    return <Login onLogin={handleLogin} />;
+  }
 
   const normalizeEpisodeName = (episodeName?: string) => {
     if (!episodeName) return '第一集';
@@ -108,9 +146,12 @@ export default function App() {
 
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 bg-[#163527] px-3 py-1.5 rounded-full text-xs text-[#d8ec6a] font-mono">
-              🪙 24310
+              🪙 {user.credits.toLocaleString()}
             </div>
-            <div className="w-8 h-8 rounded-full bg-[#9fc79b] border border-[#6da768]"></div>
+            <span className="text-xs text-[#9fc79b]">{user.username}</span>
+            <button onClick={handleLogout} title="退出登录" className="text-slate-400 hover:text-white p-1 rounded-full hover:bg-slate-700">
+              <LogOut size={15} />
+            </button>
           </div>
         </header>
       )}
@@ -121,18 +162,23 @@ export default function App() {
       )}
 
       {currentView === 'projects' && (
-        <ProjectManagement 
-          onCreateProject={() => setCurrentView('upload')} 
+        <ProjectManagement
+          onCreateProject={() => setCurrentView('upload')}
           onEnterProject={() => {
             setCurrentProjectName('离婚后我成了顶流白月光');
             setCurrentView('management');
           }}
           onGoHome={() => setCurrentView('home')}
+          username={user.username}
+          credits={user.credits}
+          onLogout={handleLogout}
+          onCreditsChange={(n) => setUser(u => u ? { ...u, credits: n } : u)}
+          onUsernameChange={(n) => setUser(u => u ? { ...u, username: n } : u)}
         />
       )}
 
       {currentView === 'management' && (
-        <EpisodeManagement 
+        <EpisodeManagement
           projectName={currentProjectName}
           onProjectNameChange={setCurrentProjectName}
           onUpload={() => setCurrentView('upload')}
@@ -140,10 +186,15 @@ export default function App() {
             setCurrentEpisodeName(normalizeEpisodeName(episodeName));
             setProductionStep(1);
             setCurrentView('production');
-          }} 
+          }}
           onBack={() => setCurrentView('projects')}
           onGoHome={() => setCurrentView('home')}
           onGoScript={() => setCurrentView('upload')}
+          username={user.username}
+          credits={user.credits}
+          onLogout={handleLogout}
+          onCreditsChange={(n) => setUser(u => u ? { ...u, credits: n } : u)}
+          onUsernameChange={(n) => setUser(u => u ? { ...u, username: n } : u)}
         />
       )}
       
