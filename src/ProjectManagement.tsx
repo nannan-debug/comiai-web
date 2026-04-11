@@ -125,18 +125,27 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
             <PlaySquare size={15} />
             我的项目
           </button>
-          <button className="h-10 px-3 rounded-full flex items-center justify-center gap-1.5 text-[#d5e8d2] hover:text-white hover:bg-[#2b5f43] transition-colors text-xs font-bold">
-            <PenTool size={15} />
-            艺术创作
-          </button>
-          <button className="h-10 px-3 rounded-full flex items-center justify-center gap-1.5 text-[#d5e8d2] hover:text-white hover:bg-[#2b5f43] transition-colors text-xs font-bold">
-            <BarChart2 size={15} />
-            数据面板
-          </button>
-          <button className="h-10 px-3 rounded-full flex items-center justify-center gap-1.5 text-[#d5e8d2] hover:text-white hover:bg-[#2b5f43] transition-colors text-xs font-bold">
-            <ClipboardCheck size={15} />
-            审阅中心
-          </button>
+          <div className="relative group">
+            <button disabled className="h-10 px-3 rounded-full flex items-center justify-center gap-1.5 text-[#d5e8d2]/40 cursor-not-allowed text-xs font-bold">
+              <PenTool size={15} />
+              艺术创作
+            </button>
+            <span className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 bg-[#193d2c] text-[#d8ec6a] text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">开发中</span>
+          </div>
+          <div className="relative group">
+            <button disabled className="h-10 px-3 rounded-full flex items-center justify-center gap-1.5 text-[#d5e8d2]/40 cursor-not-allowed text-xs font-bold">
+              <BarChart2 size={15} />
+              数据面板
+            </button>
+            <span className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 bg-[#193d2c] text-[#d8ec6a] text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">开发中</span>
+          </div>
+          <div className="relative group">
+            <button disabled className="h-10 px-3 rounded-full flex items-center justify-center gap-1.5 text-[#d5e8d2]/40 cursor-not-allowed text-xs font-bold">
+              <ClipboardCheck size={15} />
+              审阅中心
+            </button>
+            <span className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 bg-[#193d2c] text-[#d8ec6a] text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">开发中</span>
+          </div>
         </div>
 
         {/* Right Nav */}

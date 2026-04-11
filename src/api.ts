@@ -57,6 +57,13 @@ export const projectsApi = {
     request<any[]>(`/api/projects/${projectId}/episodes/${episodeId}/scenes`),
 };
 
+export interface AnalysisResult {
+  lens: { camera: string; person: string; scence_name: string; props: string; video_prompt: string }[];
+  person: { name: string; desc: string; feature: string }[];
+  scence: { name: string; desc: string }[];
+  props: { name: string; desc: string }[];
+}
+
 // Script
 export const scriptApi = {
   uploadFile: async (file: File) => {
@@ -73,10 +80,12 @@ export const scriptApi = {
     return data as { content: string; filename: string };
   },
   split: (content: string, episode_id?: number) =>
-    request<{ scenes: any[] }>('/api/script/split', {
+    request<AnalysisResult>('/api/script/split', {
       method: 'POST',
       body: JSON.stringify({ content, episode_id }),
     }),
+  getAnalysis: (episodeId: number) =>
+    request<AnalysisResult>(`/api/script/analysis/${episodeId}`),
 };
 
 // Generate

@@ -28,8 +28,10 @@ export default function EpisodeManagement({
   onBack,
   onGoHome,
   onGoScript,
+  onCreateFromScript,
   projectName,
   onProjectNameChange,
+  scriptContent,
   username,
   credits,
   onLogout,
@@ -41,16 +43,18 @@ export default function EpisodeManagement({
   onBack: () => void;
   onGoHome: () => void;
   onGoScript: () => void;
+  onCreateFromScript?: () => void;
   projectName: string;
   onProjectNameChange: (name: string) => void;
+  scriptContent?: string;
   username: string;
   credits: number;
   onLogout: () => void;
   onCreditsChange: (n: number) => void;
   onUsernameChange: (n: string) => void;
 }) {
-  const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
-  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
+  const [isNewEpisodeModalOpen, setIsNewEpisodeModalOpen] = useState(false);
+  const [episodeDraft, setEpisodeDraft] = useState({ name: '', number: '', cover: '' });
   const [isGlobalMenuOpen, setIsGlobalMenuOpen] = useState(false);
   const [isProjectEditOpen, setIsProjectEditOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'episode' | 'role' | 'scene' | 'prop'>('overview');
@@ -245,41 +249,12 @@ export default function EpisodeManagement({
         <div className="px-6 py-4 flex items-center justify-between shrink-0 relative z-40">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <button 
-                onClick={() => setIsCreateMenuOpen(!isCreateMenuOpen)}
+              <button
+                onClick={() => { setEpisodeDraft({ name: '', number: '', cover: '' }); setIsNewEpisodeModalOpen(true); }}
                 className="menu-title px-4 py-2 bg-[#193d2c] hover:bg-[#2b5f43] text-[#f5f1e4] rounded-lg text-sm transition-colors flex items-center gap-2 shadow-sm"
               >
                 <Plus size={16} /> 创建分集
               </button>
-              
-              {/* Create Menu Dropdown */}
-              {isCreateMenuOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setIsCreateMenuOpen(false)}></div>
-                  <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <button 
-                      onClick={() => {
-                        setIsCreateMenuOpen(false);
-                        onUpload();
-                      }}
-                      className="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 hover:text-violet-600 flex items-center gap-3 transition-colors"
-                    >
-                      <FileText size={16} className="text-slate-400" />
-                      <span>选择已有剧本</span>
-                    </button>
-                    <button 
-                      onClick={() => {
-                        setIsCreateMenuOpen(false);
-                        setIsNewProjectModalOpen(true);
-                      }}
-                      className="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 hover:text-violet-600 flex items-center gap-3 transition-colors"
-                    >
-                      <FolderPlus size={16} className="text-slate-400" />
-                      <span>新建空项目</span>
-                    </button>
-                  </div>
-                </>
-              )}
             </div>
 
             <div className="flex items-center gap-2 bg-[#fbf8ef] border border-[#6da768]/40 rounded-lg px-3 py-2 text-sm text-[#2b5f43] cursor-pointer hover:bg-[#f5f1e4] transition-colors">
@@ -324,15 +299,23 @@ export default function EpisodeManagement({
               </div>
 
               <div className="xl:col-span-2 bg-[#fbf8ef] rounded-2xl border border-[#6da768]/35 p-5 shadow-sm">
-                <div className="text-sm font-bold text-[#193d2c]">剧本</div>
-                <div className="h-[90px] flex flex-col items-center justify-center text-[#2b5f43]/40">
-                  <FileText size={24} />
-                  <div className="text-xs mt-2">暂未上传剧本</div>
-                  <button
-                    onClick={onGoScript}
-                    className="mt-2 text-[10px] text-[#6da768] underline hover:text-[#193d2c]"
-                  >上传剧本</button>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm font-bold text-[#193d2c]">剧本</div>
+                  {scriptContent
+                    ? <button onClick={onCreateFromScript ?? onGoScript} className="text-[10px] text-[#6da768] hover:text-[#193d2c] font-bold">重新上传</button>
+                    : <button onClick={onGoScript} className="text-[10px] text-[#6da768] hover:text-[#193d2c] font-bold underline">上传剧本</button>
+                  }
                 </div>
+                {scriptContent ? (
+                  <pre className="text-[10px] text-[#2b5f43]/70 leading-relaxed whitespace-pre-wrap line-clamp-4 font-sans h-[72px] overflow-hidden">
+                    {scriptContent}
+                  </pre>
+                ) : (
+                  <div className="h-[72px] flex flex-col items-center justify-center text-[#2b5f43]/40">
+                    <FileText size={22} />
+                    <div className="text-xs mt-1.5">暂未上传剧本</div>
+                  </div>
+                )}
               </div>
 
               <div className="xl:col-span-3 bg-[#fbf8ef] rounded-2xl border border-[#6da768]/35 p-5 shadow-sm">
@@ -379,16 +362,18 @@ export default function EpisodeManagement({
                   <Plus size={28} className="text-[#6da768]/60" />
                 </div>
                 <div className="text-[#193d2c] font-bold text-base mb-1">还没有分集</div>
-                <div className="text-sm text-[#2b5f43]/60 mb-4">上传剧本后 AI 自动拆分，或手动创建分集</div>
+                <div className="text-sm text-[#2b5f43]/60 mb-4">
+                  {scriptContent ? '已有剧本，可从剧本创建分集，或手动创建' : '上传剧本后 AI 自动拆分，或手动创建分集'}
+                </div>
                 <div className="flex gap-3">
                   <button
-                    onClick={onGoScript}
+                    onClick={scriptContent ? (onCreateFromScript ?? onGoScript) : onGoScript}
                     className="px-5 py-2.5 bg-[#193d2c] text-[#d8ec6a] rounded-xl text-sm font-bold hover:bg-[#2b5f43] transition-colors"
                   >
-                    上传剧本
+                    {scriptContent ? '从剧本创建' : '上传剧本'}
                   </button>
                   <button
-                    onClick={() => setActiveTab('episode')}
+                    onClick={() => { setEpisodeDraft({ name: '', number: '', cover: '' }); setIsNewEpisodeModalOpen(true); }}
                     className="px-5 py-2.5 bg-[#f0f7ec] text-[#2b5f43] border border-[#6da768]/40 rounded-xl text-sm font-bold hover:bg-[#e0f0d8] transition-colors"
                   >
                     手动创建
@@ -423,7 +408,7 @@ export default function EpisodeManagement({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
             {/* 新建分集卡 */}
             <div
-              onClick={onUpload}
+              onClick={() => { setEpisodeDraft({ name: '', number: '', cover: '' }); setIsNewEpisodeModalOpen(true); }}
               className="bg-[#fbf8ef] rounded-2xl border-2 border-dashed border-[#6da768]/40 hover:border-[#6da768] hover:bg-[#f5faee] transition-colors cursor-pointer flex flex-col items-center justify-center h-[380px] text-[#2b5f43]/60 hover:text-[#2b5f43]"
             >
               <Plus size={32} className="mb-3" />
@@ -657,72 +642,97 @@ export default function EpisodeManagement({
         </div>
       )}
 
-      {/* New Project Modal */}
-      {isNewProjectModalOpen && (
+      {/* New Episode Modal */}
+      {isNewEpisodeModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsNewProjectModalOpen(false)}></div>
-          <div className="bg-[#fbf8ef] rounded-2xl shadow-xl w-[480px] max-w-[90vw] z-10 overflow-hidden animate-in zoom-in-95 duration-200 border-2 border-[#193d2c]/15">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <div className="absolute inset-0 bg-[#193d2c]/60 backdrop-blur-sm" onClick={() => setIsNewEpisodeModalOpen(false)} />
+          <div className="relative z-10 bg-[#fbf8ef] rounded-2xl shadow-2xl w-[480px] max-w-[90vw] overflow-hidden animate-in zoom-in-95 duration-200 border border-[#6da768]/30">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-[#6da768]/20">
               <h2 className="text-lg font-bold text-[#193d2c] menu-title">新增分集</h2>
-              <button 
-                onClick={() => setIsNewProjectModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-full hover:bg-slate-100"
+              <button
+                onClick={() => setIsNewEpisodeModalOpen(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[#2b5f43]/60 hover:text-[#193d2c] hover:bg-[#e9f2df] transition-colors"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
-            
+
             <div className="p-6 flex flex-col gap-5">
+              {/* 分集名称 */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                <label className="block text-sm font-bold text-[#193d2c] mb-2">
                   <span className="text-red-500 mr-1">*</span>分集名称
                 </label>
-                <input 
-                  type="text" 
-                  placeholder="请输入分集名称" 
-                  className="w-full px-3 py-2.5 bg-[#fbf8ef] border border-[#6da768]/40 rounded-lg text-sm focus:outline-none focus:border-[#6da768] focus:ring-1 focus:ring-[#6da768] transition-shadow"
+                <input
+                  type="text"
+                  placeholder="请输入分集名称"
+                  value={episodeDraft.name}
+                  onChange={e => setEpisodeDraft(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-4 py-3 bg-white border border-[#6da768]/40 rounded-xl text-sm text-[#193d2c] placeholder:text-[#2b5f43]/40 focus:outline-none focus:border-[#6da768] focus:ring-2 focus:ring-[#6da768]/20 transition-all"
                 />
               </div>
 
+              {/* 集号 */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                <label className="block text-sm font-bold text-[#193d2c] mb-2">
                   <span className="text-red-500 mr-1">*</span>集号
                 </label>
                 <div className="relative">
-                  <select className="w-full px-3 py-2.5 bg-[#fbf8ef] border border-[#6da768]/40 rounded-lg text-sm focus:outline-none focus:border-[#6da768] focus:ring-1 focus:ring-[#6da768] transition-shadow appearance-none text-[#2b5f43]/75">
+                  <select
+                    value={episodeDraft.number}
+                    onChange={e => setEpisodeDraft(prev => ({ ...prev, number: e.target.value }))}
+                    className="w-full px-4 py-3 bg-white border border-[#6da768]/40 rounded-xl text-sm focus:outline-none focus:border-[#6da768] focus:ring-2 focus:ring-[#6da768]/20 transition-all appearance-none text-[#2b5f43]"
+                  >
                     <option value="">请选择或输入集号(1-100)</option>
-                    {[...Array(100)].map((_, i) => (
-                      <option key={i+1} value={i+1}>第{i+1}集</option>
+                    {Array.from({ length: 100 }, (_, i) => (
+                      <option key={i + 1} value={i + 1}>第{i + 1}集</option>
                     ))}
                   </select>
-                  <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#2b5f43]/65 pointer-events-none" />
+                  <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#2b5f43]/50 pointer-events-none" />
                 </div>
               </div>
 
+              {/* 封面图 */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  封面图
+                <label className="block text-sm font-bold text-[#193d2c] mb-2">封面图</label>
+                <label className="block border-2 border-dashed border-[#6da768]/40 rounded-xl h-44 flex flex-col items-center justify-center text-[#2b5f43]/50 hover:bg-[#f0f7ec] hover:border-[#6da768] hover:text-[#2b5f43] transition-colors cursor-pointer group overflow-hidden relative">
+                  {episodeDraft.cover ? (
+                    <img src={episodeDraft.cover} className="absolute inset-0 w-full h-full object-cover" />
+                  ) : (
+                    <>
+                      <ImageIcon size={40} className="mb-2 opacity-40 group-hover:opacity-70 transition-opacity" strokeWidth={1.5} />
+                      <span className="text-sm font-medium">点击上传封面图</span>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={e => {
+                      const file = e.target.files?.[0];
+                      if (file) setEpisodeDraft(prev => ({ ...prev, cover: URL.createObjectURL(file) }));
+                    }}
+                  />
                 </label>
-                <div className="border-2 border-dashed border-[#6da768]/40 rounded-xl h-48 flex flex-col items-center justify-center text-[#2b5f43]/60 hover:bg-[#e9f2df] hover:border-[#6da768] hover:text-[#2b5f43] transition-colors cursor-pointer group">
-                  <ImageIcon size={48} className="mb-3 opacity-50 group-hover:opacity-100 transition-opacity" strokeWidth={1.5} />
-                  <span className="text-sm font-medium">点击上传封面图</span>
-                </div>
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 bg-[#f5f1e4]">
-              <button 
-                onClick={() => setIsNewProjectModalOpen(false)}
-                className="px-6 py-2.5 bg-[#fbf8ef] border border-[#193d2c]/20 hover:bg-[#f5f1e4] text-[#2b5f43] rounded-full text-sm font-medium transition-colors"
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-[#6da768]/20 flex items-center justify-end gap-3 bg-[#f0ece0]">
+              <button
+                onClick={() => setIsNewEpisodeModalOpen(false)}
+                className="px-6 py-2.5 bg-[#fbf8ef] border border-[#6da768]/30 hover:bg-[#f0f7ec] text-[#2b5f43] rounded-full text-sm font-bold transition-colors"
               >
                 取消
               </button>
-              <button 
+              <button
+                disabled={!episodeDraft.name.trim() || !episodeDraft.number}
                 onClick={() => {
-                  setIsNewProjectModalOpen(false);
-                  onEnterEpisode('第1集');
+                  setIsNewEpisodeModalOpen(false);
+                  onEnterEpisode(episodeDraft.name || `第${episodeDraft.number}集`);
                 }}
-                className="px-6 py-2.5 bg-[#193d2c] hover:bg-[#2b5f43] text-[#f5f1e4] rounded-full text-sm font-medium transition-colors shadow-sm"
+                className="px-6 py-2.5 bg-[#193d2c] hover:bg-[#2b5f43] text-[#d8ec6a] rounded-full text-sm font-bold transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 新增
               </button>
