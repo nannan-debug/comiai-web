@@ -107,10 +107,10 @@ async function callAI(apiUrl: string, apiKey: string, model: string, useJsonMode
     model,
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },
-      { role: 'user', content: `请解析以下剧本：\n\n${content.slice(0, 6000)}` },
+      { role: 'user', content: `请解析以下剧本：\n\n${content.slice(0, 20000)}` },
     ],
     temperature: 0.3,
-    max_tokens: 4096,
+    max_tokens: 16000,
   };
   if (useJsonMode) body.response_format = { type: 'json_object' };
 

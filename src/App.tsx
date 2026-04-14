@@ -88,6 +88,7 @@ export default function App() {
 
   const [currentView, setCurrentView] = useState<ViewState>('home');
   const [productionStep, setProductionStep] = useState(1);
+  const [currentProjectId, setCurrentProjectId] = useState<number | null>(null);
   const [currentProjectName, setCurrentProjectName] = useState('离婚后我成了顶流白月光');
   const [currentEpisodeName, setCurrentEpisodeName] = useState('第一集');
   const [currentEpisodeContent, setCurrentEpisodeContent] = useState('');
@@ -189,8 +190,9 @@ export default function App() {
       {currentView === 'projects' && (
         <ProjectManagement
           onCreateProject={() => setCurrentView('upload')}
-          onEnterProject={() => {
-            setCurrentProjectName('离婚后我成了顶流白月光');
+          onEnterProject={(id: number, name: string) => {
+            setCurrentProjectId(id);
+            setCurrentProjectName(name);
             setCurrentView('management');
           }}
           onGoHome={() => setCurrentView('home')}
@@ -204,6 +206,7 @@ export default function App() {
 
       {currentView === 'management' && (
         <EpisodeManagement
+          projectId={currentProjectId ?? undefined}
           projectName={currentProjectName}
           onProjectNameChange={setCurrentProjectName}
           scriptContent={scriptData?.content}
