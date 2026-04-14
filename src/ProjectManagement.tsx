@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Edit, Trash2, User, Home, PlaySquare, Users, FileText, FolderPlus, X, Image as ImageIcon, ChevronDown, PenTool, BarChart2, ClipboardCheck } from 'lucide-react';
 import AccountCenter from './AccountCenter';
+import { projectsApi } from './api';
 
 interface Props {
   onCreateProject: () => void;
-  onEnterProject: () => void;
+  onEnterProject: (id: number, name: string) => void;
   onGoHome: () => void;
   username: string;
   credits: number;
@@ -13,93 +14,57 @@ interface Props {
   onUsernameChange: (n: string) => void;
 }
 
+interface Project {
+  id: number;
+  name: string;
+  description: string;
+  cover: string;
+  status: string;
+  created_at: string;
+  episode_count: number;
+}
+
 export default function ProjectManagement({ onCreateProject, onEnterProject, onGoHome, username, credits, onLogout, onCreditsChange, onUsernameChange }: Props) {
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
+  const [newProjectName, setNewProjectName] = useState('');
   const [selectedOrientation, setSelectedOrientation] = useState<'16:9' | '9:16'>('16:9');
-  const [selectedStyle, setSelectedStyle] = useState<string>('默认');
+  const [selectedStyle, setSelectedStyle] = useState<string>('');
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchText, setSearchText] = useState('');
 
-  const styles = [
-    { id: '默认', name: '默认', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&q=80' },
-    { id: '日本动画片', name: '日本动画片', image: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150&q=80' },
-    { id: '吉卜力', name: '吉卜力', image: 'https://images.unsplash.com/photo-1580477667995-2b92f01c3f15?w=150&q=80' },
-    { id: '漫画', name: '漫画', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80' },
-    { id: '3D', name: '3D', image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&q=80' },
-    { id: '皮克斯', name: '皮克斯', image: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&q=80' },
-    { id: '黏土', name: '黏土', image: 'https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?w=150&q=80' },
-    { id: '扁平插画', name: '扁平插画', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&q=80' },
-    { id: '童话手绘', name: '童话手绘', image: 'https://images.unsplash.com/photo-1580477667995-2b92f01c3f15?w=150&q=80' },
-    { id: '赛博朋克', name: '赛博朋克', image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&q=80' },
-    { id: '水墨画', name: '水墨画', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80' },
-    { id: '油画', name: '油画', image: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&q=80' },
-    { id: '水彩', name: '水彩', image: 'https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?w=150&q=80' },
-    { id: '游戏CG', name: '游戏CG', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&q=80' },
-    { id: '中国风', name: '中国风', image: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150&q=80' },
+  const styles: { id: string; name: string; image: string | null }[] = [
+    { id: '',          name: '默认',  image: null },
+    { id: 'realistic', name: '写实',  image: '/style-images/realistic.jpg' },
+    { id: 'ghibli',    name: '吉卜力', image: '/style-images/ghibli.jpg' },
+    { id: '3d',        name: '3D',   image: '/style-images/3d.jpg' },
+    { id: 'pixar',     name: '皮克斯', image: '/style-images/pixar.jpg' },
   ];
 
-  // Mock data based on reference image
-  const projects = [
-    { 
-      id: 1, 
-      title: '离婚后我成了顶流白月光', 
-      epCount: '52 集',
-      cover: 'https://images.unsplash.com/photo-1618331835717-801e976710b2?w=500&q=80', 
-      stats: { img: 2599, vid: 0, del: 0, token: 3281163, time: '56d05h59m' }, 
-      tags: ['若曦', '婉清', '知夏', '念禾', '可歆', '予棠', '苏晚', '安宁'], 
-      date: '2026-01-14 11:30', 
-      status: '未完成' 
-    },
-    { 
-      id: 2, 
-      title: '被绿后我带娃爆红全网', 
-      epCount: '36 集',
-      cover: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=500&q=80', 
-      stats: { img: 3774, vid: 1671, del: 548, token: 906220, time: '62d06h35m' }, 
-      tags: ['语桐', '星冉', '初禾', '嘉宁', '芷晴', '晚意', '清妍'], 
-      date: '2026-01-16 14:15', 
-      status: '未完成' 
-    },
-    { 
-      id: 3, 
-      title: '重生后我手撕绿茶和渣男', 
-      epCount: '44 集',
-      cover: 'https://images.unsplash.com/photo-1504333638930-c8787321efa0?w=500&q=80', 
-      stats: { img: 5482, vid: 2963, del: 959, token: 1091122, time: '86d03h08m' }, 
-      tags: ['慕晚', '书瑶', '南栀', '以宁', '昭月', '予安'], 
-      date: '2026-01-12 19:42', 
-      status: '未完成' 
-    },
-    { 
-      id: 4, 
-      title: '误嫁豪门后，冷面总裁真香了', 
-      epCount: '60 集',
-      cover: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?w=500&q=80', 
-      stats: { img: 8810, vid: 5244, del: 532, token: 2572990, time: '90d23h48m' }, 
-      tags: ['婧妍', '清欢', '知意', '允棠', '书意', '若初'], 
-      date: '2025-12-02 19:56', 
-      status: '未完成' 
-    },
-    { 
-      id: 5, 
-      title: '恋综翻车后，我靠打脸逆袭', 
-      epCount: '22 集',
-      cover: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80', 
-      stats: { img: 92, vid: 46, del: 0, token: 16193, time: '98d21h33m' }, 
-      tags: ['可可', '念念', '芊羽', '时宜'], 
-      date: '2025-12-02 19:56', 
-      status: '未完成' 
-    },
-    { 
-      id: 6, 
-      title: 'ComiAI：全城都在等她复仇', 
-      epCount: '28 集',
-      cover: 'https://images.unsplash.com/photo-1618331835717-801e976710b2?w=500&q=80', 
-      stats: { img: 5841, vid: 2190, del: 353, token: 1086716, time: '134d07h06m' }, 
-      tags: ['云舒', '槿年', '星眠', '若琳'], 
-      date: '2025-10-28 10:23', 
-      status: '未完成' 
-    },
-  ];
+  // 从后端加载项目列表
+  useEffect(() => {
+    setLoading(true);
+    projectsApi.list()
+      .then((list: any[]) => setProjects(list))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleDelete = async (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    if (!confirm('确认删除该项目？删除后不可恢复')) return;
+    try {
+      await projectsApi.delete(id);
+      setProjects(prev => prev.filter(p => p.id !== id));
+    } catch {
+      alert('删除失败，请重试');
+    }
+  };
+
+  const filteredProjects = projects.filter(p =>
+    !searchText || p.name.toLowerCase().includes(searchText.toLowerCase())
+  );
 
   return (
     <div className="flex flex-col h-full bg-[#F8F3E8] overflow-hidden relative">
@@ -125,18 +90,27 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
             <PlaySquare size={15} />
             我的项目
           </button>
-          <button className="h-10 px-3 rounded-full flex items-center justify-center gap-1.5 text-[#d5e8d2] hover:text-white hover:bg-[#2b5f43] transition-colors text-xs font-bold">
-            <PenTool size={15} />
-            艺术创作
-          </button>
-          <button className="h-10 px-3 rounded-full flex items-center justify-center gap-1.5 text-[#d5e8d2] hover:text-white hover:bg-[#2b5f43] transition-colors text-xs font-bold">
-            <BarChart2 size={15} />
-            数据面板
-          </button>
-          <button className="h-10 px-3 rounded-full flex items-center justify-center gap-1.5 text-[#d5e8d2] hover:text-white hover:bg-[#2b5f43] transition-colors text-xs font-bold">
-            <ClipboardCheck size={15} />
-            审阅中心
-          </button>
+          <div className="relative group">
+            <button disabled className="h-10 px-3 rounded-full flex items-center justify-center gap-1.5 text-[#d5e8d2]/40 cursor-not-allowed text-xs font-bold">
+              <PenTool size={15} />
+              艺术创作
+            </button>
+            <span className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 bg-[#193d2c] text-[#d8ec6a] text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">开发中</span>
+          </div>
+          <div className="relative group">
+            <button disabled className="h-10 px-3 rounded-full flex items-center justify-center gap-1.5 text-[#d5e8d2]/40 cursor-not-allowed text-xs font-bold">
+              <BarChart2 size={15} />
+              数据面板
+            </button>
+            <span className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 bg-[#193d2c] text-[#d8ec6a] text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">开发中</span>
+          </div>
+          <div className="relative group">
+            <button disabled className="h-10 px-3 rounded-full flex items-center justify-center gap-1.5 text-[#d5e8d2]/40 cursor-not-allowed text-xs font-bold">
+              <ClipboardCheck size={15} />
+              审阅中心
+            </button>
+            <span className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 bg-[#193d2c] text-[#d8ec6a] text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">开发中</span>
+          </div>
         </div>
 
         {/* Right Nav */}
@@ -195,10 +169,12 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
         </div>
 
         <div className="relative">
-          <input 
-            type="text" 
-            placeholder="请输入项目名称" 
-            className="pl-4 pr-10 py-2.5 bg-[#fbf8ef] border border-[#6da768]/40 rounded-full text-sm focus:outline-none focus:border-[#6da768] focus:ring-1 focus:ring-[#6da768] w-64 transition-shadow shadow-sm" 
+          <input
+            type="text"
+            placeholder="请输入项目名称"
+            value={searchText}
+            onChange={e => setSearchText(e.target.value)}
+            className="pl-4 pr-10 py-2.5 bg-[#fbf8ef] border border-[#6da768]/40 rounded-full text-sm focus:outline-none focus:border-[#6da768] focus:ring-1 focus:ring-[#6da768] w-64 transition-shadow shadow-sm"
           />
           <Search size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
         </div>
@@ -206,66 +182,82 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
 
       {/* Grid */}
       <div className="flex-1 overflow-y-auto p-6 pt-0 custom-scrollbar relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-6">
-          {projects.map((ep) => (
-            <div 
-              key={ep.id} 
-              onClick={onEnterProject}
-              className="bg-[#fbf8ef] rounded-2xl border-2 border-[#193d2c]/15 overflow-hidden shadow-[6px_6px_0_rgba(25,61,44,0.17)] hover:shadow-[8px_8px_0_rgba(25,61,44,0.2)] hover:border-[#6da768]/70 transition-all cursor-pointer group flex flex-col h-[420px]"
-            >
-              {/* Cover Image Area */}
-              <div className="relative h-[240px] shrink-0 overflow-hidden bg-slate-900">
-                <div 
-                  className="absolute inset-0 bg-cover bg-center lifely-bg-photo opacity-80 group-hover:scale-105 transition-transform duration-500"
-                  style={{ backgroundImage: `url(${ep.cover})` }}
-                />
-                {/* Gradient Overlay for text readability */}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-black/80" />
-                
-                {/* Top Right Actions */}
-                <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="p-1.5 bg-[#193d2c]/75 hover:bg-[#193d2c] rounded text-white backdrop-blur-sm transition-colors" onClick={(e) => e.stopPropagation()}>
-                    <Edit size={14} />
-                  </button>
-                  <button className="p-1.5 bg-[#193d2c]/75 hover:bg-red-600/80 rounded text-white backdrop-blur-sm transition-colors" onClick={(e) => e.stopPropagation()}>
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-
-
-              </div>
-
-              {/* Info Area */}
-              <div className="p-4 flex flex-col flex-1">
-                <div className="flex justify-between items-start mb-3 gap-2">
-                  <h3 className="font-bold text-[#193d2c] text-sm line-clamp-2 leading-tight">{ep.title}</h3>
-                  <span className="text-xs text-[#2b5f43]/80 font-medium whitespace-nowrap">{ep.epCount}</span>
-                </div>
-                
-                {/* Tags */}
-                <div className="flex flex-wrap gap-1.5 mb-auto overflow-hidden max-h-[60px]">
-                  {ep.tags.length > 0 ? (
-                    ep.tags.map((tag, idx) => (
-                      <span key={idx} className="px-2 py-0.5 bg-[#e9f2df] text-[#2b5f43] text-[11px] rounded-full border border-[#6da768]/30 whitespace-nowrap">
-                        {tag}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-xs text-slate-400 italic">暂无角色标签</span>
-                  )}
-                </div>
-
-                {/* Footer */}
-                <div className="flex justify-between items-center mt-4 pt-3 border-t border-[#193d2c]/10 text-[11px]">
-                  <span className="text-[#2b5f43]/65">{ep.date}</span>
-                  <span className="text-[#2b5f43] flex items-center gap-1 font-semibold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#6da768]"></span> {ep.status}
-                  </span>
-                </div>
-              </div>
+        {loading ? (
+          /* 加载中 */
+          <div className="flex items-center justify-center h-64 text-[#2b5f43]/50 text-sm">加载中…</div>
+        ) : filteredProjects.length === 0 ? (
+          /* 空状态 */
+          <div className="flex flex-col items-center justify-center h-64 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-[#f0f7ec] border-2 border-dashed border-[#6da768]/40 flex items-center justify-center mb-4">
+              <FolderPlus size={28} className="text-[#6da768]/60" />
             </div>
-          ))}
-        </div>
+            <div className="text-[#193d2c] font-bold text-base mb-1">
+              {searchText ? '没有找到匹配的项目' : '还没有项目'}
+            </div>
+            <p className="text-sm text-[#2b5f43]/60 mb-4">点击「新建项目」开始创作</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-6">
+            {filteredProjects.map((ep) => (
+              <div
+                key={ep.id}
+                onClick={() => onEnterProject(ep.id, ep.name)}
+                className="bg-[#fbf8ef] rounded-2xl border-2 border-[#193d2c]/15 overflow-hidden shadow-[6px_6px_0_rgba(25,61,44,0.17)] hover:shadow-[8px_8px_0_rgba(25,61,44,0.2)] hover:border-[#6da768]/70 transition-all cursor-pointer group flex flex-col h-[380px]"
+              >
+                {/* Cover */}
+                <div className="relative h-[220px] shrink-0 overflow-hidden bg-[#1f3828]">
+                  {ep.cover ? (
+                    <div
+                      className="absolute inset-0 bg-cover bg-center opacity-80 group-hover:scale-105 transition-transform duration-500"
+                      style={{ backgroundImage: `url(${ep.cover})` }}
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-[#6da768]/20">
+                      <ImageIcon size={48} strokeWidth={1} />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/10 to-black/70" />
+
+                  {/* Actions */}
+                  <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      className="p-1.5 bg-[#193d2c]/75 hover:bg-red-600/80 rounded text-white backdrop-blur-sm transition-colors"
+                      onClick={(e) => handleDelete(e, ep.id)}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Info */}
+                <div className="p-4 flex flex-col flex-1">
+                  <div className="flex justify-between items-start mb-3 gap-2">
+                    <h3 className="font-bold text-[#193d2c] text-sm line-clamp-2 leading-tight">{ep.name}</h3>
+                    <span className="text-xs text-[#2b5f43]/70 font-medium whitespace-nowrap shrink-0">
+                      {ep.episode_count > 0 ? `${ep.episode_count} 集` : '暂无分集'}
+                    </span>
+                  </div>
+
+                  {ep.description ? (
+                    <p className="text-xs text-[#2b5f43]/60 line-clamp-2 mb-auto">{ep.description}</p>
+                  ) : (
+                    <p className="text-xs text-slate-400 italic mb-auto">暂无简介</p>
+                  )}
+
+                  <div className="flex justify-between items-center mt-4 pt-3 border-t border-[#193d2c]/10 text-[11px]">
+                    <span className="text-[#2b5f43]/60">
+                      {ep.created_at ? new Date(ep.created_at).toLocaleDateString('zh-CN') : ''}
+                    </span>
+                    <span className="text-[#2b5f43] flex items-center gap-1 font-semibold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#6da768]"></span>
+                      {ep.status === 'active' ? '进行中' : ep.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* New Project Modal */}
@@ -293,9 +285,11 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
                     <label className="block text-sm font-medium text-slate-700 mb-2">
                       <span className="text-red-500 mr-1">*</span>剧本名称
                     </label>
-                    <input 
-                      type="text" 
-                      placeholder="请输入剧本名称" 
+                    <input
+                      type="text"
+                      placeholder="请输入剧本名称"
+                      value={newProjectName}
+                      onChange={e => setNewProjectName(e.target.value)}
                       className="w-full px-4 py-3 bg-[#fbf8ef] border border-[#6da768]/40 rounded-xl text-sm focus:outline-none focus:border-[#6da768] focus:ring-1 focus:ring-[#6da768] transition-shadow"
                     />
                   </div>
@@ -350,19 +344,29 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
                   </label>
                   <div className="grid grid-cols-5 gap-4">
                     {styles.map((style) => (
-                      <div 
+                      <div
                         key={style.id}
                         onClick={() => setSelectedStyle(style.id)}
                         className={`relative rounded-xl overflow-hidden cursor-pointer group aspect-square ${selectedStyle === style.id ? 'ring-2 ring-[#6da768] ring-offset-2 ring-offset-[#fbf8ef]' : ''}`}
                       >
-                        <div 
-                          className="absolute inset-0 bg-cover bg-center lifely-bg-photo transition-transform duration-500 group-hover:scale-110"
-                          style={{ backgroundImage: `url(${style.image})` }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 p-3 text-center">
-                          <span className="text-white text-sm font-medium">{style.name}</span>
-                        </div>
+                        {style.image === null ? (
+                          /* 默认风格：空占位 */
+                          <div className="absolute inset-0 border-2 border-dashed border-[#6da768]/50 rounded-xl bg-[#f5f1e4] flex flex-col items-center justify-center gap-2 group-hover:bg-[#e9f2df] group-hover:border-[#6da768] transition-colors">
+                            <span className="text-2xl">📋</span>
+                            <span className="text-sm font-medium text-[#2b5f43]">默认</span>
+                          </div>
+                        ) : (
+                          <>
+                            <div
+                              className="absolute inset-0 bg-cover bg-center lifely-bg-photo transition-transform duration-500 group-hover:scale-110"
+                              style={{ backgroundImage: `url(${style.image})` }}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                            <div className="absolute bottom-0 left-0 right-0 p-3 text-center">
+                              <span className="text-white text-sm font-medium">{style.name}</span>
+                            </div>
+                          </>
+                        )}
                         {selectedStyle === style.id && (
                           <div className="absolute top-2 right-2 w-5 h-5 bg-[#6da768] rounded-full flex items-center justify-center border-2 border-white">
                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -385,12 +389,19 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
               >
                 取消
               </button>
-              <button 
-                onClick={() => {
-                  setIsNewProjectModalOpen(false);
-                  onEnterProject(); // Go to episode management for the new project
+              <button
+                disabled={!newProjectName.trim()}
+                onClick={async () => {
+                  try {
+                    const project = await projectsApi.create(newProjectName.trim());
+                    setIsNewProjectModalOpen(false);
+                    setNewProjectName('');
+                    onEnterProject(project.id, project.name);
+                  } catch {
+                    alert('创建项目失败，请重试');
+                  }
                 }}
-                className="px-8 py-2.5 bg-[#193d2c] hover:bg-[#2b5f43] text-[#f5f1e4] rounded-full text-sm font-medium transition-colors shadow-sm"
+                className="px-8 py-2.5 bg-[#193d2c] hover:bg-[#2b5f43] text-[#f5f1e4] rounded-full text-sm font-medium transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 新增
               </button>

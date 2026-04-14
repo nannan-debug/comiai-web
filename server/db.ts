@@ -10,6 +10,9 @@ const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
+// 迁移：给已存在的 episodes 表补列
+try { db.exec(`ALTER TABLE episodes ADD COLUMN analysis_json TEXT DEFAULT ''`); } catch { /* 已存在则忽略 */ }
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,6 +38,7 @@ db.exec(`
     project_id INTEGER NOT NULL REFERENCES projects(id),
     name TEXT NOT NULL,
     script_content TEXT DEFAULT '',
+    analysis_json TEXT DEFAULT '',
     status TEXT DEFAULT 'draft',
     created_at TEXT DEFAULT (datetime('now'))
   );
@@ -52,6 +56,16 @@ db.exec(`
     image_task_id TEXT DEFAULT '',
     video_task_id TEXT DEFAULT '',
     status TEXT DEFAULT 'pending',
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS project_assets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL REFERENCES projects(id),
+    category TEXT NOT NULL,
+    name TEXT NOT NULL,
+    image_url TEXT DEFAULT '',
+    description TEXT DEFAULT '',
     created_at TEXT DEFAULT (datetime('now'))
   );
 `);

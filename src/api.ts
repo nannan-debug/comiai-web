@@ -53,9 +53,39 @@ export const projectsApi = {
       method: 'POST',
       body: JSON.stringify({ name, script_content }),
     }),
+  deleteEpisode: (projectId: number, episodeId: number) =>
+    request<any>(`/api/projects/${projectId}/episodes/${episodeId}`, { method: 'DELETE' }),
   listScenes: (projectId: number, episodeId: number) =>
     request<any[]>(`/api/projects/${projectId}/episodes/${episodeId}/scenes`),
+  listAssets: (projectId: number, category?: string) =>
+    request<any[]>(`/api/projects/${projectId}/assets${category ? `?category=${category}` : ''}`),
+  deleteAsset: (projectId: number, assetId: number) =>
+    request<any>(`/api/projects/${projectId}/assets/${assetId}`, { method: 'DELETE' }),
 };
+
+export async function uploadAsset(projectId: number, data: { name: string; category: string; description?: string; imageFile?: File | null }): Promise<any> {
+  const token = localStorage.getItem('comiai_token');
+  const formData = new FormData();
+  formData.append('name', data.name);
+  formData.append('category', data.category);
+  if (data.description) formData.append('description', data.description);
+  if (data.imageFile) formData.append('image', data.imageFile);
+  const resp = await fetch(`/api/projects/${projectId}/assets`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  const json = await resp.json();
+  if (!resp.ok) throw new Error(json.error ?? '上传失败');
+  return json;
+}
+
+export interface AnalysisResult {
+  lens: { camera: string; person: string; scence_name: string; props: string; video_prompt: string }[];
+  person: { name: string; desc: string; feature: string }[];
+  scence: { name: string; desc: string }[];
+  props: { name: string; desc: string }[];
+}
 
 // Script
 export const scriptApi = {
@@ -73,10 +103,12 @@ export const scriptApi = {
     return data as { content: string; filename: string };
   },
   split: (content: string, episode_id?: number) =>
-    request<{ scenes: any[] }>('/api/script/split', {
+    request<AnalysisResult>('/api/script/split', {
       method: 'POST',
       body: JSON.stringify({ content, episode_id }),
     }),
+  getAnalysis: (episodeId: number) =>
+    request<AnalysisResult>(`/api/script/analysis/${episodeId}`),
 };
 
 // Generate

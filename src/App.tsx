@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import StoryboardProduction from './StoryboardProduction';
 import VideoPreview from './VideoPreview';
-import ScriptAndAssets from './ScriptAndAssets';
 import StoryboardManagement from './StoryboardManagement';
 import ScriptUpload from './ScriptUpload';
 import EpisodeManagement from './EpisodeManagement';
@@ -9,9 +8,9 @@ import ScriptSplitView from './ScriptSplitView';
 import ProjectManagement from './ProjectManagement';
 import Login from './Login';
 import { ArrowLeft, LogOut } from 'lucide-react';
+import { projectsApi } from './api';
 
 type ViewState = 'home' | 'projects' | 'management' | 'upload' | 'split' | 'production';
-type StoryboardMode = 'image-video' | 'direct-video';
 
 function HomeLanding({ onEnterProjects }: { onEnterProjects: () => void }) {
   return (
@@ -89,9 +88,37 @@ export default function App() {
 
   const [currentView, setCurrentView] = useState<ViewState>('home');
   const [productionStep, setProductionStep] = useState(1);
-  const [storyboardEntryMode, setStoryboardEntryMode] = useState<StoryboardMode>('image-video');
+  const [currentProjectId, setCurrentProjectId] = useState<number | null>(null);
   const [currentProjectName, setCurrentProjectName] = useState('离婚后我成了顶流白月光');
   const [currentEpisodeName, setCurrentEpisodeName] = useState('第一集');
+  const [currentEpisodeContent, setCurrentEpisodeContent] = useState('');
+  const [currentEpisodeId, setCurrentEpisodeId] = useState<number | null>(null);
+  const [scriptData, setScriptData] = useState<{ content: string; filename: string; episodeCount: number } | null>(null);
+
+  const handleCreateProjectFromScript = async (projectName: string, episodeName: string, episodeContent: string) => {
+    // 查找是否已有同名项目
+    const projects = await projectsApi.list();
+    let project = projects.find((p: any) => p.name === projectName);
+
+    // 没有则新建项目
+    if (!project) {
+      project = await projectsApi.create(projectName);
+    }
+
+    // 查找是否已有同名分集
+    const episodes = await projectsApi.listEpisodes(project.id);
+    let episode = episodes.find((e: any) => e.name === episodeName);
+    if (!episode) {
+      episode = await projectsApi.createEpisode(project.id, episodeName, episodeContent);
+    }
+
+    setCurrentProjectName(projectName);
+    setCurrentEpisodeName(episodeName);
+    setCurrentEpisodeContent(episodeContent);
+    setCurrentEpisodeId(episode.id ?? null);
+    setProductionStep(1);
+    setCurrentView('production');
+  };
 
   if (!user) {
     return <Login onLogin={handleLogin} />;
@@ -138,10 +165,9 @@ export default function App() {
           </div>
 
           <div className="flex bg-[#2b5f43] rounded-full p-1 text-[11px] font-bold">
-            <button onClick={() => setProductionStep(1)} className={`px-4 py-1.5 rounded-full transition-all ${productionStep === 1 ? 'bg-[#d8ec6a] text-[#193d2c] shadow-sm' : 'text-[#d7ead6] hover:text-white'}`}>1.剧本与设定</button>
-            <button onClick={() => setProductionStep(2)} className={`px-4 py-1.5 rounded-full transition-all ${productionStep === 2 ? 'bg-[#d8ec6a] text-[#193d2c] shadow-sm' : 'text-[#d7ead6] hover:text-white'}`}>2.分镜管理</button>
-            <button onClick={() => setProductionStep(3)} className={`px-4 py-1.5 rounded-full transition-all ${productionStep === 3 ? 'bg-[#d8ec6a] text-[#193d2c] shadow-sm' : 'text-[#d7ead6] hover:text-white'}`}>3.分镜制作</button>
-            <button onClick={() => setProductionStep(4)} className={`px-4 py-1.5 rounded-full transition-all ${productionStep === 4 ? 'bg-[#d8ec6a] text-[#193d2c] shadow-sm' : 'text-[#d7ead6] hover:text-white'}`}>4.视频预览</button>
+            <button onClick={() => setProductionStep(1)} className={`px-4 py-1.5 rounded-full transition-all ${productionStep === 1 ? 'bg-[#d8ec6a] text-[#193d2c] shadow-sm' : 'text-[#d7ead6] hover:text-white'}`}>1.分镜管理</button>
+            <button onClick={() => setProductionStep(2)} className={`px-4 py-1.5 rounded-full transition-all ${productionStep === 2 ? 'bg-[#d8ec6a] text-[#193d2c] shadow-sm' : 'text-[#d7ead6] hover:text-white'}`}>2.分镜制作</button>
+            <button onClick={() => setProductionStep(3)} className={`px-4 py-1.5 rounded-full transition-all ${productionStep === 3 ? 'bg-[#d8ec6a] text-[#193d2c] shadow-sm' : 'text-[#d7ead6] hover:text-white'}`}>3.视频预览</button>
           </div>
 
           <div className="flex items-center gap-3">
@@ -164,8 +190,9 @@ export default function App() {
       {currentView === 'projects' && (
         <ProjectManagement
           onCreateProject={() => setCurrentView('upload')}
-          onEnterProject={() => {
-            setCurrentProjectName('离婚后我成了顶流白月光');
+          onEnterProject={(id: number, name: string) => {
+            setCurrentProjectId(id);
+            setCurrentProjectName(name);
             setCurrentView('management');
           }}
           onGoHome={() => setCurrentView('home')}
@@ -179,8 +206,10 @@ export default function App() {
 
       {currentView === 'management' && (
         <EpisodeManagement
+          projectId={currentProjectId ?? undefined}
           projectName={currentProjectName}
           onProjectNameChange={setCurrentProjectName}
+          scriptContent={scriptData?.content}
           onUpload={() => setCurrentView('upload')}
           onEnterEpisode={(episodeName) => {
             setCurrentEpisodeName(normalizeEpisodeName(episodeName));
@@ -190,6 +219,7 @@ export default function App() {
           onBack={() => setCurrentView('projects')}
           onGoHome={() => setCurrentView('home')}
           onGoScript={() => setCurrentView('upload')}
+          onCreateFromScript={() => setCurrentView('split')}
           username={user.username}
           credits={user.credits}
           onLogout={handleLogout}
@@ -199,38 +229,33 @@ export default function App() {
       )}
       
       {currentView === 'upload' && (
-        <ScriptUpload 
-          onNext={() => setCurrentView('split')} 
-          onBack={() => setCurrentView('projects')} 
+        <ScriptUpload
+          onNext={(result) => { setScriptData(result); setCurrentView('split'); }}
+          onBack={() => setCurrentView('projects')}
         />
       )}
 
-      {currentView === 'split' && (
-        <ScriptSplitView 
+      {currentView === 'split' && scriptData && (
+        <ScriptSplitView
+          content={scriptData.content}
+          filename={scriptData.filename}
           onBack={() => setCurrentView('upload')}
-          onCreateProject={() => setCurrentView('management')} 
+          onCreateProject={handleCreateProjectFromScript}
         />
       )}
       
       {/* Production Steps */}
       {currentView === 'production' && productionStep === 1 && (
-        <ScriptAndAssets
-          onNext={(mode) => {
-            setStoryboardEntryMode(mode);
-            setProductionStep(2);
-          }}
+        <StoryboardManagement
+          scriptContent={currentEpisodeContent}
+          episodeId={currentEpisodeId ?? undefined}
+          onNext={() => setProductionStep(2)}
         />
       )}
       {currentView === 'production' && productionStep === 2 && (
-        <StoryboardManagement
-          initialMode={storyboardEntryMode}
-          onNext={() => setProductionStep(3)}
-        />
-      )}
-      {currentView === 'production' && productionStep === 3 && (
         <StoryboardProduction />
       )}
-      {currentView === 'production' && productionStep === 4 && (
+      {currentView === 'production' && productionStep === 3 && (
         <VideoPreview />
       )}
     </div>

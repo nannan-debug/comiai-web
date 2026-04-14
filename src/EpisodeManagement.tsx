@@ -1,59 +1,74 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { projectsApi, uploadAsset } from './api';
 import {
   Search,
   Filter,
   Plus,
-  Edit,
   Trash2,
   ChevronDown,
-  User,
   FileText,
-  FolderPlus,
   X,
   Image as ImageIcon,
-  Home,
-  PlaySquare,
-  PenTool,
-  BarChart2,
-  ClipboardCheck,
-  Users,
-  MapPin,
-  Package,
 } from 'lucide-react';
 import AccountCenter from './AccountCenter';
 
 export default function EpisodeManagement({
+  projectId,
   onUpload,
   onEnterEpisode,
   onBack,
   onGoHome,
   onGoScript,
+  onCreateFromScript,
   projectName,
   onProjectNameChange,
+  scriptContent,
   username,
   credits,
   onLogout,
   onCreditsChange,
   onUsernameChange,
 }: {
+  projectId?: number;
   onUpload: () => void;
   onEnterEpisode: (episodeName?: string) => void;
   onBack: () => void;
   onGoHome: () => void;
   onGoScript: () => void;
+  onCreateFromScript?: () => void;
   projectName: string;
   onProjectNameChange: (name: string) => void;
+  scriptContent?: string;
   username: string;
   credits: number;
   onLogout: () => void;
   onCreditsChange: (n: number) => void;
   onUsernameChange: (n: string) => void;
 }) {
-  const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
-  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
+  const [isNewEpisodeModalOpen, setIsNewEpisodeModalOpen] = useState(false);
+  const [episodeDraft, setEpisodeDraft] = useState({ name: '', number: '', cover: '' });
+  const [episodes, setEpisodes] = useState<{ id: number; title: string; number: string; cover: string; date: string }[]>([]);
+  const [episodesLoading, setEpisodesLoading] = useState(false);
   const [isGlobalMenuOpen, setIsGlobalMenuOpen] = useState(false);
+
+  // 从后端加载分集列表
+  useEffect(() => {
+    if (!projectId) return;
+    setEpisodesLoading(true);
+    projectsApi.listEpisodes(projectId)
+      .then((list: any[]) => {
+        setEpisodes(list.map((ep) => ({
+          id: ep.id,
+          title: ep.name,
+          number: String(ep.id),
+          cover: ep.cover_url ?? '',
+          date: ep.created_at ? new Date(ep.created_at).toLocaleDateString('zh-CN') : '',
+        })));
+      })
+      .catch(() => {})
+      .finally(() => setEpisodesLoading(false));
+  }, [projectId]);
   const [isProjectEditOpen, setIsProjectEditOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'episode' | 'role' | 'scene' | 'prop'>('overview');
   const [projectMeta, setProjectMeta] = useState({
     name: projectName,
     style: '',
@@ -63,27 +78,97 @@ export default function EpisodeManagement({
   });
   const [projectDraft, setProjectDraft] = useState(projectMeta);
 
-  // 真实数据（初始为空，后续从后端加载）
-  const episodes: any[] = [];
-  const roleAssets: any[] = [];
-  const sceneAssets: any[] = [];
-  const propAssets: any[] = [];
+  // 资产 Modal 状态
+  const [assetModalOpen, setAssetModalOpen] = useState(false);
+  const [assetModalCategory, setAssetModalCategory] = useState<'role' | 'scene' | 'prop'>('role');
+  const [assetList, setAssetList] = useState<any[]>([]);
+  const [assetLoading, setAssetLoading] = useState(false);
+  const [addFormOpen, setAddFormOpen] = useState(false);
+  const [newAssetName, setNewAssetName] = useState('');
+  const [newAssetDesc, setNewAssetDesc] = useState('');
+  const [newAssetFile, setNewAssetFile] = useState<File | null>(null);
+  const [newAssetPreview, setNewAssetPreview] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [assetCounts, setAssetCounts] = useState<Record<string, number>>({ role: 0, scene: 0, prop: 0 });
 
-  const searchPlaceholder = activeTab === 'overview'
-    ? '分集 / 角色 / 场景 / 道具搜索'
-    : activeTab === 'episode'
-    ? '参与者名称搜索'
-    : activeTab === 'role'
-      ? '角色名称搜索'
-      : activeTab === 'scene'
-        ? '场景名称搜索'
-        : '道具名称搜索';
+  // 页面加载时拉全量资产计数
+  useEffect(() => {
+    if (!projectId) return;
+    projectsApi.listAssets(projectId)
+      .then((list: any[]) => {
+        setAssetCounts({
+          role:  list.filter(a => a.category === 'role').length,
+          scene: list.filter(a => a.category === 'scene').length,
+          prop:  list.filter(a => a.category === 'prop').length,
+        });
+      })
+      .catch(() => {});
+  }, [projectId]);
 
-  const currentAssets = activeTab === 'role'
-    ? roleAssets
-    : activeTab === 'scene'
-      ? sceneAssets
-      : propAssets;
+  const loadAssets = (category: string) => {
+    if (!projectId) return;
+    setAssetLoading(true);
+    projectsApi.listAssets(projectId, category)
+      .then(list => setAssetList(list))
+      .catch(() => {})
+      .finally(() => setAssetLoading(false));
+  };
+
+  const openAssetModal = (category: 'role' | 'scene' | 'prop') => {
+    setAssetModalCategory(category);
+    setAssetModalOpen(true);
+    setAddFormOpen(false);
+    loadAssets(category);
+  };
+
+  const handleAddAsset = async () => {
+    if (!newAssetName.trim() || !projectId) return;
+    setSubmitting(true);
+    try {
+      const asset = await uploadAsset(projectId, {
+        name: newAssetName.trim(),
+        category: assetModalCategory,
+        description: newAssetDesc,
+        imageFile: newAssetFile,
+      });
+      setAssetList(prev => [...prev, asset]);
+      setAssetCounts(prev => ({ ...prev, [assetModalCategory]: (prev[assetModalCategory] ?? 0) + 1 }));
+      setNewAssetName('');
+      setNewAssetDesc('');
+      setNewAssetFile(null);
+      setNewAssetPreview('');
+      setAddFormOpen(false);
+    } catch {
+      alert('添加失败，请重试');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const categoryLabel: Record<'role' | 'scene' | 'prop', string> = { role: '角色', scene: '场景', prop: '道具' };
+
+  const handleDeleteAsset = async (assetId: number) => {
+    if (!projectId || !confirm('确认删除？')) return;
+    try {
+      await projectsApi.deleteAsset(projectId, assetId);
+      const deleted = assetList.find(a => a.id === assetId);
+      setAssetList(prev => prev.filter(a => a.id !== assetId));
+      if (deleted) setAssetCounts(prev => ({ ...prev, [deleted.category]: Math.max(0, (prev[deleted.category] ?? 0) - 1) }));
+    } catch {
+      alert('删除失败');
+    }
+  };
+
+  const handleDeleteEpisode = async (e: React.MouseEvent, episodeId: number) => {
+    e.stopPropagation();
+    if (!confirm('确认删除该分集？删除后不可恢复')) return;
+    try {
+      if (projectId) await projectsApi.deleteEpisode(projectId, episodeId);
+      setEpisodes(prev => prev.filter(ep => ep.id !== episodeId));
+    } catch {
+      alert('删除失败，请重试');
+    }
+  };
 
   const openProjectEdit = () => {
     setProjectDraft(projectMeta);
@@ -108,15 +193,16 @@ export default function EpisodeManagement({
       <div className="pointer-events-none absolute -right-10 top-20 h-40 w-40 rounded-[42%_58%_51%_49%/62%_38%_62%_38%] bg-[#9fc79b]/35" />
       {/* Header */}
       <header className="h-16 bg-[#f0ebdd] border-b border-[#6da768]/30 flex items-center justify-between px-6 shrink-0">
-        <div className="relative">
-          <button
-            onClick={() => setIsGlobalMenuOpen((prev) => !prev)}
-            className="flex items-center gap-2 text-[#2b5f43] font-black text-xl tracking-tight menu-title hover:opacity-90 transition-opacity"
-            title="打开全局导航"
-          >
-            <div className="w-6 h-6 bg-[#6da768] rounded flex items-center justify-center text-[#193d2c] text-sm">C</div>
-            COMIAI
-          </button>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <button
+              onClick={() => setIsGlobalMenuOpen((prev) => !prev)}
+              className="flex items-center gap-2 text-[#2b5f43] font-black text-xl tracking-tight menu-title hover:opacity-90 transition-opacity"
+              title="打开全局导航"
+            >
+              <div className="w-6 h-6 bg-[#6da768] rounded flex items-center justify-center text-[#193d2c] text-sm">C</div>
+              COMIAI
+            </button>
 
           {isGlobalMenuOpen && (
             <>
@@ -164,59 +250,8 @@ export default function EpisodeManagement({
               </div>
             </>
           )}
-        </div>
-
-        <div className="flex items-center bg-[#2b5f43] rounded-full p-1 gap-1 text-[11px] font-bold">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`px-4 py-1.5 rounded-full transition-all ${
-              activeTab === 'overview'
-                ? 'bg-[#d8ec6a] text-[#193d2c] shadow-sm'
-                : 'text-[#d7ead6] hover:text-white'
-            }`}
-          >
-            总览
-          </button>
-          <button
-            onClick={() => setActiveTab('episode')}
-            className={`px-4 py-1.5 rounded-full transition-all ${
-              activeTab === 'episode'
-                ? 'bg-[#d8ec6a] text-[#193d2c] shadow-sm'
-                : 'text-[#d7ead6] hover:text-white'
-            }`}
-          >
-            分集
-          </button>
-          <button
-            onClick={() => setActiveTab('role')}
-            className={`px-4 py-1.5 rounded-full transition-all ${
-              activeTab === 'role'
-                ? 'bg-[#d8ec6a] text-[#193d2c] shadow-sm'
-                : 'text-[#d7ead6] hover:text-white'
-            }`}
-          >
-            角色
-          </button>
-          <button
-            onClick={() => setActiveTab('scene')}
-            className={`px-4 py-1.5 rounded-full transition-all ${
-              activeTab === 'scene'
-                ? 'bg-[#d8ec6a] text-[#193d2c] shadow-sm'
-                : 'text-[#d7ead6] hover:text-white'
-            }`}
-          >
-            场景
-          </button>
-          <button
-            onClick={() => setActiveTab('prop')}
-            className={`px-4 py-1.5 rounded-full transition-all ${
-              activeTab === 'prop'
-                ? 'bg-[#d8ec6a] text-[#193d2c] shadow-sm'
-                : 'text-[#d7ead6] hover:text-white'
-            }`}
-          >
-            道具
-          </button>
+          </div>
+          <span className="text-xs text-[#6da768] font-medium bg-[#e9f2df] px-2 py-0.5 rounded-full">总览</span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -240,69 +275,10 @@ export default function EpisodeManagement({
         </div>
       </div>
 
-      {/* Toolbar - only for 分集页 */}
-      {activeTab === 'episode' && (
-        <div className="px-6 py-4 flex items-center justify-between shrink-0 relative z-40">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <button 
-                onClick={() => setIsCreateMenuOpen(!isCreateMenuOpen)}
-                className="menu-title px-4 py-2 bg-[#193d2c] hover:bg-[#2b5f43] text-[#f5f1e4] rounded-lg text-sm transition-colors flex items-center gap-2 shadow-sm"
-              >
-                <Plus size={16} /> 创建分集
-              </button>
-              
-              {/* Create Menu Dropdown */}
-              {isCreateMenuOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setIsCreateMenuOpen(false)}></div>
-                  <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <button 
-                      onClick={() => {
-                        setIsCreateMenuOpen(false);
-                        onUpload();
-                      }}
-                      className="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 hover:text-violet-600 flex items-center gap-3 transition-colors"
-                    >
-                      <FileText size={16} className="text-slate-400" />
-                      <span>选择已有剧本</span>
-                    </button>
-                    <button 
-                      onClick={() => {
-                        setIsCreateMenuOpen(false);
-                        setIsNewProjectModalOpen(true);
-                      }}
-                      className="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 hover:text-violet-600 flex items-center gap-3 transition-colors"
-                    >
-                      <FolderPlus size={16} className="text-slate-400" />
-                      <span>新建空项目</span>
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 bg-[#fbf8ef] border border-[#6da768]/40 rounded-lg px-3 py-2 text-sm text-[#2b5f43] cursor-pointer hover:bg-[#f5f1e4] transition-colors">
-              <Filter size={16} className="text-[#2b5f43]/65" /> 集号正序 <ChevronDown size={14} className="text-[#2b5f43]/65" />
-            </div>
-            <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#2b5f43]/65" />
-              <input 
-                type="text" 
-                placeholder={searchPlaceholder}
-                className="pl-9 pr-4 py-2 bg-[#fbf8ef] border border-[#6da768]/40 rounded-lg text-sm focus:outline-none focus:border-[#6da768] focus:ring-1 focus:ring-[#6da768] w-64 transition-shadow" 
-              />
-            </div>
-          </div>
-
-          <div />
-        </div>
-      )}
 
       {/* Grid */}
       <div className="flex-1 overflow-y-auto p-6 pt-0 custom-scrollbar relative z-10">
-        {activeTab === 'overview' ? (
-          <div className="space-y-6">
+        <div className="space-y-6">
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
               <div className="xl:col-span-7 bg-[#fbf8ef] rounded-2xl border border-[#6da768]/35 p-5 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
@@ -324,15 +300,23 @@ export default function EpisodeManagement({
               </div>
 
               <div className="xl:col-span-2 bg-[#fbf8ef] rounded-2xl border border-[#6da768]/35 p-5 shadow-sm">
-                <div className="text-sm font-bold text-[#193d2c]">剧本</div>
-                <div className="h-[90px] flex flex-col items-center justify-center text-[#2b5f43]/40">
-                  <FileText size={24} />
-                  <div className="text-xs mt-2">暂未上传剧本</div>
-                  <button
-                    onClick={onGoScript}
-                    className="mt-2 text-[10px] text-[#6da768] underline hover:text-[#193d2c]"
-                  >上传剧本</button>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm font-bold text-[#193d2c]">剧本</div>
+                  {scriptContent
+                    ? <button onClick={onCreateFromScript ?? onGoScript} className="text-[10px] text-[#6da768] hover:text-[#193d2c] font-bold">重新上传</button>
+                    : <button onClick={onGoScript} className="text-[10px] text-[#6da768] hover:text-[#193d2c] font-bold underline">上传剧本</button>
+                  }
                 </div>
+                {scriptContent ? (
+                  <pre className="text-[10px] text-[#2b5f43]/70 leading-relaxed whitespace-pre-wrap line-clamp-4 font-sans h-[72px] overflow-hidden">
+                    {scriptContent}
+                  </pre>
+                ) : (
+                  <div className="h-[72px] flex flex-col items-center justify-center text-[#2b5f43]/40">
+                    <FileText size={22} />
+                    <div className="text-xs mt-1.5">暂未上传剧本</div>
+                  </div>
+                )}
               </div>
 
               <div className="xl:col-span-3 bg-[#fbf8ef] rounded-2xl border border-[#6da768]/35 p-5 shadow-sm">
@@ -349,24 +333,24 @@ export default function EpisodeManagement({
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <button
-                onClick={() => setActiveTab('role')}
+                onClick={() => openAssetModal('role')}
                 className="h-36 rounded-2xl border border-[#6da768]/35 bg-[linear-gradient(120deg,#f8f3e8,#f1f7e8)] p-5 text-left hover:border-[#6da768] transition-colors"
               >
-                <div className="text-[36px] leading-none menu-title text-[#193d2c]">{roleAssets.length}</div>
+                <div className="text-[36px] leading-none menu-title text-[#193d2c]">{assetCounts.role}</div>
                 <div className="text-xl menu-title text-[#2b5f43] mt-2">角色</div>
               </button>
               <button
-                onClick={() => setActiveTab('scene')}
+                onClick={() => openAssetModal('scene')}
                 className="h-36 rounded-2xl border border-[#6da768]/35 bg-[linear-gradient(120deg,#f8f3e8,#e9f2df)] p-5 text-left hover:border-[#6da768] transition-colors"
               >
-                <div className="text-[36px] leading-none menu-title text-[#193d2c]">{sceneAssets.length}</div>
+                <div className="text-[36px] leading-none menu-title text-[#193d2c]">{assetCounts.scene}</div>
                 <div className="text-xl menu-title text-[#2b5f43] mt-2">场景</div>
               </button>
               <button
-                onClick={() => setActiveTab('prop')}
+                onClick={() => openAssetModal('prop')}
                 className="h-36 rounded-2xl border border-[#6da768]/35 bg-[linear-gradient(120deg,#f8f3e8,#eef6e4)] p-5 text-left hover:border-[#6da768] transition-colors"
               >
-                <div className="text-[36px] leading-none menu-title text-[#193d2c]">{propAssets.length}</div>
+                <div className="text-[36px] leading-none menu-title text-[#193d2c]">{assetCounts.prop}</div>
                 <div className="text-xl menu-title text-[#2b5f43] mt-2">道具</div>
               </button>
             </div>
@@ -379,16 +363,18 @@ export default function EpisodeManagement({
                   <Plus size={28} className="text-[#6da768]/60" />
                 </div>
                 <div className="text-[#193d2c] font-bold text-base mb-1">还没有分集</div>
-                <div className="text-sm text-[#2b5f43]/60 mb-4">上传剧本后 AI 自动拆分，或手动创建分集</div>
+                <div className="text-sm text-[#2b5f43]/60 mb-4">
+                  {scriptContent ? '已有剧本，可从剧本创建分集，或手动创建' : '上传剧本后 AI 自动拆分，或手动创建分集'}
+                </div>
                 <div className="flex gap-3">
                   <button
-                    onClick={onGoScript}
+                    onClick={scriptContent ? (onCreateFromScript ?? onGoScript) : onGoScript}
                     className="px-5 py-2.5 bg-[#193d2c] text-[#d8ec6a] rounded-xl text-sm font-bold hover:bg-[#2b5f43] transition-colors"
                   >
-                    上传剧本
+                    {scriptContent ? '从剧本创建' : '上传剧本'}
                   </button>
                   <button
-                    onClick={() => setActiveTab('episode')}
+                    onClick={() => { setEpisodeDraft({ name: '', number: '', cover: '' }); setIsNewEpisodeModalOpen(true); }}
                     className="px-5 py-2.5 bg-[#f0f7ec] text-[#2b5f43] border border-[#6da768]/40 rounded-xl text-sm font-bold hover:bg-[#e0f0d8] transition-colors"
                   >
                     手动创建
@@ -396,155 +382,50 @@ export default function EpisodeManagement({
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+                {/* 新建分集卡 */}
+                <div
+                  onClick={() => { setEpisodeDraft({ name: '', number: '', cover: '' }); setIsNewEpisodeModalOpen(true); }}
+                  className="relative h-40 rounded-2xl border-2 border-dashed border-[#6da768]/40 bg-[#f5faee] hover:border-[#6da768] hover:bg-[#eaf4e3] transition-all cursor-pointer flex flex-col items-center justify-center gap-2 text-[#2b5f43]/50 hover:text-[#2b5f43]"
+                >
+                  <Plus size={28} strokeWidth={1.5} />
+                  <span className="text-xs font-medium">新建分集</span>
+                </div>
+
                 {episodes.map((ep) => (
-                  <button
+                  <div
                     key={ep.id}
                     onClick={() => onEnterEpisode(ep.title)}
-                    className="bg-[#fbf8ef] rounded-2xl border border-[#6da768]/35 p-3 text-left hover:border-[#6da768] transition-colors"
+                    className="group relative bg-[#fbf8ef] rounded-2xl border-2 border-[#193d2c]/15 overflow-hidden shadow-[4px_4px_0_rgba(25,61,44,0.14)] hover:shadow-[6px_6px_0_rgba(25,61,44,0.2)] hover:border-[#6da768]/60 transition-all cursor-pointer"
                   >
-                    <div className="h-36 rounded-xl overflow-hidden bg-[#e8f0e0] relative flex items-center justify-center">
+                    <div className="relative h-40 overflow-hidden bg-[#e8f0e0]">
                       {ep.cover ? (
-                        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${ep.cover})` }} />
+                        <div
+                          className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-500"
+                          style={{ backgroundImage: `url(${ep.cover})` }}
+                        />
                       ) : (
-                        <span className="text-[#6da768]/50 text-sm">暂无封面</span>
+                        <div className="absolute inset-0 flex items-center justify-center text-[#6da768]/30">
+                          <ImageIcon size={36} strokeWidth={1.5} />
+                        </div>
                       )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      <div className="absolute bottom-3 left-3 text-white font-bold text-base leading-tight drop-shadow">
+                        {ep.title}
+                      </div>
+                      {/* 删除按钮 */}
+                      <button
+                        className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-red-600/80 rounded-lg text-white opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm"
+                        onClick={(e) => handleDeleteEpisode(e, ep.id)}
+                      >
+                        <Trash2 size={13} />
+                      </button>
                     </div>
-                    <div className="mt-3">
-                      <div className="font-bold text-[#193d2c] text-base">{ep.title}</div>
-                      <div className="text-xs text-[#2b5f43]/70 mt-1">创建于：{ep.date}</div>
-                    </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             )}
-          </div>
-        ) : activeTab === 'episode' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-            {/* 新建分集卡 */}
-            <div
-              onClick={onUpload}
-              className="bg-[#fbf8ef] rounded-2xl border-2 border-dashed border-[#6da768]/40 hover:border-[#6da768] hover:bg-[#f5faee] transition-colors cursor-pointer flex flex-col items-center justify-center h-[380px] text-[#2b5f43]/60 hover:text-[#2b5f43]"
-            >
-              <Plus size={32} className="mb-3" />
-              <span className="text-sm font-bold">新建分集</span>
-              <span className="text-xs mt-1 opacity-70">上传剧本或手动创建</span>
-            </div>
-            {episodes.map((ep) => (
-              <div
-                key={ep.id}
-                onClick={() => onEnterEpisode(ep.title)}
-                className="bg-[#fbf8ef] rounded-2xl border-2 border-[#193d2c]/15 overflow-hidden shadow-[6px_6px_0_rgba(25,61,44,0.16)] hover:shadow-[8px_8px_0_rgba(25,61,44,0.2)] hover:border-[#6da768]/70 transition-all cursor-pointer group flex flex-col h-[380px]"
-              >
-                <div className="relative h-[220px] shrink-0 overflow-hidden bg-slate-900">
-                  <div
-                    className="absolute inset-0 bg-cover bg-center lifely-bg-photo opacity-80 group-hover:scale-105 transition-transform duration-500"
-                    style={{ backgroundImage: `url(${ep.cover})` }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-black/80" />
-
-                  <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="p-1.5 bg-[#193d2c]/75 hover:bg-[#193d2c] rounded text-white backdrop-blur-sm transition-colors" onClick={(e) => e.stopPropagation()}>
-                      <Edit size={14} />
-                    </button>
-                    <button className="p-1.5 bg-[#193d2c]/75 hover:bg-red-600/80 rounded text-white backdrop-blur-sm transition-colors" onClick={(e) => e.stopPropagation()}>
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="p-4 flex flex-col flex-1">
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="font-bold text-[#193d2c] text-base">{ep.title}</h3>
-                    <span className="text-xs text-[#2b5f43]/80 font-medium">{ep.epNumber}</span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-1.5 mb-auto">
-                    {ep.tags.length > 0 ? (
-                      ep.tags.map((tag, idx) => (
-                        <span key={idx} className="px-2 py-0.5 bg-[#e9f2df] text-[#2b5f43] text-[11px] rounded-full border border-[#6da768]/30">
-                          {tag}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-xs text-slate-400 italic">暂无角色标签</span>
-                    )}
-                  </div>
-
-                  <div className="flex justify-between items-center mt-4 pt-3 border-t border-[#193d2c]/10 text-[11px]">
-                    <span className="text-[#2b5f43]/65">{ep.date}</span>
-                    <span className="text-[#2b5f43] flex items-center gap-1 font-semibold">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#6da768]"></span> {ep.status}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-            <button className="bg-[#fbf8ef] rounded-2xl border-2 border-dashed border-[#6da768]/45 hover:border-[#6da768] hover:bg-[#f5faee] transition-colors h-[360px] flex flex-col items-center justify-center text-[#2b5f43]/70 hover:text-[#2b5f43]">
-              <Plus size={28} className="mb-3" />
-              <span className="text-sm font-bold">
-                新增{activeTab === 'role' ? '角色' : activeTab === 'scene' ? '场景' : '道具'}资产
-              </span>
-              <span className="text-xs mt-1 opacity-70">上传图片并补充描述信息</span>
-            </button>
-
-            {currentAssets.length === 0 && (
-              <div className="col-span-full flex flex-col items-center justify-center py-12 text-center text-[#2b5f43]/40">
-                <div className="text-sm">
-                  暂无{activeTab === 'role' ? '角色' : activeTab === 'scene' ? '场景' : '道具'}资产
-                </div>
-                <div className="text-xs mt-1">点击左侧卡片添加</div>
-              </div>
-            )}
-
-            {currentAssets.map((asset) => (
-              <div
-                key={asset.id}
-                className="bg-[#fbf8ef] rounded-2xl border-2 border-[#193d2c]/15 overflow-hidden shadow-[6px_6px_0_rgba(25,61,44,0.16)] hover:shadow-[8px_8px_0_rgba(25,61,44,0.2)] hover:border-[#6da768]/70 transition-all cursor-pointer group flex flex-col h-[360px]"
-              >
-                <div className="relative h-[210px] shrink-0 overflow-hidden bg-slate-900">
-                  <div
-                    className="absolute inset-0 bg-cover bg-center lifely-bg-photo opacity-85 group-hover:scale-105 transition-transform duration-500"
-                    style={{ backgroundImage: `url(${asset.cover})` }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/15 to-black/75" />
-
-                  <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="p-1.5 bg-[#193d2c]/75 hover:bg-[#193d2c] rounded text-white backdrop-blur-sm transition-colors">
-                      <Edit size={14} />
-                    </button>
-                    <button className="p-1.5 bg-[#193d2c]/75 hover:bg-red-600/80 rounded text-white backdrop-blur-sm transition-colors">
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="p-4 flex flex-col flex-1">
-                  <div className="mb-2">
-                    <h3 className="font-bold text-[#193d2c] text-base">{asset.name}</h3>
-                    <p className="text-xs text-[#2b5f43]/75 mt-1 line-clamp-2">{asset.subtitle}</p>
-                  </div>
-
-                  <div className="flex flex-wrap gap-1.5 mb-auto">
-                    {asset.tags.map((tag) => (
-                      <span key={tag} className="px-2 py-0.5 bg-[#e9f2df] text-[#2b5f43] text-[11px] rounded-full border border-[#6da768]/30">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="flex justify-between items-center mt-4 pt-3 border-t border-[#193d2c]/10 text-[11px]">
-                    <span className="text-[#2b5f43]/65">{asset.updatedAt}</span>
-                    <span className="text-[#2b5f43] font-semibold">{asset.usage}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        </div>
       </div>
 
       {isProjectEditOpen && (
@@ -657,76 +538,252 @@ export default function EpisodeManagement({
         </div>
       )}
 
-      {/* New Project Modal */}
-      {isNewProjectModalOpen && (
+      {/* New Episode Modal */}
+      {isNewEpisodeModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsNewProjectModalOpen(false)}></div>
-          <div className="bg-[#fbf8ef] rounded-2xl shadow-xl w-[480px] max-w-[90vw] z-10 overflow-hidden animate-in zoom-in-95 duration-200 border-2 border-[#193d2c]/15">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <div className="absolute inset-0 bg-[#193d2c]/60 backdrop-blur-sm" onClick={() => setIsNewEpisodeModalOpen(false)} />
+          <div className="relative z-10 bg-[#fbf8ef] rounded-2xl shadow-2xl w-[480px] max-w-[90vw] overflow-hidden animate-in zoom-in-95 duration-200 border border-[#6da768]/30">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-[#6da768]/20">
               <h2 className="text-lg font-bold text-[#193d2c] menu-title">新增分集</h2>
-              <button 
-                onClick={() => setIsNewProjectModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-full hover:bg-slate-100"
+              <button
+                onClick={() => setIsNewEpisodeModalOpen(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[#2b5f43]/60 hover:text-[#193d2c] hover:bg-[#e9f2df] transition-colors"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
-            
+
             <div className="p-6 flex flex-col gap-5">
+              {/* 分集名称 */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                <label className="block text-sm font-bold text-[#193d2c] mb-2">
                   <span className="text-red-500 mr-1">*</span>分集名称
                 </label>
-                <input 
-                  type="text" 
-                  placeholder="请输入分集名称" 
-                  className="w-full px-3 py-2.5 bg-[#fbf8ef] border border-[#6da768]/40 rounded-lg text-sm focus:outline-none focus:border-[#6da768] focus:ring-1 focus:ring-[#6da768] transition-shadow"
+                <input
+                  type="text"
+                  placeholder="请输入分集名称"
+                  value={episodeDraft.name}
+                  onChange={e => setEpisodeDraft(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-4 py-3 bg-white border border-[#6da768]/40 rounded-xl text-sm text-[#193d2c] placeholder:text-[#2b5f43]/40 focus:outline-none focus:border-[#6da768] focus:ring-2 focus:ring-[#6da768]/20 transition-all"
                 />
               </div>
 
+              {/* 集号 */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                <label className="block text-sm font-bold text-[#193d2c] mb-2">
                   <span className="text-red-500 mr-1">*</span>集号
                 </label>
                 <div className="relative">
-                  <select className="w-full px-3 py-2.5 bg-[#fbf8ef] border border-[#6da768]/40 rounded-lg text-sm focus:outline-none focus:border-[#6da768] focus:ring-1 focus:ring-[#6da768] transition-shadow appearance-none text-[#2b5f43]/75">
+                  <select
+                    value={episodeDraft.number}
+                    onChange={e => setEpisodeDraft(prev => ({ ...prev, number: e.target.value }))}
+                    className="w-full px-4 py-3 bg-white border border-[#6da768]/40 rounded-xl text-sm focus:outline-none focus:border-[#6da768] focus:ring-2 focus:ring-[#6da768]/20 transition-all appearance-none text-[#2b5f43]"
+                  >
                     <option value="">请选择或输入集号(1-100)</option>
-                    {[...Array(100)].map((_, i) => (
-                      <option key={i+1} value={i+1}>第{i+1}集</option>
+                    {Array.from({ length: 100 }, (_, i) => (
+                      <option key={i + 1} value={i + 1}>第{i + 1}集</option>
                     ))}
                   </select>
-                  <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#2b5f43]/65 pointer-events-none" />
+                  <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#2b5f43]/50 pointer-events-none" />
                 </div>
               </div>
 
+              {/* 封面图 */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  封面图
+                <label className="block text-sm font-bold text-[#193d2c] mb-2">封面图</label>
+                <label className="block border-2 border-dashed border-[#6da768]/40 rounded-xl h-44 flex flex-col items-center justify-center text-[#2b5f43]/50 hover:bg-[#f0f7ec] hover:border-[#6da768] hover:text-[#2b5f43] transition-colors cursor-pointer group overflow-hidden relative">
+                  {episodeDraft.cover ? (
+                    <img src={episodeDraft.cover} className="absolute inset-0 w-full h-full object-cover" />
+                  ) : (
+                    <>
+                      <ImageIcon size={40} className="mb-2 opacity-40 group-hover:opacity-70 transition-opacity" strokeWidth={1.5} />
+                      <span className="text-sm font-medium">点击上传封面图</span>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={e => {
+                      const file = e.target.files?.[0];
+                      if (file) setEpisodeDraft(prev => ({ ...prev, cover: URL.createObjectURL(file) }));
+                    }}
+                  />
                 </label>
-                <div className="border-2 border-dashed border-[#6da768]/40 rounded-xl h-48 flex flex-col items-center justify-center text-[#2b5f43]/60 hover:bg-[#e9f2df] hover:border-[#6da768] hover:text-[#2b5f43] transition-colors cursor-pointer group">
-                  <ImageIcon size={48} className="mb-3 opacity-50 group-hover:opacity-100 transition-opacity" strokeWidth={1.5} />
-                  <span className="text-sm font-medium">点击上传封面图</span>
-                </div>
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 bg-[#f5f1e4]">
-              <button 
-                onClick={() => setIsNewProjectModalOpen(false)}
-                className="px-6 py-2.5 bg-[#fbf8ef] border border-[#193d2c]/20 hover:bg-[#f5f1e4] text-[#2b5f43] rounded-full text-sm font-medium transition-colors"
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-[#6da768]/20 flex items-center justify-end gap-3 bg-[#f0ece0]">
+              <button
+                onClick={() => setIsNewEpisodeModalOpen(false)}
+                className="px-6 py-2.5 bg-[#fbf8ef] border border-[#6da768]/30 hover:bg-[#f0f7ec] text-[#2b5f43] rounded-full text-sm font-bold transition-colors"
               >
                 取消
               </button>
-              <button 
-                onClick={() => {
-                  setIsNewProjectModalOpen(false);
-                  onEnterEpisode('第1集');
+              <button
+                disabled={!episodeDraft.name.trim() || !episodeDraft.number}
+                onClick={async () => {
+                  const title = episodeDraft.name.trim() || `第${episodeDraft.number}集`;
+                  if (projectId) {
+                    try {
+                      const created = await projectsApi.createEpisode(projectId, title);
+                      setEpisodes(prev => [
+                        ...prev,
+                        {
+                          id: created.id,
+                          title: created.name ?? title,
+                          number: episodeDraft.number,
+                          cover: episodeDraft.cover,
+                          date: new Date().toLocaleDateString('zh-CN'),
+                        },
+                      ]);
+                    } catch {
+                      // 离线 fallback：仅本地存
+                      setEpisodes(prev => [
+                        ...prev,
+                        { id: Date.now(), title, number: episodeDraft.number, cover: episodeDraft.cover, date: new Date().toLocaleDateString('zh-CN') },
+                      ]);
+                    }
+                  } else {
+                    setEpisodes(prev => [
+                      ...prev,
+                      { id: Date.now(), title, number: episodeDraft.number, cover: episodeDraft.cover, date: new Date().toLocaleDateString('zh-CN') },
+                    ]);
+                  }
+                  setIsNewEpisodeModalOpen(false);
+                  setEpisodeDraft({ name: '', number: '', cover: '' });
                 }}
-                className="px-6 py-2.5 bg-[#193d2c] hover:bg-[#2b5f43] text-[#f5f1e4] rounded-full text-sm font-medium transition-colors shadow-sm"
+                className="px-6 py-2.5 bg-[#193d2c] hover:bg-[#2b5f43] text-[#d8ec6a] rounded-full text-sm font-bold transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 新增
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Asset Modal */}
+      {assetModalOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setAssetModalOpen(false)} />
+          <div className="relative z-10 w-[480px] h-full bg-[#fbf8ef] border-l border-[#6da768]/30 flex flex-col shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-[#6da768]/20 shrink-0">
+              <div>
+                <h2 className="text-lg font-bold text-[#193d2c] menu-title">
+                  {categoryLabel[assetModalCategory]}资产
+                </h2>
+                <p className="text-xs text-[#2b5f43]/60 mt-0.5">名称将作为 @标签 在分镜 Prompt 中引用</p>
+              </div>
+              <button onClick={() => setAssetModalOpen(false)} className="p-2 rounded-full hover:bg-[#e9f2df] transition-colors text-[#2b5f43]/60">
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Asset list */}
+            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+              {assetLoading ? (
+                <div className="text-center text-[#2b5f43]/50 text-sm py-8">加载中…</div>
+              ) : assetList.length === 0 && !addFormOpen ? (
+                <div className="text-center text-[#2b5f43]/40 text-sm py-12">
+                  <div className="text-3xl mb-3">📂</div>
+                  <div>还没有{({ role: '角色', scene: '场景', prop: '道具' } as const)[assetModalCategory]}，点击下方添加</div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  {assetList.map((asset) => (
+                    <div key={asset.id} className="group relative bg-white rounded-2xl border border-[#6da768]/25 overflow-hidden shadow-sm">
+                      <div className="h-32 bg-[#e8f0e0] relative overflow-hidden">
+                        {asset.image_url ? (
+                          <img src={asset.image_url} className="w-full h-full object-cover" alt={asset.name} />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-[#6da768]/30">
+                            <ImageIcon size={28} strokeWidth={1.5} />
+                          </div>
+                        )}
+                        <button
+                          onClick={() => handleDeleteAsset(asset.id)}
+                          className="absolute top-2 right-2 p-1 bg-black/50 hover:bg-red-600/80 rounded-lg text-white opacity-0 group-hover:opacity-100 transition-all"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                      <div className="px-3 py-2">
+                        <div className="font-semibold text-[#193d2c] text-sm">@{asset.name}</div>
+                        {asset.description && <div className="text-xs text-[#2b5f43]/60 mt-0.5 line-clamp-1">{asset.description}</div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Add form */}
+              {addFormOpen && (
+                <div className="mt-4 bg-[#f5f1e4] rounded-2xl border border-[#6da768]/30 p-4 flex flex-col gap-3">
+                  <div className="text-sm font-bold text-[#193d2c]">添加新资产</div>
+                  <div>
+                    <label className="text-xs text-[#2b5f43]/70 mb-1 block">名称 *</label>
+                    <input
+                      value={newAssetName}
+                      onChange={e => setNewAssetName(e.target.value)}
+                      placeholder="如：若曦、客厅场景..."
+                      className="w-full px-3 py-2 rounded-xl border border-[#6da768]/40 text-sm focus:outline-none focus:border-[#6da768] bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-[#2b5f43]/70 mb-1 block">图片</label>
+                    <label className="block border-2 border-dashed border-[#6da768]/40 rounded-xl overflow-hidden cursor-pointer hover:border-[#6da768] transition-colors">
+                      {newAssetPreview ? (
+                        <img src={newAssetPreview} className="w-full h-32 object-cover" />
+                      ) : (
+                        <div className="h-28 flex flex-col items-center justify-center text-[#2b5f43]/40 hover:text-[#2b5f43]/70">
+                          <ImageIcon size={24} strokeWidth={1.5} className="mb-1" />
+                          <span className="text-xs">点击上传图片</span>
+                        </div>
+                      )}
+                      <input type="file" accept="image/*" className="hidden" onChange={e => {
+                        const f = e.target.files?.[0];
+                        if (f) { setNewAssetFile(f); setNewAssetPreview(URL.createObjectURL(f)); }
+                      }} />
+                    </label>
+                  </div>
+                  <div>
+                    <label className="text-xs text-[#2b5f43]/70 mb-1 block">描述（可选）</label>
+                    <textarea
+                      value={newAssetDesc}
+                      onChange={e => setNewAssetDesc(e.target.value)}
+                      placeholder="外形特征、场景描述等..."
+                      rows={2}
+                      className="w-full px-3 py-2 rounded-xl border border-[#6da768]/40 text-sm focus:outline-none focus:border-[#6da768] bg-white resize-none"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => setAddFormOpen(false)} className="flex-1 py-2 rounded-full border border-[#6da768]/30 text-[#2b5f43] text-sm hover:bg-[#e9f2df] transition-colors">取消</button>
+                    <button
+                      onClick={handleAddAsset}
+                      disabled={!newAssetName.trim() || submitting}
+                      className="flex-1 py-2 rounded-full bg-[#193d2c] text-[#d8ec6a] text-sm font-bold hover:bg-[#2b5f43] transition-colors disabled:opacity-40"
+                    >
+                      {submitting ? '保存中…' : '保存'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            {!addFormOpen && (
+              <div className="px-4 py-4 border-t border-[#6da768]/20 shrink-0">
+                <button
+                  onClick={() => setAddFormOpen(true)}
+                  className="w-full py-2.5 rounded-full border-2 border-dashed border-[#6da768]/50 text-[#2b5f43] text-sm font-medium hover:border-[#6da768] hover:bg-[#f0f7ec] transition-colors flex items-center justify-center gap-2"
+                >
+                  <Plus size={16} /> 添加{({ role: '角色', scene: '场景', prop: '道具' } as const)[assetModalCategory]}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

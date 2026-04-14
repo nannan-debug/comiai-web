@@ -12,7 +12,7 @@
 ```
 本地路径：/Users/newblue/Projects/comiai-web-v2.0.1
 服务器：ubuntu@82.157.197.163  /opt/comiai
-SSH密码：NewBlue@123456
+SSH密码：.EQtB48eZXsa5=n-
 ```
 
 ## 本地启动（两个终端）
@@ -30,10 +30,12 @@ npm run dev       # 运行在 http://localhost:5173
 ```bash
 cd /Users/newblue/Projects/comiai-web-v2.0.1
 npm run build
-sshpass -p 'NewBlue@123456' rsync -avz --exclude 'node_modules' --exclude '.env' \
+sshpass -p '.EQtB48eZXsa5=n-' rsync -avz \
+  --exclude 'node_modules' --exclude '.env' --exclude 'comiai.db*' --exclude 'uploads' --exclude '.git' \
+  -e "ssh -o StrictHostKeyChecking=no -o PreferredAuthentications=password -o PubkeyAuthentication=no" \
   ./ ubuntu@82.157.197.163:/opt/comiai/
-sshpass -p 'NewBlue@123456' ssh ubuntu@82.157.197.163 \
-  "cd /opt/comiai && npm install --production && pm2 restart comiai-server"
+sshpass -p '.EQtB48eZXsa5=n-' ssh -o StrictHostKeyChecking=no -o PreferredAuthentications=password -o PubkeyAuthentication=no ubuntu@82.157.197.163 \
+  "cd /opt/comiai && npm install --production && pm2 restart comiai"
 ```
 
 ## 线上地址
