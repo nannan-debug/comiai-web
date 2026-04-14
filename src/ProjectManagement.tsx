@@ -17,24 +17,14 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [selectedOrientation, setSelectedOrientation] = useState<'16:9' | '9:16'>('16:9');
-  const [selectedStyle, setSelectedStyle] = useState<string>('默认');
+  const [selectedStyle, setSelectedStyle] = useState<string>('');
 
-  const styles = [
-    { id: '默认', name: '默认', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&q=80' },
-    { id: '日本动画片', name: '日本动画片', image: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150&q=80' },
-    { id: '吉卜力', name: '吉卜力', image: 'https://images.unsplash.com/photo-1580477667995-2b92f01c3f15?w=150&q=80' },
-    { id: '漫画', name: '漫画', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80' },
-    { id: '3D', name: '3D', image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&q=80' },
-    { id: '皮克斯', name: '皮克斯', image: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&q=80' },
-    { id: '黏土', name: '黏土', image: 'https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?w=150&q=80' },
-    { id: '扁平插画', name: '扁平插画', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&q=80' },
-    { id: '童话手绘', name: '童话手绘', image: 'https://images.unsplash.com/photo-1580477667995-2b92f01c3f15?w=150&q=80' },
-    { id: '赛博朋克', name: '赛博朋克', image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&q=80' },
-    { id: '水墨画', name: '水墨画', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80' },
-    { id: '油画', name: '油画', image: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&q=80' },
-    { id: '水彩', name: '水彩', image: 'https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?w=150&q=80' },
-    { id: '游戏CG', name: '游戏CG', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&q=80' },
-    { id: '中国风', name: '中国风', image: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150&q=80' },
+  const styles: { id: string; name: string; image: string | null }[] = [
+    { id: '',          name: '默认',  image: null },
+    { id: 'realistic', name: '写实',  image: '/style-images/realistic.jpg' },
+    { id: 'ghibli',    name: '吉卜力', image: '/style-images/ghibli.jpg' },
+    { id: '3d',        name: '3D',   image: '/style-images/3d.jpg' },
+    { id: 'pixar',     name: '皮克斯', image: '/style-images/pixar.jpg' },
   ];
 
   // Mock data based on reference image
@@ -359,19 +349,29 @@ export default function ProjectManagement({ onCreateProject, onEnterProject, onG
                   </label>
                   <div className="grid grid-cols-5 gap-4">
                     {styles.map((style) => (
-                      <div 
+                      <div
                         key={style.id}
                         onClick={() => setSelectedStyle(style.id)}
                         className={`relative rounded-xl overflow-hidden cursor-pointer group aspect-square ${selectedStyle === style.id ? 'ring-2 ring-[#6da768] ring-offset-2 ring-offset-[#fbf8ef]' : ''}`}
                       >
-                        <div 
-                          className="absolute inset-0 bg-cover bg-center lifely-bg-photo transition-transform duration-500 group-hover:scale-110"
-                          style={{ backgroundImage: `url(${style.image})` }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 p-3 text-center">
-                          <span className="text-white text-sm font-medium">{style.name}</span>
-                        </div>
+                        {style.image === null ? (
+                          /* 默认风格：空占位 */
+                          <div className="absolute inset-0 border-2 border-dashed border-[#6da768]/50 rounded-xl bg-[#f5f1e4] flex flex-col items-center justify-center gap-2 group-hover:bg-[#e9f2df] group-hover:border-[#6da768] transition-colors">
+                            <span className="text-2xl">📋</span>
+                            <span className="text-sm font-medium text-[#2b5f43]">默认</span>
+                          </div>
+                        ) : (
+                          <>
+                            <div
+                              className="absolute inset-0 bg-cover bg-center lifely-bg-photo transition-transform duration-500 group-hover:scale-110"
+                              style={{ backgroundImage: `url(${style.image})` }}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                            <div className="absolute bottom-0 left-0 right-0 p-3 text-center">
+                              <span className="text-white text-sm font-medium">{style.name}</span>
+                            </div>
+                          </>
+                        )}
                         {selectedStyle === style.id && (
                           <div className="absolute top-2 right-2 w-5 h-5 bg-[#6da768] rounded-full flex items-center justify-center border-2 border-white">
                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
